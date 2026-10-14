@@ -9,3 +9,4 @@ dist/
 *serviceAccount*.json
 .DS_Store
 *.log
+server/data/
