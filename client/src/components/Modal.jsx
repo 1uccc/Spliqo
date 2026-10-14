@@ -68,7 +68,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-white dark:bg-[#282834] flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:text-[#18181b] dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#323242] shadow-xs transition-all cursor-pointer"
-            title="Đóng (Esc)"
+            title="Đóng"
           >
             <X className="w-4 h-4" />
           </button>

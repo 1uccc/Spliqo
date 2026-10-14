@@ -1,71 +1,10 @@
 {
-  "users": {
-    "BXGuLOWJItNUhcXWPv7FpAhTuS92": {
-      "uid": "BXGuLOWJItNUhcXWPv7FpAhTuS92",
-      "email": "bachtuocndl@gmail.com",
-      "displayName": "Tuoc Bach",
-      "photoURL": "https://api.dicebear.com/7.x/avataaars/svg?seed=Molly",
-      "phone": "",
-      "bankName": "VPB",
-      "bankAccountNumber": "0386967646",
-      "bankAccountHolder": "NGUYEN DINH LUC",
-      "paymentQrUrl": ""
-    },
-    "TPtOfpBBDvVvVBGVAfTxq4hujpI3": {
-      "uid": "TPtOfpBBDvVvVBGVAfTxq4hujpI3",
-      "email": "lucnd0201@gmail.com",
-      "displayName": "Nguyễn Đình Lực",
-      "photoURL": "https://api.dicebear.com/7.x/avataaars/svg?seed=TPtOfpBBDvVvVBGVAfTxq4hujpI3",
-      "phone": "",
-      "bankName": "VCB",
-      "bankAccountNumber": "1017913693",
-      "bankAccountHolder": "NGUYEN DINH LUC",
-      "paymentQrUrl": ""
-    }
-  },
-  "trips": {
-    "trip_1791970508811": {
-      "id": "trip_1791970508811",
-      "name": "Đà Lạt 2026",
-      "description": "ádasdasdasd",
-      "tripCode": "2QXZ45",
-      "createdBy": "TPtOfpBBDvVvVBGVAfTxq4hujpI3",
-      "startDate": "2026-10-14",
-      "endDate": "2026-10-16",
-      "status": "ACTIVE",
-      "createdAt": "2026-10-14T09:35:08.811Z"
-    }
-  },
-  "tripMembers": {
-    "trip_1791970508811": [
-      {
-        "userId": "TPtOfpBBDvVvVBGVAfTxq4hujpI3",
-        "role": "Creator",
-        "joinedAt": "2026-10-14T09:35:08.812Z"
-      }
-    ]
-  },
-  "expenses": {
-    "trip_1791970508811": []
-  },
-  "settlements": {
-    "trip_1791970508811": []
-  },
+  "users": {},
+  "trips": {},
+  "tripMembers": {},
+  "expenses": {},
+  "settlements": {},
   "friends": {},
   "friendRequests": [],
-  "notifications": {
-    "BXGuLOWJItNUhcXWPv7FpAhTuS92": [
-      {
-        "id": "notif_1791971190886_0v0x0",
-        "userId": "BXGuLOWJItNUhcXWPv7FpAhTuS92",
-        "type": "SYSTEM",
-        "title": "Chào mừng bạn đến với Spliqo! 🎉",
-        "message": "Tạo chuyến đi, thêm chi phí và chia tiền công bằng. Hệ thống sẽ tự động tối ưu giao dịch chuyển khoản VietQR cho bạn.",
-        "link": "/trips",
-        "actor": null,
-        "read": true,
-        "createdAt": "2026-10-14T09:46:30.886Z"
-      }
-    ]
-  }
+  "notifications": {}
 }

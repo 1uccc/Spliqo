@@ -50,7 +50,7 @@ export default function CameraModal({ isOpen, onClose, currentImageUrl, onImageS
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Hóa đơn / Bill thanh toán" maxWidth="max-w-md">
+    <Modal isOpen={isOpen} onClose={onClose} title="Hóa đơn thanh toán" maxWidth="max-w-md">
       <div className="space-y-4">
         {/* Hidden inputs */}
         <input

@@ -246,7 +246,7 @@ export default function MainLayout({ onOpenAddExpense }) {
               className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                 isDark ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] font-bold shadow-xs' : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
               }`}
-              title="Giao diện Tối (Dark Mode)"
+              title="Giao diện Tối"
             >
               <Moon className="w-3.5 h-3.5 stroke-[2.2]" />
             </button>
@@ -255,7 +255,7 @@ export default function MainLayout({ onOpenAddExpense }) {
               className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                 !isDark ? 'bg-[#18181b] text-white dark:bg-[#34343f] font-bold shadow-xs' : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
               }`}
-              title="Giao diện Sáng (Light Mode)"
+              title="Giao diện Sáng"
             >
               <Sun className="w-3.5 h-3.5 stroke-[2.2]" />
             </button>
@@ -310,7 +310,7 @@ export default function MainLayout({ onOpenAddExpense }) {
                     serverState === 'online'
                       ? `Server Online (${latency ? latency + 'ms' : 'hoạt động tốt'})`
                       : serverState === 'waking'
-                      ? 'Server đang thức dậy từ chế độ Sleep (Render Free Tier)...'
+                      ? 'Server đang thức dậy từ chế độ tạm nghỉ...'
                       : serverState === 'offline'
                       ? 'Mất kết nối tới Server'
                       : 'Đang kiểm tra kết nối Server...'
@@ -393,12 +393,12 @@ export default function MainLayout({ onOpenAddExpense }) {
                       <div className="flex items-center justify-between">
                         <span className="text-zinc-500 dark:text-zinc-400">Môi trường:</span>
                         <span className="font-semibold text-zinc-900 dark:text-white">
-                          {import.meta.env.PROD ? 'Render Cloud (Free Tier)' : 'Localhost (Dev)'}
+                          {import.meta.env.PROD ? 'Render Cloud' : 'Máy chủ cục bộ'}
                         </span>
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <span className="text-zinc-500 dark:text-zinc-400">Tốc độ phản hồi (Ping):</span>
+                        <span className="text-zinc-500 dark:text-zinc-400">Tốc độ phản hồi:</span>
                         <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
                           {latency ? `${latency} ms` : '--'}
                         </span>

@@ -278,7 +278,7 @@ export default function ProfilePage() {
               <div className="w-8 h-8 rounded-full bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] flex items-center justify-center shadow-xs">
                 <Building className="w-4 h-4" />
               </div>
-              <h3 className="text-sm font-bold text-[#18181b] dark:text-white">{t('bankInfoVietQR', 'Thông tin tài khoản ngân hàng (VietQR)')}</h3>
+              <h3 className="text-sm font-bold text-[#18181b] dark:text-white">{t('bankInfoVietQR', 'Thông tin tài khoản ngân hàng')}</h3>
             </div>
             <span className="text-[11px] font-semibold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">
               {t('autoGenerateVietQR', 'Tự động tạo VietQR')}
@@ -368,7 +368,7 @@ export default function ProfilePage() {
               <Globe className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-[#18181b]">{t('languageSettings', 'Cài đặt ngôn ngữ (Language Settings)')}</h3>
+              <h3 className="text-sm font-bold text-[#18181b]">{t('languageSettings', 'Cài đặt ngôn ngữ')}</h3>
               <p className="text-xs text-zinc-500 mt-0.5">{t('languageSettingsDesc', 'Chọn ngôn ngữ hiển thị cho giao diện người dùng ứng dụng Spliqo')}</p>
             </div>
           </div>

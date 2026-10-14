@@ -181,7 +181,7 @@ export default function BottomNav() {
           </div>
 
           <p className="text-[11px] text-zinc-400 italic">
-            {t('autoTripCodeHint', '* Sau khi tạo, hệ thống sẽ tự động cấp một mã chuyến đi (Trip Code) để bạn mời bạn bè tham gia.')}
+            {t('autoTripCodeHint', '* Sau khi tạo, hệ thống sẽ tự động cấp một mã chuyến đi để bạn mời bạn bè tham gia.')}
           </p>
 
           <div className="flex items-center justify-end gap-2 pt-2">

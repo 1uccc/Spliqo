@@ -591,9 +591,9 @@ export default function TripDetailPage() {
                 <thead>
                   <tr className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider bg-[#faf9f6] dark:bg-[#15151c] border-b border-[#e6e4dc] dark:border-[#272732]">
                     <th className="py-3 px-6">Thành viên</th>
-                    <th className="py-3 px-4 text-right">Đã trả (Paid)</th>
-                    <th className="py-3 px-4 text-right">Phải chịu (Owed)</th>
-                    <th className="py-3 px-6 text-right">Số dư (Balance)</th>
+                    <th className="py-3 px-4 text-right">Đã trả</th>
+                    <th className="py-3 px-4 text-right">Phải chịu</th>
+                    <th className="py-3 px-6 text-right">Số dư</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#e6e4dc] dark:divide-[#272732]">
@@ -916,7 +916,7 @@ export default function TripDetailPage() {
           {/* Settlement Summary Header */}
           <div className="tactile-card p-6 sm:p-8 space-y-4 bg-[#18181b] text-white">
             <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-wider">
-              <Sparkles className="w-4 h-4" /> Báo cáo tất toán chi phí (Trip Settlement)
+              <Sparkles className="w-4 h-4" /> Báo cáo tất toán chi phí
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
@@ -1028,7 +1028,7 @@ export default function TripDetailPage() {
             <div className="px-6 py-4 border-b border-[#e6e4dc] dark:border-[#272732] flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Ai cần trả cho ai? (Who pays whom)
+                  Ai cần trả cho ai?
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-zinc-400">
                   Thuật toán tối ưu hóa đã rút gọn số lượng giao dịch tối thiểu để giải phóng toàn bộ công nợ.
@@ -1193,7 +1193,7 @@ export default function TripDetailPage() {
       <Modal
         isOpen={addExpenseModalOpen}
         onClose={() => setAddExpenseModalOpen(false)}
-        title={editingExpense ? 'Chỉnh sửa khoản chi' : 'Thêm khoản chi mới (Add Expense)'}
+        title={editingExpense ? 'Chỉnh sửa khoản chi' : 'Thêm khoản chi mới'}
         maxWidth="max-w-xl"
       >
         <form onSubmit={handleSaveExpense} className="space-y-4">
@@ -1213,7 +1213,7 @@ export default function TripDetailPage() {
               )}
               <div>
                 <span className="text-xs font-bold text-[#18181b] dark:text-white">
-                  {expBillImageUrl ? 'Đã đính kèm ảnh hóa đơn' : 'Ảnh hóa đơn / Bill'}
+                  {expBillImageUrl ? 'Đã đính kèm ảnh hóa đơn' : 'Ảnh hóa đơn'}
                 </span>
                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Chụp hoặc tải ảnh hóa đơn thanh toán</p>
               </div>
@@ -1224,14 +1224,14 @@ export default function TripDetailPage() {
               onClick={() => setCameraModalOpen(true)}
               className="tactile-btn-pill text-xs border border-[#e6e4dc] dark:border-[#2e2e38]"
             >
-              {expBillImageUrl ? 'Thay đổi ảnh' : 'Chụp / Tải bill'}
+              {expBillImageUrl ? 'Thay đổi ảnh' : 'Chụp / Tải ảnh'}
             </button>
           </div>
 
           {/* Expense Name */}
           <div>
             <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
-              Tên khoản chi (Expense Name) *
+              Tên khoản chi *
             </label>
             <input
               type="text"
@@ -1247,7 +1247,7 @@ export default function TripDetailPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
-                Số tiền (Amount) *
+                Số tiền *
               </label>
               <div className="relative">
                 <input
@@ -1266,7 +1266,7 @@ export default function TripDetailPage() {
 
             <div>
               <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
-                Người trả tiền (Paid by) *
+                Người trả tiền *
               </label>
               <select
                 value={expPaidBy}
@@ -1327,7 +1327,7 @@ export default function TripDetailPage() {
           {/* Split Mode: Equal vs Custom */}
           <div>
             <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5">
-              Phương thức chia tiền (Split Method)
+              Phương thức chia tiền
             </label>
             <div className="grid grid-cols-2 gap-3 mb-3">
               <button
@@ -1339,7 +1339,7 @@ export default function TripDetailPage() {
                     : 'bg-[#f4f3ec] dark:bg-[#22222a] border-[#e6e4dc] dark:border-[#32323e] text-zinc-600 dark:text-zinc-300 hover:bg-[#eae8df] dark:hover:bg-[#2c2c36]'
                 }`}
               >
-                Chia đều (Equal Split)
+                Chia đều
               </button>
 
               <button
@@ -1351,7 +1351,7 @@ export default function TripDetailPage() {
                     : 'bg-[#f4f3ec] dark:bg-[#22222a] border-[#e6e4dc] dark:border-[#32323e] text-zinc-600 dark:text-zinc-300 hover:bg-[#eae8df] dark:hover:bg-[#2c2c36]'
                 }`}
               >
-                Chia tùy chỉnh (Custom Split)
+                Chia tùy chỉnh
               </button>
             </div>
 
@@ -1421,7 +1421,7 @@ export default function TripDetailPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">Ghi chú (Note)</label>
+              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">Ghi chú</label>
               <input
                 type="text"
                 placeholder="Ví dụ: E bị mệt về phòng trước..."

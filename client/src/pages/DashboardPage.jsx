@@ -213,7 +213,7 @@ export default function DashboardPage() {
         />
 
         <StatCard
-          title={t('youOweTitle', 'Bạn cần trả (You Owe)')}
+          title={t('youOweTitle', 'Bạn cần trả')}
           value={formatVND(stats.youOwe)}
           icon={TrendingDown}
           color="rose"
@@ -221,7 +221,7 @@ export default function DashboardPage() {
         />
 
         <StatCard
-          title={t('youWillReceiveTitle', 'Bạn sẽ nhận (You Will Receive)')}
+          title={t('youWillReceiveTitle', 'Bạn sẽ nhận')}
           value={formatVND(stats.youWillReceive)}
           icon={TrendingUp}
           color="emerald"
@@ -233,7 +233,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-[#18181b] dark:text-white">
-            {t('activeTripsTitle', 'Cần bạn chú ý (Active Trips)')}
+            {t('activeTripsTitle', 'Cần bạn chú ý')}
           </h2>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
             {t('activeTripsSubtitle', 'Danh sách các chuyến đi và khoản chi tiêu nhóm đang được theo dõi trực tiếp')}
@@ -425,7 +425,7 @@ export default function DashboardPage() {
           </div>
 
           <p className="text-[11px] text-zinc-400 italic">
-            {t('autoTripCodeHint', '* Sau khi tạo, hệ thống sẽ tự động cấp một mã chuyến đi (Trip Code) để bạn gửi cho bạn bè cùng tham gia.')}
+            {t('autoTripCodeHint', '* Sau khi tạo, hệ thống sẽ tự động cấp một mã chuyến đi để bạn gửi cho bạn bè cùng tham gia.')}
           </p>
 
           <div className="flex items-center justify-end gap-2 pt-2">
