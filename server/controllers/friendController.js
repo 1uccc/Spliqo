@@ -3,6 +3,11 @@ import { dbService } from '../services/dbService.js';
 export async function getFriendsData(req, res) {
   try {
     const userId = req.user.uid;
+    // If local memory is empty or sparse, ensure we load all users and records from Cloud Firestore
+    if (Object.keys(dbService.data.users || {}).length <= 1) {
+      await dbService.syncAllDataFromFirestore();
+    }
+
     const friends = dbService.getFriends(userId);
     const suggested = dbService.getSuggestedUsers(userId);
     const requests = dbService.getFriendRequests(userId);

@@ -29,7 +29,104 @@ class DBService {
   constructor() {
     this.data = this.loadData();
     if (isFirebaseConfigured && db) {
-      this.syncAllLocalDataToFirestore();
+      this.initFirestoreSync();
+    }
+  }
+
+  async initFirestoreSync() {
+    if (!isFirebaseConfigured || !db) return;
+    await this.syncAllDataFromFirestore();
+    await this.syncAllLocalDataToFirestore();
+  }
+
+  async syncAllDataFromFirestore() {
+    if (!isFirebaseConfigured || !db) return;
+    try {
+      console.log('[Firestore Sync] Pulling latest data from Cloud Firestore into local store...');
+      let loadedUsers = 0;
+
+      // 1. Users
+      const usersSnap = await db.collection('users').get();
+      usersSnap.forEach(doc => {
+        const u = doc.data();
+        this.data.users[doc.id] = {
+          ...(this.data.users[doc.id] || {}),
+          ...u,
+          uid: doc.id
+        };
+        loadedUsers++;
+      });
+
+      // 2. Trips
+      const tripsSnap = await db.collection('trips').get();
+      tripsSnap.forEach(doc => {
+        const t = doc.data();
+        this.data.trips[doc.id] = {
+          ...(this.data.trips[doc.id] || {}),
+          ...t,
+          id: doc.id
+        };
+      });
+
+      // 3. Trip Members
+      const tmSnap = await db.collection('tripMembers').get();
+      tmSnap.forEach(doc => {
+        const d = doc.data();
+        if (d && Array.isArray(d.members)) {
+          this.data.tripMembers[doc.id] = d.members;
+        }
+      });
+
+      // 4. Expenses
+      const expSnap = await db.collection('expenses').get();
+      expSnap.forEach(doc => {
+        const d = doc.data();
+        if (d && Array.isArray(d.expenses)) {
+          this.data.expenses[doc.id] = d.expenses;
+        }
+      });
+
+      // 5. Settlements
+      const setSnap = await db.collection('settlements').get();
+      setSnap.forEach(doc => {
+        const d = doc.data();
+        if (d && Array.isArray(d.settlements)) {
+          this.data.settlements[doc.id] = d.settlements;
+        }
+      });
+
+      // 6. Friends
+      const friendsSnap = await db.collection('friends').get();
+      friendsSnap.forEach(doc => {
+        const d = doc.data();
+        if (d && Array.isArray(d.friends)) {
+          this.data.friends[doc.id] = d.friends;
+        }
+      });
+
+      // 7. Friend Requests
+      const reqSnap = await db.collection('friendRequests').get();
+      const reqList = [];
+      reqSnap.forEach(doc => {
+        reqList.push({ ...doc.data(), id: doc.id });
+      });
+      if (reqList.length > 0) {
+        this.data.friendRequests = reqList;
+      }
+
+      // 8. Notifications
+      const notifSnap = await db.collection('notifications').get();
+      notifSnap.forEach(doc => {
+        const d = doc.data();
+        if (d && Array.isArray(d.list)) {
+          this.data.notifications[doc.id] = d.list;
+        }
+      });
+
+      this.saveData();
+      console.log(`[Firestore Sync] Successfully loaded ${loadedUsers} users & documents from Cloud Firestore!`);
+    } catch (err) {
+      console.error('[Firestore Sync] Pull from Firestore error:', err.message);
     }
   }
 
@@ -340,7 +437,15 @@ class DBService {
   getFriends(userId) {
     if (!this.data.friends) this.data.friends = {};
     const friendIds = this.data.friends[userId] || [];
-    return friendIds.map(fId => this.getUser(fId)).filter(Boolean);
+    return friendIds.map(fId => {
+      const u = this.getUser(fId);
+      if (!u) return null;
+      return {
+        ...u,
+        bankAccountNumber: u.bankAccountNumber || u.accountNumber || '',
+        bankAccountHolder: u.bankAccountHolder || u.accountHolder || ''
+      };
+    }).filter(Boolean);
   }
 
   getSuggestedUsers(userId) {
@@ -351,12 +456,13 @@ class DBService {
       .filter(u => !friendIds.has(u.uid))
       .map(u => ({
         uid: u.uid,
-        displayName: u.displayName,
-        email: u.email,
-        photoURL: u.photoURL,
-        phone: u.phone,
-        bankName: u.bankName,
-        bankAccountNumber: u.bankAccountNumber
+        displayName: u.displayName || '',
+        email: u.email || '',
+        photoURL: u.photoURL || '',
+        phone: u.phone || '',
+        bankName: u.bankName || '',
+        bankAccountNumber: u.bankAccountNumber || u.accountNumber || '',
+        bankAccountHolder: u.bankAccountHolder || u.accountHolder || ''
       }));
   }
 
@@ -383,6 +489,8 @@ class DBService {
     }
 
     this.saveData();
+    this.syncToFirestore('friends', userId, { friends: this.data.friends[userId] });
+    this.syncToFirestore('friends', targetUserId, { friends: this.data.friends[targetUserId] });
     return this.getFriends(userId);
   }
 
@@ -395,6 +503,8 @@ class DBService {
       this.data.friends[targetUserId] = this.data.friends[targetUserId].filter(id => id !== userId);
     }
     this.saveData();
+    this.syncToFirestore('friends', userId, { friends: this.data.friends[userId] });
+    this.syncToFirestore('friends', targetUserId, { friends: this.data.friends[targetUserId] });
     return this.getFriends(userId);
   }
 
@@ -402,16 +512,30 @@ class DBService {
     if (!this.data.friendRequests) this.data.friendRequests = [];
     const incoming = this.data.friendRequests
       .filter(r => r.toUserId === userId && r.status === 'PENDING')
-      .map(r => ({
-        ...r,
-        fromUser: this.getUser(r.fromUserId)
-      }));
+      .map(r => {
+        const u = this.getUser(r.fromUserId);
+        return {
+          ...r,
+          fromUser: u ? {
+            ...u,
+            bankAccountNumber: u.bankAccountNumber || u.accountNumber || '',
+            bankAccountHolder: u.bankAccountHolder || u.accountHolder || ''
+          } : null
+        };
+      });
     const outgoing = this.data.friendRequests
       .filter(r => r.fromUserId === userId && r.status === 'PENDING')
-      .map(r => ({
-        ...r,
-        toUser: this.getUser(r.toUserId)
-      }));
+      .map(r => {
+        const u = this.getUser(r.toUserId);
+        return {
+          ...r,
+          toUser: u ? {
+            ...u,
+            bankAccountNumber: u.bankAccountNumber || u.accountNumber || '',
+            bankAccountHolder: u.bankAccountHolder || u.accountHolder || ''
+          } : null
+        };
+      });
     return { incoming, outgoing };
   }
 

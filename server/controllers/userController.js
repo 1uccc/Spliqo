@@ -48,6 +48,9 @@ export async function updateProfile(req, res) {
 
 export async function getAllUsers(req, res) {
   try {
+    if (Object.keys(dbService.data.users || {}).length <= 1) {
+      await dbService.syncAllDataFromFirestore();
+    }
     const users = dbService.getAllUsers();
     // Return public profiles
     return res.json(users.map(u => ({
