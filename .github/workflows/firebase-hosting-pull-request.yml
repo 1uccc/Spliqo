@@ -6,7 +6,7 @@ on:
 
 jobs:
   build_and_preview:
-    if: "${{ github.event.pull_request.head.repo.full_name == github.repository }}"
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -28,9 +28,8 @@ jobs:
         run: npm run build
 
       - name: Deploy Preview Channel to Firebase Hosting
-        if: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_SPLIQ0 != '' }}"
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          repoToken: "${{ secrets.GITHUB_TOKEN }}"
-          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_SPLIQ0 }}"
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SPLIQ0 }}
           projectId: spliq0

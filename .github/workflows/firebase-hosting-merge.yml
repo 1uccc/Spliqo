@@ -26,16 +26,10 @@ jobs:
         working-directory: client
         run: npm run build
 
-      - name: Deploy to Firebase Hosting (Service Account)
-        if: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_SPLIQ0 != '' }}"
+      - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          repoToken: "${{ secrets.GITHUB_TOKEN }}"
-          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_SPLIQ0 }}"
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SPLIQ0 }}
           channelId: live
           projectId: spliq0
-
-      - name: Deploy to Firebase Hosting (Fallback with FIREBASE_TOKEN)
-        if: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_SPLIQ0 == '' && secrets.FIREBASE_TOKEN != '' }}"
-        run: |
-          npx firebase-tools deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}" --project spliq0
