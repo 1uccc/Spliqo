@@ -167,6 +167,48 @@ export async function acceptFriendRequest(req, res) {
   }
 }
 
+export async function rejectFriendRequest(req, res) {
+  try {
+    const userId = req.user.uid;
+    const { fromUserId, requestId } = req.body;
+
+    if (!requestId && !fromUserId) {
+      return res.status(400).json({ error: 'Thiếu ID lời mời kết bạn.' });
+    }
+
+    dbService.rejectFriendRequest(userId, requestId || fromUserId);
+
+    return res.json({
+      success: true,
+      message: 'Đã từ chối lời mời kết bạn.'
+    });
+  } catch (err) {
+    console.error('[rejectFriendRequest] Error:', err);
+    return res.status(500).json({ error: 'Lỗi khi từ chối lời mời.' });
+  }
+}
+
+export async function cancelFriendRequest(req, res) {
+  try {
+    const userId = req.user.uid;
+    const { targetUserId, requestId } = req.body;
+
+    if (!requestId && !targetUserId) {
+      return res.status(400).json({ error: 'Thiếu ID người dùng hoặc lời mời cần hủy.' });
+    }
+
+    dbService.cancelFriendRequest(userId, targetUserId, requestId);
+
+    return res.json({
+      success: true,
+      message: 'Đã hủy lời mời kết bạn.'
+    });
+  } catch (err) {
+    console.error('[cancelFriendRequest] Error:', err);
+    return res.status(500).json({ error: 'Lỗi khi hủy lời mời kết bạn.' });
+  }
+}
+
 export async function inviteFriendToTrip(req, res) {
   try {
     const currentUserId = req.user.uid;

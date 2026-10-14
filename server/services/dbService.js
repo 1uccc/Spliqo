@@ -480,12 +480,21 @@ class DBService {
 
     // Clear any pending friend requests between them
     if (this.data.friendRequests) {
+      const removedReqs = this.data.friendRequests.filter(
+        r => (r.fromUserId === userId && r.toUserId === targetUserId) ||
+             (r.fromUserId === targetUserId && r.toUserId === userId)
+      );
       this.data.friendRequests = this.data.friendRequests.filter(
         r => !(
           (r.fromUserId === userId && r.toUserId === targetUserId) ||
           (r.fromUserId === targetUserId && r.toUserId === userId)
         )
       );
+      for (const req of removedReqs) {
+        if (req.id) {
+          this.syncToFirestore('friendRequests', req.id, null, true);
+        }
+      }
     }
 
     this.saveData();
@@ -572,6 +581,7 @@ class DBService {
     };
     this.data.friendRequests.push(request);
     this.saveData();
+    this.syncToFirestore('friendRequests', request.id, request);
     return request;
   }
 
@@ -581,8 +591,27 @@ class DBService {
       r => (r.id === requestId || r.fromUserId === requestId) && r.toUserId === userId
     );
     if (reqIndex >= 0) {
-      this.data.friendRequests.splice(reqIndex, 1);
+      const removed = this.data.friendRequests.splice(reqIndex, 1)[0];
       this.saveData();
+      if (removed?.id) {
+        this.syncToFirestore('friendRequests', removed.id, null, true);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  cancelFriendRequest(userId, targetUserId, requestId) {
+    if (!this.data.friendRequests) return false;
+    const reqIndex = this.data.friendRequests.findIndex(
+      r => (r.id === requestId || (r.toUserId === targetUserId && r.fromUserId === userId)) && r.fromUserId === userId
+    );
+    if (reqIndex >= 0) {
+      const removed = this.data.friendRequests.splice(reqIndex, 1)[0];
+      this.saveData();
+      if (removed?.id) {
+        this.syncToFirestore('friendRequests', removed.id, null, true);
+      }
       return true;
     }
     return false;

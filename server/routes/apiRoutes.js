@@ -43,6 +43,8 @@ import {
   removeFriend,
   sendFriendRequest,
   acceptFriendRequest,
+  rejectFriendRequest,
+  cancelFriendRequest,
   inviteFriendToTrip
 } from '../controllers/friendController.js';
 import {
@@ -76,6 +78,8 @@ router.post('/friends', addFriend);
 router.delete('/friends/:friendId', removeFriend);
 router.post('/friends/request', sendFriendRequest);
 router.post('/friends/accept', acceptFriendRequest);
+router.post('/friends/reject', rejectFriendRequest);
+router.post('/friends/cancel', cancelFriendRequest);
 router.post('/friends/invite-trip', inviteFriendToTrip);
 
 // --- Trips ---

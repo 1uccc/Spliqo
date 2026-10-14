@@ -23,7 +23,9 @@ import {
   Mail,
   Phone,
   Flame,
-  Plus
+  Plus,
+  Clock,
+  X
 } from 'lucide-react';
 
 export default function FriendsPage() {
@@ -70,18 +72,51 @@ export default function FriendsPage() {
     fetchFriendsAndTrips();
   }, [currentUser?.uid]);
 
-  // Kết bạn trực tiếp
-  const handleAddFriend = async (targetUserId, targetName) => {
+  // 1. Gửi lời mời kết bạn (Friend Request)
+  const handleSendRequest = async (targetUserId, targetName) => {
     try {
-      const res = await api.post('/friends', { targetUserId });
-      showToast(res.message || `Đã kết bạn với ${targetName}!`, 'success');
+      const res = await api.post('/friends/request', { targetUserId });
+      showToast(res.message || `Đã gửi lời mời kết bạn đến ${targetName}!`, 'success');
       fetchFriendsAndTrips();
     } catch (err) {
-      showToast(err.message || 'Lỗi khi kết bạn', 'error');
+      showToast(err.message || 'Lỗi khi gửi lời mời kết bạn', 'error');
     }
   };
 
-  // Hủy kết bạn
+  // 2. Hủy lời mời kết bạn đã gửi
+  const handleCancelRequest = async (targetUserId, requestId, targetName) => {
+    try {
+      const res = await api.post('/friends/cancel', { targetUserId, requestId });
+      showToast(res.message || 'Đã hủy lời mời kết bạn', 'info');
+      fetchFriendsAndTrips();
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi hủy lời mời kết bạn', 'error');
+    }
+  };
+
+  // 3. Chấp nhận lời mời kết bạn
+  const handleAcceptRequest = async (fromUserId, requestId, fromName) => {
+    try {
+      const res = await api.post('/friends/accept', { fromUserId, requestId });
+      showToast(res.message || `Đã chấp nhận kết bạn với ${fromName || 'thành viên'}!`, 'success');
+      fetchFriendsAndTrips();
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi chấp nhận lời mời', 'error');
+    }
+  };
+
+  // 4. Từ chối lời mời kết bạn
+  const handleRejectRequest = async (fromUserId, requestId, fromName) => {
+    try {
+      const res = await api.post('/friends/reject', { fromUserId, requestId });
+      showToast(res.message || 'Đã từ chối lời mời kết bạn', 'info');
+      fetchFriendsAndTrips();
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi từ chối lời mời', 'error');
+    }
+  };
+
+  // 5. Hủy kết bạn
   const handleRemoveFriend = async (friendId, friendName) => {
     if (!window.confirm(`Bạn có chắc muốn hủy kết bạn với ${friendName}?`)) {
       return;
@@ -92,17 +127,6 @@ export default function FriendsPage() {
       fetchFriendsAndTrips();
     } catch (err) {
       showToast(err.message || 'Lỗi khi hủy kết bạn', 'error');
-    }
-  };
-
-  // Chấp nhận lời mời kết bạn
-  const handleAcceptRequest = async (fromUserId, requestId) => {
-    try {
-      const res = await api.post('/friends/accept', { fromUserId, requestId });
-      showToast(res.message || 'Đã chấp nhận kết bạn!', 'success');
-      fetchFriendsAndTrips();
-    } catch (err) {
-      showToast(err.message || 'Lỗi khi chấp nhận lời mời', 'error');
     }
   };
 
@@ -181,7 +205,8 @@ export default function FriendsPage() {
   // Lọc tìm kiếm
   const filteredFriends = friends.filter(f => matchesSearch(f, searchQuery));
   const filteredSuggested = suggested.filter(u => matchesSearch(u, searchQuery));
-  const filteredRequests = requests.incoming.filter(r => matchesSearch(r.fromUser, searchQuery));
+  const filteredRequests = (requests.incoming || []).filter(r => matchesSearch(r.fromUser, searchQuery));
+  const filteredOutgoingRequests = (requests.outgoing || []).filter(r => matchesSearch(r.toUser, searchQuery));
 
   // Render Friend Card
   const renderFriendCard = (friend) => (
@@ -276,56 +301,100 @@ export default function FriendsPage() {
     </div>
   );
 
-  // Render Suggested User Card
-  const renderSuggestedCard = (user) => (
-    <div
-      key={user.uid}
-      className="tactile-card p-5 flex flex-col justify-between hover:shadow-md transition-all duration-300"
-    >
-      <div>
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex items-center gap-3">
-            <img
-              src={user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`}
-              alt={user.displayName}
-              className="w-11 h-11 rounded-full object-cover bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/10 shrink-0"
-            />
-            <div className="min-w-0">
-              <h4 className="text-sm font-bold text-[#18181b] dark:text-white truncate">
-                {user.displayName}
-              </h4>
-              <p className="text-[11px] text-zinc-400 dark:text-zinc-400 truncate">{user.email}</p>
+  // Render Suggested User Card (Hoặc thành viên tìm thấy trong hệ thống)
+  const renderSuggestedCard = (user) => {
+    const isOutgoing = (requests.outgoing || []).find(r => r.toUserId === user.uid);
+    const isIncoming = (requests.incoming || []).find(r => r.fromUserId === user.uid);
+
+    return (
+      <div
+        key={user.uid}
+        className="tactile-card p-5 flex flex-col justify-between hover:shadow-md transition-all duration-300"
+      >
+        <div>
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <img
+                src={user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`}
+                alt={user.displayName}
+                className="w-11 h-11 rounded-full object-cover bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/10 shrink-0"
+              />
+              <div className="min-w-0 flex-1">
+                <h4 className="text-sm font-bold text-[#18181b] dark:text-white truncate">
+                  {user.displayName}
+                </h4>
+                <p className="text-[11px] text-zinc-400 dark:text-zinc-400 truncate">{user.email}</p>
+              </div>
             </div>
-          </div>
 
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#edebe4] dark:bg-[#252530] text-zinc-600 dark:text-zinc-300 border border-[#dedbd0] dark:border-[#32323e] shrink-0">
-            {t('suggestedBadge', 'Gợi ý')}
-          </span>
-        </div>
-
-        {(user.bankName || user.bankAccountNumber || user.accountNumber) ? (
-          <div className="tactile-chip p-2.5 text-xs mb-3 flex items-center gap-2">
-            <CreditCard className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-            <span className="text-zinc-700 dark:text-zinc-300 font-medium truncate">
-              {user.bankName ? `${user.bankName} • ` : ''}STK: {user.bankAccountNumber || user.accountNumber}
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+              isIncoming
+                ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/40'
+                : isOutgoing
+                ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40'
+                : 'bg-[#edebe4] dark:bg-[#252530] text-zinc-600 dark:text-zinc-300 border border-[#dedbd0] dark:border-[#32323e]'
+            }`}>
+              {isIncoming ? 'Đã gửi lời mời cho bạn' : isOutgoing ? 'Đã gửi lời mời' : t('suggestedBadge', 'Gợi ý')}
             </span>
           </div>
-        ) : (
-          <div className="tactile-chip p-2.5 text-xs mb-3 text-zinc-400 dark:text-zinc-500 italic">
-            Chưa cập nhật STK ngân hàng
+
+          {(user.bankName || user.bankAccountNumber || user.accountNumber) ? (
+            <div className="tactile-chip p-2.5 text-xs mb-3 flex items-center gap-2">
+              <CreditCard className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+              <span className="text-zinc-700 dark:text-zinc-300 font-medium truncate">
+                {user.bankName ? `${user.bankName} • ` : ''}STK: {user.bankAccountNumber || user.accountNumber}
+              </span>
+            </div>
+          ) : (
+            <div className="tactile-chip p-2.5 text-xs mb-3 text-zinc-400 dark:text-zinc-500 italic">
+              Chưa cập nhật STK ngân hàng
+            </div>
+          )}
+        </div>
+
+        {isIncoming ? (
+          <div className="flex items-center gap-2 pt-1">
+            <button
+              onClick={() => handleAcceptRequest(user.uid, isIncoming.id, user.displayName)}
+              className="flex-1 tactile-btn-dark py-2 text-xs flex items-center justify-center gap-1.5 shadow-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Chấp nhận</span>
+            </button>
+            <button
+              onClick={() => handleRejectRequest(user.uid, isIncoming.id, user.displayName)}
+              className="px-3 py-2 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold border border-[#dedbd0] dark:border-[#32323e] transition-colors"
+              title="Từ chối lời mời"
+            >
+              Từ chối
+            </button>
           </div>
+        ) : isOutgoing ? (
+          <div className="flex items-center gap-2 pt-1">
+            <div className="flex-1 py-1.5 px-3 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 text-xs font-semibold flex items-center justify-center gap-1.5 border border-amber-200 dark:border-amber-800/40">
+              <Clock className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+              <span>Chờ chấp nhận</span>
+            </div>
+            <button
+              onClick={() => handleCancelRequest(user.uid, isOutgoing.id, user.displayName)}
+              className="px-3 py-1.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold border border-[#dedbd0] dark:border-[#32323e] transition-colors"
+              title="Hủy lời mời kết bạn"
+            >
+              Hủy
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => handleSendRequest(user.uid, user.displayName)}
+            className="w-full tactile-btn-dark py-2 text-xs flex items-center justify-center gap-1.5 shadow-xs hover:scale-[1.01] active:scale-[0.99] transition-all"
+          >
+            <UserPlus className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>Kết bạn</span>
+          </button>
         )}
       </div>
-
-      <button
-        onClick={() => handleAddFriend(user.uid, user.displayName)}
-        className="w-full tactile-btn-dark py-2 text-xs flex items-center justify-center gap-1.5 shadow-xs"
-      >
-        <UserPlus className="w-3.5 h-3.5 stroke-[2.5]" />
-        <span>{t('addFriendNow', 'Kết bạn ngay')}</span>
-      </button>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-6 animate-fade-in text-[#18181b]">
@@ -366,18 +435,18 @@ export default function FriendsPage() {
             </span>
           </button>
 
-          {requests.incoming.length > 0 && (
-            <button
-              onClick={() => setActiveTab('REQUESTS')}
-              className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'REQUESTS' ? 'active-purple' : ''}`}
-            >
-              <Send className="w-4 h-4 text-purple-600 shrink-0" />
-              <span className="whitespace-nowrap shrink-0">{t('invitationsTab', 'Lời mời')}</span>
+          <button
+            onClick={() => setActiveTab('REQUESTS')}
+            className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'REQUESTS' ? 'active-purple' : ''}`}
+          >
+            <Send className="w-4 h-4 text-purple-600 shrink-0" />
+            <span className="whitespace-nowrap shrink-0">Lời mời kết bạn</span>
+            {requests.incoming?.length > 0 && (
               <span className="tactile-badge w-5 h-5 rounded-full bg-purple-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 leading-none">
-                {searchQuery.trim() ? filteredRequests.length : requests.incoming.length}
+                {requests.incoming.length}
               </span>
-            </button>
-          )}
+            )}
+          </button>
         </div>
       </div>
 
@@ -541,44 +610,133 @@ export default function FriendsPage() {
         )
       ) : (
         /* --- TAB: LỜI MỜI KẾT BẠN --- */
-        <div className="space-y-4 max-w-2xl mx-auto">
-          {filteredRequests.length === 0 ? (
-            <div className="p-8 text-center rounded-3xl bg-white dark:bg-[#1a1a20] border border-[#dedbd0] dark:border-[#2e2e38] text-xs text-zinc-500 dark:text-zinc-400">
-              {searchQuery.trim()
-                ? `Không có lời mời kết bạn nào khớp với "${searchQuery}".`
-                : t('noIncomingRequests', 'Không có lời mời kết bạn nào đang chờ xử lý.')}
+        <div className="space-y-6 max-w-2xl mx-auto">
+          {/* 1. Lời mời kết bạn nhận được */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-[#18181b] dark:text-white flex items-center gap-2">
+                <Send className="w-4 h-4 text-purple-600 rotate-180" />
+                <span>Lời mời nhận được ({filteredRequests.length})</span>
+              </h3>
+              {filteredRequests.length > 0 && (
+                <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400">
+                  Cần phản hồi
+                </span>
+              )}
             </div>
-          ) : (
-            filteredRequests.map((req) => (
-              <div
-                key={req.id}
-                className="tactile-card p-4 flex items-center justify-between gap-4"
-              >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={req.fromUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${req.fromUserId}`}
-                    alt=""
-                    className="w-10 h-10 rounded-full object-cover bg-zinc-100 dark:bg-zinc-800"
-                  />
-                  <div>
-                    <h4 className="text-sm font-bold text-[#18181b] dark:text-white">
-                      {req.fromUser?.displayName || t('userDefault', 'Người dùng')}
-                    </h4>
-                    <p className="text-xs text-zinc-400 dark:text-zinc-400">{req.fromUser?.email}</p>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleAcceptRequest(req.fromUserId, req.id)}
-                    className="tactile-btn-dark py-1.5 px-3 text-xs flex items-center gap-1"
-                  >
-                    <Check className="w-3.5 h-3.5" /> {t('accept', 'Đồng ý')}
-                  </button>
-                </div>
+            {filteredRequests.length === 0 ? (
+              <div className="p-6 text-center rounded-2xl bg-white dark:bg-[#1a1a20] border border-[#dedbd0] dark:border-[#2e2e38] text-xs text-zinc-400 dark:text-zinc-500">
+                {searchQuery.trim()
+                  ? `Không có lời mời nhận được nào khớp với "${searchQuery}".`
+                  : 'Bạn không có lời mời kết bạn nào đang chờ chấp nhận.'}
               </div>
-            ))
-          )}
+            ) : (
+              <div className="space-y-3">
+                {filteredRequests.map((req) => (
+                  <div
+                    key={req.id}
+                    className="tactile-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img
+                        src={req.fromUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${req.fromUserId}`}
+                        alt=""
+                        className="w-11 h-11 rounded-full object-cover bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/10 shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm font-bold text-[#18181b] dark:text-white truncate">
+                          {req.fromUser?.displayName || 'Người dùng'}
+                        </h4>
+                        <p className="text-[11px] text-zinc-400 dark:text-zinc-400 truncate">{req.fromUser?.email}</p>
+                        {(req.fromUser?.bankName || req.fromUser?.bankAccountNumber) && (
+                          <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-0.5 truncate">
+                            <CreditCard className="w-3 h-3 text-zinc-400 shrink-0" />
+                            <span>{req.fromUser?.bankName} • {req.fromUser?.bankAccountNumber}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                      <button
+                        onClick={() => handleAcceptRequest(req.fromUserId, req.id, req.fromUser?.displayName)}
+                        className="tactile-btn-dark py-1.5 px-3.5 text-xs flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                      >
+                        <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span>Chấp nhận</span>
+                      </button>
+                      <button
+                        onClick={() => handleRejectRequest(req.fromUserId, req.id, req.fromUser?.displayName)}
+                        className="py-1.5 px-3 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold border border-[#dedbd0] dark:border-[#32323e] transition-colors"
+                      >
+                        Từ chối
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 2. Lời mời kết bạn đã gửi đi */}
+          <div className="space-y-3 pt-4 border-t border-[#dedbd0]/60 dark:border-[#2e2e38]">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-[#18181b] dark:text-white flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-500" />
+                <span>Lời mời đã gửi ({filteredOutgoingRequests.length})</span>
+              </h3>
+            </div>
+
+            {filteredOutgoingRequests.length === 0 ? (
+              <div className="p-6 text-center rounded-2xl bg-white dark:bg-[#1a1a20] border border-[#dedbd0] dark:border-[#2e2e38] text-xs text-zinc-400 dark:text-zinc-500">
+                {searchQuery.trim()
+                  ? `Không có lời mời đã gửi nào khớp với "${searchQuery}".`
+                  : 'Bạn chưa gửi lời mời kết bạn nào đang chờ xử lý.'}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredOutgoingRequests.map((req) => (
+                  <div
+                    key={req.id}
+                    className="tactile-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img
+                        src={req.toUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${req.toUserId}`}
+                        alt=""
+                        className="w-11 h-11 rounded-full object-cover bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/10 shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm font-bold text-[#18181b] dark:text-white truncate">
+                          {req.toUser?.displayName || 'Người dùng'}
+                        </h4>
+                        <p className="text-[11px] text-zinc-400 dark:text-zinc-400 truncate">{req.toUser?.email}</p>
+                        {(req.toUser?.bankName || req.toUser?.bankAccountNumber) && (
+                          <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-0.5 truncate">
+                            <CreditCard className="w-3 h-3 text-zinc-400 shrink-0" />
+                            <span>{req.toUser?.bankName} • {req.toUser?.bankAccountNumber}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 self-end sm:self-center shrink-0">
+                      <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                        <Clock className="w-3 h-3 animate-pulse" /> Chờ chấp nhận
+                      </span>
+                      <button
+                        onClick={() => handleCancelRequest(req.toUserId, req.id, req.toUser?.displayName)}
+                        className="py-1 px-3 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold border border-[#dedbd0] dark:border-[#32323e] transition-colors"
+                      >
+                        Hủy
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
