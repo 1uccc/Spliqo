@@ -11,7 +11,7 @@ import {
   ChevronDown, 
   Sparkles,
   Compass,
-  ArrowRightLeft
+  Flame
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -34,14 +34,14 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 group-hover:scale-110 group-hover:shadow-emerald-500/40 transition-all duration-300">
-              <ArrowRightLeft className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-2xl bg-[#18181b] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-all duration-300">
+              <Flame className="w-5 h-5 text-amber-400 fill-amber-400" />
             </div>
             <div>
-              <span className="text-xl font-bold tracking-tight text-slate-900 group-hover:text-emerald-600 transition-colors">
-                Split<span className="text-emerald-600">Mate</span>
+              <span className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">
+                Spli<span className="text-amber-500">qo</span>
               </span>
-              <span className="hidden sm:inline-block ml-2 text-[11px] font-medium px-2.5 py-0.5 bg-white/50 backdrop-blur-sm text-emerald-700 rounded-full border border-emerald-200/50">
+              <span className="hidden sm:inline-block ml-2 text-[11px] font-medium px-2.5 py-0.5 bg-amber-100/60 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 rounded-full border border-amber-200/50">
                 Split expenses. Stay friends.
               </span>
             </div>

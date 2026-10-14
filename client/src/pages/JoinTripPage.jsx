@@ -167,55 +167,54 @@ export default function JoinTripPage() {
   return (
     <div className="min-h-screen w-full bg-[#f4f3ec] dark:bg-[#0f0f12] text-[#18181b] dark:text-[#f4f4f5] flex flex-col items-center justify-center p-4 relative select-none transition-colors">
       
-      {/* Top Floating Controls: Language + Dark Mode Toggle */}
-      <div className="fixed top-4 right-4 z-20 flex items-center gap-2">
-        <div className="flex items-center p-0.5 rounded-full bg-white dark:bg-[#24242b] border border-[#dedbd0] dark:border-[#32323c] text-xs shadow-xs">
-          <button
-            type="button"
-            onClick={() => setLanguage('vi')}
-            className={`px-2 py-0.5 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
-              language === 'vi'
-                ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-xs'
-                : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
-            }`}
-          >
-            VI
-          </button>
-          <button
-            type="button"
-            onClick={() => setLanguage('en')}
-            className={`px-2 py-0.5 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
-              language === 'en'
-                ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-xs'
-                : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
-            }`}
-          >
-            EN
-          </button>
-        </div>
+      {/* Top Right: Language Selector (VI / EN) */}
+      <div className="fixed top-4 right-4 z-30 flex items-center p-0.5 rounded-full bg-white dark:bg-[#24242b] border border-[#dedbd0] dark:border-[#32323c] text-xs shadow-xs">
+        <button
+          type="button"
+          onClick={() => setLanguage('vi')}
+          className={`px-2 py-0.5 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+            language === 'vi'
+              ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-xs'
+              : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+          }`}
+        >
+          VI
+        </button>
+        <button
+          type="button"
+          onClick={() => setLanguage('en')}
+          className={`px-2 py-0.5 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+            language === 'en'
+              ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-xs'
+              : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+          }`}
+        >
+          EN
+        </button>
+      </div>
 
-        <div className="flex items-center p-0.5 rounded-full bg-white dark:bg-[#24242b] border border-[#dedbd0] dark:border-[#32323c] shadow-xs">
-          <button
-            type="button"
-            onClick={() => setDarkMode(true)}
-            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-              isDark ? 'bg-[#32323d] text-amber-400 font-bold shadow-xs' : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
-            }`}
-            title="Dark Mode"
-          >
-            <Moon className="w-3.5 h-3.5 stroke-[2.2]" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setDarkMode(false)}
-            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-              !isDark ? 'bg-[#edebe4] text-zinc-900 font-bold shadow-xs' : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
-            }`}
-            title="Light Mode"
-          >
-            <Sun className="w-3.5 h-3.5 stroke-[2.2]" />
-          </button>
-        </div>
+      {/* Bottom Left: Vertical Light / Dark Mode Toggle */}
+      <div className="fixed bottom-4 left-4 sm:bottom-5 sm:left-5 z-30 flex flex-col items-center p-1 rounded-full bg-white dark:bg-[#24242b] border border-[#dedbd0] dark:border-[#32323c] shadow-xs gap-1">
+        <button
+          type="button"
+          onClick={() => setDarkMode(true)}
+          className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+            isDark ? 'bg-[#32323d] text-amber-400 font-bold shadow-xs' : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
+          }`}
+          title="Dark Mode"
+        >
+          <Moon className="w-3.5 h-3.5 stroke-[2.2]" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setDarkMode(false)}
+          className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+            !isDark ? 'bg-[#edebe4] text-zinc-900 font-bold shadow-xs' : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
+          }`}
+          title="Light Mode"
+        >
+          <Sun className="w-3.5 h-3.5 stroke-[2.2]" />
+        </button>
       </div>
 
       {/* Main Container */}
