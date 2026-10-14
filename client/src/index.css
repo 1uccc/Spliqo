@@ -199,8 +199,9 @@
   .tactile-tab {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.45rem 1rem;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.95rem;
     border-radius: 9999px;
     font-size: 0.8125rem;
     font-weight: 600;
@@ -208,6 +209,38 @@
     background-color: #ffffff;
     color: #52525b;
     border: 1px solid #e6e4dc;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    user-select: none;
+    line-height: 1;
+  }
+
+  .tactile-tab span {
+    white-space: nowrap !important;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+  }
+
+  .tactile-tab .tactile-badge,
+  .tactile-tab span.rounded-full {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    min-width: 1.25rem !important;
+    max-height: 1.25rem !important;
+    border-radius: 9999px !important;
+    font-size: 0.6875rem !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    vertical-align: middle !important;
   }
 
   .tactile-tab:hover {
@@ -226,6 +259,15 @@
     color: #065f46;
     border-color: #a7f3d0;
   }
+}
+
+/* Cross-browser no-scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
 
 /* Custom sleek scrollbar */
@@ -347,3 +389,265 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Modern sleek tactile scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d4d0c5;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa;
+}
+
+/* ============================================================
+   TACTILE OBSIDIAN DARK THEME (DARK MODE)
+   ============================================================ */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #0f0f12;
+  color: #f4f4f6;
+}
+
+/* Background surfaces */
+html.dark .bg-\[\#f4f3ec\] {
+  background-color: #0f0f12 !important;
+}
+
+html.dark .bg-\[\#edebe4\] {
+  background-color: #17171c !important;
+}
+
+html.dark .bg-white {
+  background-color: #1b1b22 !important;
+}
+
+/* Text colors */
+html.dark .text-\[\#18181b\] {
+  color: #f4f4f6 !important;
+}
+
+html.dark .text-zinc-900 {
+  color: #f4f4f6 !important;
+}
+
+html.dark .text-zinc-800 {
+  color: #e4e4e7 !important;
+}
+
+html.dark .text-zinc-700 {
+  color: #d4d4d8 !important;
+}
+
+html.dark .text-zinc-600 {
+  color: #a1a1aa !important;
+}
+
+html.dark .text-zinc-500 {
+  color: #94949e !important;
+}
+
+/* Borders */
+html.dark .border-\[\#dedbd0\] {
+  border-color: #272730 !important;
+}
+
+html.dark .border-\[\#e6e4dc\] {
+  border-color: #2a2a35 !important;
+}
+
+html.dark .border-black\/5 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.dark .divide-\[\#e6e4dc\]\/70 > * {
+  border-color: #2a2a35 !important;
+}
+
+/* Tactile Components in Dark Mode */
+html.dark .tactile-shell {
+  background-color: #121216;
+  border-color: #2a2a35;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+html.dark .tactile-card {
+  background-color: #18181f !important;
+  border-color: #272732 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  color: #f4f4f6 !important;
+}
+
+html.dark .tactile-card:hover {
+  border-color: #3b3b4a !important;
+  box-shadow: 0 12px 32px -6px rgba(0, 0, 0, 0.55);
+}
+
+html.dark .tactile-chip {
+  background-color: #212129 !important;
+  border-color: #30303c !important;
+  color: #f4f4f6 !important;
+}
+
+html.dark .tactile-chip:hover {
+  background-color: #292934 !important;
+}
+
+html.dark .tactile-btn-pill {
+  background-color: #24242d !important;
+  color: #f4f4f6 !important;
+  border: 1px solid #32323e !important;
+}
+
+html.dark .tactile-btn-pill:hover {
+  background-color: #2e2e3a !important;
+  color: #ffffff !important;
+}
+
+html.dark .tactile-btn-dark {
+  background-color: #ffffff !important;
+  color: #18181b !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.12);
+}
+
+html.dark .tactile-btn-dark:hover {
+  background-color: #f4f4f5 !important;
+  color: #000000 !important;
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.2);
+}
+
+/* Ensure high contrast dark mode inverted elements stay crisp white */
+html.dark .dark\:bg-white,
+html.dark [class*="dark:bg-white"] {
+  background-color: #ffffff !important;
+}
+
+html.dark .dark\:text-\[\#18181b\],
+html.dark [class*="dark:text-[#18181b]"] {
+  color: #18181b !important;
+}
+
+html.dark .tactile-tab {
+  background-color: #18181f !important;
+  color: #a1a1aa !important;
+  border-color: #2c2c38 !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+html.dark .tactile-tab span {
+  white-space: nowrap !important;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+html.dark .tactile-tab:hover {
+  color: #ffffff !important;
+  background-color: #212129 !important;
+  border-color: #3f3f50 !important;
+}
+
+html.dark .tactile-tab.active-purple {
+  background-color: #2e1065 !important;
+  color: #ede9fe !important;
+  border-color: #7c3aed !important;
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.25);
+}
+
+html.dark .tactile-tab.active-purple .tactile-badge {
+  background-color: #7c3aed !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+html.dark .tactile-tab .tactile-badge {
+  background-color: #272733 !important;
+  color: #f4f4f6 !important;
+  border-color: #38384a !important;
+}
+
+html.dark .tactile-tab.active-emerald {
+  background-color: #064e3b !important;
+  color: #a7f3d0 !important;
+  border-color: #059669 !important;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+}
+
+html.dark .tactile-tab.active-emerald .tactile-badge {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Status Badge Pills in Dark Mode */
+html.dark .bg-purple-100 {
+  background-color: rgba(124, 58, 237, 0.2) !important;
+  color: #ddd6fe !important;
+  border: 1px solid rgba(139, 92, 246, 0.35) !important;
+}
+
+html.dark .bg-emerald-100 {
+  background-color: rgba(16, 185, 129, 0.2) !important;
+  color: #a7f3d0 !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+}
+
+html.dark .bg-rose-100 {
+  background-color: rgba(244, 63, 94, 0.2) !important;
+  color: #fecdd3 !important;
+  border: 1px solid rgba(244, 63, 94, 0.35) !important;
+}
+
+/* Form Controls in Dark Mode */
+html.dark input, 
+html.dark select, 
+html.dark textarea {
+  background-color: #212129 !important;
+  color: #f4f4f6 !important;
+  border-color: #32323e !important;
+}
+
+html.dark input:focus, 
+html.dark select:focus, 
+html.dark textarea:focus {
+  background-color: #272732 !important;
+  border-color: #10b981 !important;
+  outline: none !important;
+}
+
+html.dark input::placeholder, 
+html.dark textarea::placeholder {
+  color: #71717a !important;
+}
+
+/* Modals & Dialogs */
+html.dark .fixed.inset-0.bg-slate-900\/40 {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+html.dark [data-modal-content="true"] {
+  background-color: #18181f !important;
+  color: #f4f4f6 !important;
+}
+
+/* Scrollbars in Dark Mode */
+html.dark ::-webkit-scrollbar-thumb {
+  background: #363644;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4f4f60;
+}
+
+

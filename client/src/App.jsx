@@ -2,12 +2,18 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { LanguageProvider } from './contexts/LanguageContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import MainLayout from './layouts/MainLayout';
 import AuthPage from './pages/AuthPage';
 import DashboardPage from './pages/DashboardPage';
 import MyTripsPage from './pages/MyTripsPage';
 import TripDetailPage from './pages/TripDetailPage';
 import ProfilePage from './pages/ProfilePage';
+import FriendsPage from './pages/FriendsPage';
+import SettlementsPage from './pages/SettlementsPage';
+import JoinTripPage from './pages/JoinTripPage';
 
 // Protected Route Guard
 function ProtectedRoute({ children }) {
@@ -32,6 +38,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/auth" element={<AuthPage />} />
+      <Route path="/join/:code" element={<JoinTripPage />} />
+      <Route path="/trips/join/:code" element={<JoinTripPage />} />
 
       <Route
         path="/"
@@ -45,6 +53,8 @@ function AppRoutes() {
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="trips" element={<MyTripsPage />} />
         <Route path="trips/:tripId" element={<TripDetailPage />} />
+        <Route path="settlements" element={<SettlementsPage />} />
+        <Route path="friends" element={<FriendsPage />} />
         <Route path="profile" element={<ProfilePage />} />
       </Route>
 
@@ -56,11 +66,17 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <ToastProvider>
-          <AppRoutes />
-        </ToastProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <NotificationProvider>
+                <AppRoutes />
+              </NotificationProvider>
+            </ToastProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

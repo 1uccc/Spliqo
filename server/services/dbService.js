@@ -13,182 +13,99 @@ if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-// Initial seed data matching user prompt example: "Đà Lạt 3 ngày 2 đêm"
+// Empty default data schema
 const DEFAULT_DATA = {
-  users: {
-    "user_a": {
-      uid: "user_a",
-      email: "nguyenvana@gmail.com",
-      displayName: "Nguyễn Văn A",
-      photoURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
-      phone: "0901234567",
-      bankName: "VCB",
-      bankAccountNumber: "0071001234567",
-      bankAccountHolder: "NGUYEN VAN A",
-      paymentQrUrl: "",
-      createdAt: new Date().toISOString()
-    },
-    "user_b": {
-      uid: "user_b",
-      email: "tranthib@gmail.com",
-      displayName: "Trần Thị B",
-      photoURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
-      phone: "0912345678",
-      bankName: "MB",
-      bankAccountNumber: "0912345678",
-      bankAccountHolder: "TRAN THI B",
-      paymentQrUrl: "",
-      createdAt: new Date().toISOString()
-    },
-    "user_c": {
-      uid: "user_c",
-      email: "levanc@gmail.com",
-      displayName: "Lê Văn C",
-      photoURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alexander",
-      phone: "0923456789",
-      bankName: "TCB",
-      bankAccountNumber: "19034567890123",
-      bankAccountHolder: "LE VAN C",
-      paymentQrUrl: "",
-      createdAt: new Date().toISOString()
-    },
-    "user_d": {
-      uid: "user_d",
-      email: "phamminhd@gmail.com",
-      displayName: "Phạm Minh D",
-      photoURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jack",
-      phone: "0934567890",
-      bankName: "ACB",
-      bankAccountNumber: "88889999123",
-      bankAccountHolder: "PHAM MINH D",
-      paymentQrUrl: "",
-      createdAt: new Date().toISOString()
-    },
-    "user_e": {
-      uid: "user_e",
-      email: "hoangthie@gmail.com",
-      displayName: "Hoàng Thị E",
-      photoURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=Molly",
-      phone: "0945678901",
-      bankName: "VPB",
-      bankAccountNumber: "1234567890",
-      bankAccountHolder: "HOANG THI E",
-      paymentQrUrl: "",
-      createdAt: new Date().toISOString()
-    }
-  },
-  trips: {
-    "trip_dalat_2026": {
-      id: "trip_dalat_2026",
-      name: "Đà Lạt 3 ngày 2 đêm",
-      description: "Chuyến du lịch khám phá Đà Lạt mộng mơ, săn mây và thưởng thức ẩm thực",
-      tripCode: "DL26A8",
-      createdBy: "user_a",
-      startDate: "2026-09-20",
-      endDate: "2026-09-22",
-      status: "ACTIVE", // ACTIVE | COMPLETED | ARCHIVED
-      createdAt: new Date().toISOString()
-    }
-  },
-  tripMembers: {
-    "trip_dalat_2026": [
-      { userId: "user_a", role: "Creator", joinedAt: new Date().toISOString() },
-      { userId: "user_b", role: "Member", joinedAt: new Date().toISOString() },
-      { userId: "user_c", role: "Member", joinedAt: new Date().toISOString() },
-      { userId: "user_d", role: "Member", joinedAt: new Date().toISOString() },
-      { userId: "user_e", role: "Member", joinedAt: new Date().toISOString() }
-    ]
-  },
-  expenses: {
-    "trip_dalat_2026": [
-      {
-        id: "exp_1",
-        title: "Tiền xe khứ hồi",
-        amount: 1000000,
-        paidBy: "user_a",
-        participants: ["user_a", "user_b", "user_c", "user_d", "user_e"],
-        splitType: "equal",
-        individualAmounts: {},
-        billImageUrl: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80",
-        note: "Xe Limousine 9 chỗ đưa đón tận nơi",
-        date: "2026-09-20",
-        createdBy: "user_a",
-        createdAt: "2026-09-20T08:00:00.000Z"
-      },
-      {
-        id: "exp_2",
-        title: "Khách sạn 2 đêm",
-        amount: 2500000,
-        paidBy: "user_b",
-        participants: ["user_a", "user_b", "user_c", "user_d", "user_e"],
-        splitType: "equal",
-        individualAmounts: {},
-        billImageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80",
-        note: "Villa view đồi thông gần trung tâm",
-        date: "2026-09-20",
-        createdBy: "user_b",
-        createdAt: "2026-09-20T14:00:00.000Z"
-      },
-      {
-        id: "exp_3",
-        title: "Ăn trưa lẩu gà lá é",
-        amount: 600000,
-        paidBy: "user_c",
-        participants: ["user_a", "user_b", "user_c", "user_d"], // E không ăn
-        splitType: "equal",
-        individualAmounts: {},
-        billImageUrl: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80",
-        note: "Quán Tao Ngộ - E bị mệt nên về phòng nghỉ, không ăn trưa",
-        date: "2026-09-21",
-        createdBy: "user_c",
-        createdAt: "2026-09-21T12:30:00.000Z"
-      },
-      {
-        id: "exp_4",
-        title: "Cà phê săn mây",
-        amount: 250000,
-        paidBy: "user_d",
-        participants: ["user_a", "user_b", "user_c", "user_d", "user_e"],
-        splitType: "equal",
-        individualAmounts: {},
-        billImageUrl: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=600&q=80",
-        note: "Cà phê đồi chè Cầu Đất",
-        date: "2026-09-21",
-        createdBy: "user_d",
-        createdAt: "2026-09-21T16:00:00.000Z"
-      },
-      {
-        id: "exp_5",
-        title: "Vé tham quan Fresh Garden",
-        amount: 750000,
-        paidBy: "user_e",
-        participants: ["user_a", "user_b", "user_c", "user_d", "user_e"],
-        splitType: "equal",
-        individualAmounts: {},
-        billImageUrl: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=600&q=80",
-        note: "Vé combo người lớn 150.000đ/vé",
-        date: "2026-09-22",
-        createdBy: "user_e",
-        createdAt: "2026-09-22T09:30:00.000Z"
-      }
-    ]
-  },
-  settlements: {
-    "trip_dalat_2026": []
-  },
-  friends: {
-    "user_a": ["user_b", "user_c"],
-    "user_b": ["user_a", "user_c"],
-    "user_c": ["user_a", "user_b"],
-    "user_d": ["user_e"],
-    "user_e": ["user_d"]
-  },
-  friendRequests: []
+  users: {},
+  trips: {},
+  tripMembers: {},
+  expenses: {},
+  settlements: {},
+  friends: {},
+  friendRequests: [],
+  notifications: {}
 };
 
 class DBService {
   constructor() {
     this.data = this.loadData();
+    if (isFirebaseConfigured && db) {
+      this.syncAllLocalDataToFirestore();
+    }
+  }
+
+  async syncToFirestore(collectionName, docId, data, isDelete = false) {
+    if (!isFirebaseConfigured || !db || !docId) return;
+    try {
+      const ref = db.collection(collectionName).doc(String(docId));
+      if (isDelete) {
+        await ref.delete();
+      } else {
+        await ref.set(data, { merge: true });
+      }
+    } catch (e) {
+      console.warn(`[Firestore Sync] Error syncing ${collectionName}/${docId}:`, e.message);
+    }
+  }
+
+  async syncAllLocalDataToFirestore() {
+    if (!isFirebaseConfigured || !db) return;
+    try {
+      console.log('[Firestore Sync] Starting full synchronization from local store to Cloud Firestore...');
+      let totalSynced = 0;
+
+      // 1. Users
+      const users = Object.entries(this.data.users || {});
+      for (const [uid, user] of users) {
+        await db.collection('users').doc(uid).set(user, { merge: true });
+        totalSynced++;
+      }
+
+      // 2. Trips
+      const trips = Object.entries(this.data.trips || {});
+      for (const [tripId, trip] of trips) {
+        await db.collection('trips').doc(tripId).set(trip, { merge: true });
+        totalSynced++;
+      }
+
+      // 3. Trip Members
+      const members = Object.entries(this.data.tripMembers || {});
+      for (const [tripId, mList] of members) {
+        await db.collection('tripMembers').doc(tripId).set({ members: mList }, { merge: true });
+        totalSynced++;
+      }
+
+      // 4. Expenses
+      const expenses = Object.entries(this.data.expenses || {});
+      for (const [tripId, expList] of expenses) {
+        await db.collection('expenses').doc(tripId).set({ expenses: expList }, { merge: true });
+        totalSynced++;
+      }
+
+      // 5. Settlements
+      const settlements = Object.entries(this.data.settlements || {});
+      for (const [tripId, setList] of settlements) {
+        await db.collection('settlements').doc(tripId).set({ settlements: setList }, { merge: true });
+        totalSynced++;
+      }
+
+      // 6. Notifications
+      const notifs = Object.entries(this.data.notifications || {});
+      for (const [userId, nList] of notifs) {
+        await db.collection('notifications').doc(userId).set({ list: nList }, { merge: true });
+        totalSynced++;
+      }
+
+      // 7. Friends
+      const friends = Object.entries(this.data.friends || {});
+      for (const [userId, fList] of friends) {
+        await db.collection('friends').doc(userId).set({ friends: fList }, { merge: true });
+        totalSynced++;
+      }
+
+      console.log(`[Firestore Sync] Successfully synchronized ${totalSynced} items to Cloud Firestore!`);
+    } catch (err) {
+      console.error('[Firestore Sync] Full sync error:', err.message);
+    }
   }
 
   loadData() {
@@ -196,18 +113,14 @@ class DBService {
       if (fs.existsSync(STORE_FILE)) {
         const raw = fs.readFileSync(STORE_FILE, 'utf-8');
         const parsed = JSON.parse(raw);
-        if (!parsed.friends) {
-          parsed.friends = {
-            "user_a": ["user_b", "user_c"],
-            "user_b": ["user_a", "user_c"],
-            "user_c": ["user_a", "user_b"],
-            "user_d": ["user_e"],
-            "user_e": ["user_d"]
-          };
-        }
-        if (!parsed.friendRequests) {
-          parsed.friendRequests = [];
-        }
+        if (!parsed.users) parsed.users = {};
+        if (!parsed.trips) parsed.trips = {};
+        if (!parsed.tripMembers) parsed.tripMembers = {};
+        if (!parsed.expenses) parsed.expenses = {};
+        if (!parsed.settlements) parsed.settlements = {};
+        if (!parsed.friends) parsed.friends = {};
+        if (!parsed.friendRequests) parsed.friendRequests = [];
+        if (!parsed.notifications) parsed.notifications = {};
         return parsed;
       }
     } catch (e) {
@@ -238,6 +151,7 @@ class DBService {
       uid
     };
     this.saveData();
+    this.syncToFirestore('users', uid, this.data.users[uid]);
     return this.data.users[uid];
   }
 
@@ -277,6 +191,7 @@ class DBService {
       this.data.settlements[trip.id] = [];
     }
     this.saveData();
+    this.syncToFirestore('trips', trip.id, trip);
     return trip;
   }
 
@@ -287,6 +202,7 @@ class DBService {
       ...updates
     };
     this.saveData();
+    this.syncToFirestore('trips', tripId, this.data.trips[tripId]);
     return this.data.trips[tripId];
   }
 
@@ -296,6 +212,10 @@ class DBService {
     delete this.data.expenses[tripId];
     delete this.data.settlements[tripId];
     this.saveData();
+    this.syncToFirestore('trips', tripId, null, true);
+    this.syncToFirestore('tripMembers', tripId, null, true);
+    this.syncToFirestore('expenses', tripId, null, true);
+    this.syncToFirestore('settlements', tripId, null, true);
     return true;
   }
 
@@ -325,6 +245,7 @@ class DBService {
         joinedAt: new Date().toISOString()
       });
       this.saveData();
+      this.syncToFirestore('tripMembers', tripId, { members: this.data.tripMembers[tripId] });
     }
     return this.getTripMembers(tripId);
   }
@@ -333,6 +254,7 @@ class DBService {
     if (!this.data.tripMembers[tripId]) return [];
     this.data.tripMembers[tripId] = this.data.tripMembers[tripId].filter(m => m.userId !== userId);
     this.saveData();
+    this.syncToFirestore('tripMembers', tripId, { members: this.data.tripMembers[tripId] });
     return this.getTripMembers(tripId);
   }
 
@@ -352,6 +274,7 @@ class DBService {
     }
     this.data.expenses[tripId].push(expense);
     this.saveData();
+    this.syncToFirestore('expenses', tripId, { expenses: this.data.expenses[tripId] });
     return expense;
   }
 
@@ -365,6 +288,7 @@ class DBService {
       updatedAt: new Date().toISOString()
     };
     this.saveData();
+    this.syncToFirestore('expenses', tripId, { expenses: this.data.expenses[tripId] });
     return list[index];
   }
 
@@ -373,6 +297,7 @@ class DBService {
     const initialLen = this.data.expenses[tripId].length;
     this.data.expenses[tripId] = this.data.expenses[tripId].filter(e => e.id !== expenseId);
     this.saveData();
+    this.syncToFirestore('expenses', tripId, { expenses: this.data.expenses[tripId] });
     return this.data.expenses[tripId].length < initialLen;
   }
 
@@ -393,6 +318,7 @@ class DBService {
       list.push(settlement);
     }
     this.saveData();
+    this.syncToFirestore('settlements', tripId, { settlements: this.data.settlements[tripId] });
     return settlement;
   }
 
@@ -404,6 +330,7 @@ class DBService {
       item.status = status;
       Object.assign(item, extraFields);
       this.saveData();
+      this.syncToFirestore('settlements', tripId, { settlements: this.data.settlements[tripId] });
       return item;
     }
     return null;
@@ -535,6 +462,89 @@ class DBService {
       return true;
     }
     return false;
+  }
+
+  // --- Notifications ---
+  getNotifications(userId) {
+    if (!this.data.notifications) this.data.notifications = {};
+    const userNotifs = this.data.notifications[userId] || [];
+    return [...userNotifs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+
+  addNotification(userId, notif) {
+    if (!userId) return null;
+    if (!this.data.notifications) this.data.notifications = {};
+    if (!this.data.notifications[userId]) this.data.notifications[userId] = [];
+
+    const newNotif = {
+      id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      userId,
+      type: notif.type || 'SYSTEM',
+      title: notif.title || 'Thông báo mới',
+      message: notif.message || '',
+      link: notif.link || '',
+      actor: notif.actor || null,
+      read: false,
+      createdAt: new Date().toISOString()
+    };
+
+    this.data.notifications[userId].unshift(newNotif);
+    // Keep max 100 notifications per user
+    if (this.data.notifications[userId].length > 100) {
+      this.data.notifications[userId] = this.data.notifications[userId].slice(0, 100);
+    }
+
+    this.saveData();
+    this.syncToFirestore('notifications', userId, { list: this.data.notifications[userId] });
+    return newNotif;
+  }
+
+  markNotificationAsRead(userId, notifId) {
+    if (!this.data.notifications?.[userId]) return false;
+    const notif = this.data.notifications[userId].find(n => n.id === notifId);
+    if (notif) {
+      notif.read = true;
+      this.saveData();
+      this.syncToFirestore('notifications', userId, { list: this.data.notifications[userId] });
+      return true;
+    }
+    return false;
+  }
+
+  markAllNotificationsAsRead(userId) {
+    if (!this.data.notifications?.[userId]) return 0;
+    let count = 0;
+    this.data.notifications[userId].forEach(n => {
+      if (!n.read) {
+        n.read = true;
+        count++;
+      }
+    });
+    if (count > 0) {
+      this.saveData();
+      this.syncToFirestore('notifications', userId, { list: this.data.notifications[userId] });
+    }
+    return count;
+  }
+
+  deleteNotification(userId, notifId) {
+    if (!this.data.notifications?.[userId]) return false;
+    const idx = this.data.notifications[userId].findIndex(n => n.id === notifId);
+    if (idx >= 0) {
+      this.data.notifications[userId].splice(idx, 1);
+      this.saveData();
+      this.syncToFirestore('notifications', userId, { list: this.data.notifications[userId] });
+      return true;
+    }
+    return false;
+  }
+
+  clearNotifications(userId) {
+    if (!this.data.notifications) this.data.notifications = {};
+    this.data.notifications[userId] = [];
+    this.saveData();
+    this.syncToFirestore('notifications', userId, { list: this.data.notifications[userId] });
+    return true;
   }
 }
 

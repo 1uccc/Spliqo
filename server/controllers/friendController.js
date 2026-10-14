@@ -94,6 +94,23 @@ export async function sendFriendRequest(req, res) {
     }
 
     const result = dbService.sendFriendRequest(userId, targetUserId);
+
+    try {
+      dbService.addNotification(targetUserId, {
+        type: 'FRIEND_REQUEST',
+        title: 'Lời mời kết bạn mới',
+        message: `${req.user.displayName || 'Một thành viên'} vừa gửi lời mời kết bạn cho bạn.`,
+        link: '/friends',
+        actor: {
+          uid: userId,
+          displayName: req.user.displayName,
+          photoURL: req.user.photoURL,
+        }
+      });
+    } catch (e) {
+      console.warn('[sendFriendRequest] Notification error:', e.message);
+    }
+
     return res.json({
       success: true,
       message: result.autoAccepted ? result.message : 'Đã gửi lời mời kết bạn!',
@@ -117,6 +134,22 @@ export async function acceptFriendRequest(req, res) {
     dbService.addFriend(userId, fromUserId);
     if (requestId) {
       dbService.rejectFriendRequest(userId, requestId);
+    }
+
+    try {
+      dbService.addNotification(fromUserId, {
+        type: 'FRIEND_ACCEPTED',
+        title: 'Lời mời kết bạn được chấp nhận',
+        message: `${req.user.displayName || 'Một thành viên'} đã chấp nhận lời mời kết bạn của bạn.`,
+        link: '/friends',
+        actor: {
+          uid: userId,
+          displayName: req.user.displayName,
+          photoURL: req.user.photoURL,
+        }
+      });
+    } catch (e) {
+      console.warn('[acceptFriendRequest] Notification error:', e.message);
     }
 
     return res.json({
@@ -163,6 +196,22 @@ export async function inviteFriendToTrip(req, res) {
 
     // Add friend to trip
     dbService.addMemberToTrip(tripId, friendId, 'Member');
+
+    try {
+      dbService.addNotification(friendId, {
+        type: 'TRIP_INVITE',
+        title: 'Lời mời tham gia chuyến đi',
+        message: `${req.user.displayName || 'Một người bạn'} đã thêm bạn vào chuyến đi "${trip.name}".`,
+        link: `/trips/${tripId}`,
+        actor: {
+          uid: currentUserId,
+          displayName: req.user.displayName,
+          photoURL: req.user.photoURL,
+        }
+      });
+    } catch (e) {
+      console.warn('[inviteFriendToTrip] Notification error:', e.message);
+    }
 
     return res.json({
       success: true,

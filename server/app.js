@@ -24,7 +24,7 @@ app.use(morgan('dev'));
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
-    service: 'SplitMate API Server',
+    service: 'Spliqo API Server',
     time: new Date().toISOString()
   });
 });
@@ -34,7 +34,7 @@ app.use('/api', apiRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
-  console.error('[SplitMate Server Error]:', err);
+  console.error('[Spliqo Server Error]:', err);
   res.status(err.status || 500).json({
     error: err.message || 'Lỗi hệ thống nội bộ máy chủ.'
   });
@@ -43,7 +43,7 @@ app.use((err, req, res, next) => {
 // Start listening if run directly
 app.listen(PORT, () => {
   console.log(`===============================================`);
-  console.log(` 🚀 SplitMate API Server is running on port ${PORT}`);
+  console.log(` 🚀 Spliqo API Server is running on port ${PORT}`);
   console.log(` 🔗 URL: http://localhost:${PORT}/api/health`);
   console.log(`===============================================`);
 });

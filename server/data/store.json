@@ -1,319 +1,71 @@
 {
   "users": {
-    "user_a": {
-      "uid": "user_a",
-      "email": "nguyenvana@gmail.com",
-      "displayName": "Nguyễn Văn A",
-      "photoURL": "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
+    "BXGuLOWJItNUhcXWPv7FpAhTuS92": {
+      "uid": "BXGuLOWJItNUhcXWPv7FpAhTuS92",
+      "email": "bachtuocndl@gmail.com",
+      "displayName": "Tuoc Bach",
+      "photoURL": "https://api.dicebear.com/7.x/avataaars/svg?seed=Molly",
+      "phone": "",
+      "bankName": "VPB",
+      "bankAccountNumber": "0386967646",
+      "bankAccountHolder": "NGUYEN DINH LUC",
+      "paymentQrUrl": ""
+    },
+    "TPtOfpBBDvVvVBGVAfTxq4hujpI3": {
+      "uid": "TPtOfpBBDvVvVBGVAfTxq4hujpI3",
+      "email": "lucnd0201@gmail.com",
+      "displayName": "Nguyễn Đình Lực",
+      "photoURL": "https://api.dicebear.com/7.x/avataaars/svg?seed=TPtOfpBBDvVvVBGVAfTxq4hujpI3",
       "phone": "",
       "bankName": "VCB",
       "bankAccountNumber": "1017913693",
       "bankAccountHolder": "NGUYEN DINH LUC",
-      "paymentQrUrl": "",
-      "createdAt": "2026-10-13T01:27:45.692Z"
-    },
-    "user_b": {
-      "uid": "user_b",
-      "email": "tranthib@gmail.com",
-      "displayName": "Trần Thị B",
-      "photoURL": "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
-      "phone": "0912345678",
-      "bankName": "MB",
-      "bankAccountNumber": "0912345678",
-      "bankAccountHolder": "TRAN THI B",
-      "paymentQrUrl": "",
-      "createdAt": "2026-10-13T01:27:45.693Z"
-    },
-    "user_c": {
-      "uid": "user_c",
-      "email": "levanc@gmail.com",
-      "displayName": "Lê Văn C",
-      "photoURL": "https://api.dicebear.com/7.x/avataaars/svg?seed=Alexander",
-      "phone": "0923456789",
-      "bankName": "TCB",
-      "bankAccountNumber": "19034567890123",
-      "bankAccountHolder": "LE VAN C",
-      "paymentQrUrl": "",
-      "createdAt": "2026-10-13T01:27:45.693Z"
-    },
-    "user_d": {
-      "uid": "user_d",
-      "email": "phamminhd@gmail.com",
-      "displayName": "Phạm Minh D",
-      "photoURL": "https://api.dicebear.com/7.x/avataaars/svg?seed=Jack",
-      "phone": "0934567890",
-      "bankName": "ACB",
-      "bankAccountNumber": "88889999123",
-      "bankAccountHolder": "PHAM MINH D",
-      "paymentQrUrl": "",
-      "createdAt": "2026-10-13T01:27:45.693Z"
-    },
-    "user_e": {
-      "uid": "user_e",
-      "email": "hoangthie@gmail.com",
-      "displayName": "Hoàng Thị E",
-      "photoURL": "https://api.dicebear.com/7.x/avataaars/svg?seed=Molly",
-      "phone": "0945678901",
-      "bankName": "VPB",
-      "bankAccountNumber": "1234567890",
-      "bankAccountHolder": "HOANG THI E",
-      "paymentQrUrl": "",
-      "createdAt": "2026-10-13T01:27:45.693Z"
+      "paymentQrUrl": ""
     }
   },
   "trips": {
-    "trip_dalat_2026": {
-      "id": "trip_dalat_2026",
-      "name": "Đà Lạt 3 ngày 2 đêm",
-      "description": "Chuyến du lịch khám phá Đà Lạt mộng mơ, săn mây và thưởng thức ẩm thực",
-      "tripCode": "DL26A8",
-      "createdBy": "user_a",
-      "startDate": "2026-09-20",
-      "endDate": "2026-09-22",
-      "status": "ACTIVE",
-      "createdAt": "2026-10-13T01:27:45.693Z"
-    },
-    "trip_1791953512680": {
-      "id": "trip_1791953512680",
-      "name": "h",
-      "description": "",
-      "tripCode": "DN4MC4",
-      "createdBy": "user_e",
+    "trip_1791970508811": {
+      "id": "trip_1791970508811",
+      "name": "Đà Lạt 2026",
+      "description": "ádasdasdasd",
+      "tripCode": "2QXZ45",
+      "createdBy": "TPtOfpBBDvVvVBGVAfTxq4hujpI3",
       "startDate": "2026-10-14",
-      "endDate": "2026-10-14",
+      "endDate": "2026-10-16",
       "status": "ACTIVE",
-      "createdAt": "2026-10-14T04:51:52.680Z"
-    },
-    "trip_1791953523071": {
-      "id": "trip_1791953523071",
-      "name": "k",
-      "description": "",
-      "tripCode": "FP9RK8",
-      "createdBy": "user_e",
-      "startDate": "2026-10-14",
-      "endDate": "2026-10-14",
-      "status": "ACTIVE",
-      "createdAt": "2026-10-14T04:52:03.071Z"
+      "createdAt": "2026-10-14T09:35:08.811Z"
     }
   },
   "tripMembers": {
-    "trip_dalat_2026": [
+    "trip_1791970508811": [
       {
-        "userId": "user_a",
+        "userId": "TPtOfpBBDvVvVBGVAfTxq4hujpI3",
         "role": "Creator",
-        "joinedAt": "2026-10-13T01:27:45.693Z"
-      },
-      {
-        "userId": "user_b",
-        "role": "Member",
-        "joinedAt": "2026-10-13T01:27:45.693Z"
-      },
-      {
-        "userId": "user_c",
-        "role": "Member",
-        "joinedAt": "2026-10-13T01:27:45.693Z"
-      },
-      {
-        "userId": "user_d",
-        "role": "Member",
-        "joinedAt": "2026-10-13T01:27:45.693Z"
-      },
-      {
-        "userId": "user_e",
-        "role": "Member",
-        "joinedAt": "2026-10-13T01:27:45.693Z"
-      }
-    ],
-    "trip_1791953512680": [
-      {
-        "userId": "user_e",
-        "role": "Creator",
-        "joinedAt": "2026-10-14T04:51:52.681Z"
-      },
-      {
-        "userId": "user_d",
-        "role": "Member",
-        "joinedAt": "2026-10-14T05:07:18.576Z"
-      }
-    ],
-    "trip_1791953523071": [
-      {
-        "userId": "user_e",
-        "role": "Creator",
-        "joinedAt": "2026-10-14T04:52:03.071Z"
+        "joinedAt": "2026-10-14T09:35:08.812Z"
       }
     ]
   },
   "expenses": {
-    "trip_dalat_2026": [
-      {
-        "id": "exp_1",
-        "title": "Tiền xe khứ hồi",
-        "amount": 1000000,
-        "paidBy": "user_a",
-        "participants": [
-          "user_a",
-          "user_b",
-          "user_c",
-          "user_d",
-          "user_e"
-        ],
-        "splitType": "equal",
-        "individualAmounts": {},
-        "billImageUrl": "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80",
-        "note": "Xe Limousine 9 chỗ đưa đón tận nơi",
-        "date": "2026-09-20",
-        "createdBy": "user_a",
-        "createdAt": "2026-09-20T08:00:00.000Z"
-      },
-      {
-        "id": "exp_2",
-        "title": "Khách sạn 2 đêm",
-        "amount": 2500000,
-        "paidBy": "user_b",
-        "participants": [
-          "user_a",
-          "user_b",
-          "user_c",
-          "user_d",
-          "user_e"
-        ],
-        "splitType": "equal",
-        "individualAmounts": {},
-        "billImageUrl": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80",
-        "note": "Villa view đồi thông gần trung tâm",
-        "date": "2026-09-20",
-        "createdBy": "user_b",
-        "createdAt": "2026-09-20T14:00:00.000Z"
-      },
-      {
-        "id": "exp_3",
-        "title": "Ăn trưa lẩu gà lá é",
-        "amount": 600000,
-        "paidBy": "user_c",
-        "participants": [
-          "user_a",
-          "user_b",
-          "user_c",
-          "user_d"
-        ],
-        "splitType": "equal",
-        "individualAmounts": {},
-        "billImageUrl": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80",
-        "note": "Quán Tao Ngộ - E bị mệt nên về phòng nghỉ, không ăn trưa",
-        "date": "2026-09-21",
-        "createdBy": "user_c",
-        "createdAt": "2026-09-21T12:30:00.000Z"
-      },
-      {
-        "id": "exp_4",
-        "title": "Cà phê săn mây",
-        "amount": 250000,
-        "paidBy": "user_d",
-        "participants": [
-          "user_a",
-          "user_b",
-          "user_c",
-          "user_d",
-          "user_e"
-        ],
-        "splitType": "equal",
-        "individualAmounts": {},
-        "billImageUrl": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=600&q=80",
-        "note": "Cà phê đồi chè Cầu Đất",
-        "date": "2026-09-21",
-        "createdBy": "user_d",
-        "createdAt": "2026-09-21T16:00:00.000Z"
-      },
-      {
-        "id": "exp_5",
-        "title": "Vé tham quan Fresh Garden",
-        "amount": 750000,
-        "paidBy": "user_e",
-        "participants": [
-          "user_a",
-          "user_b",
-          "user_c",
-          "user_d",
-          "user_e"
-        ],
-        "splitType": "equal",
-        "individualAmounts": {},
-        "billImageUrl": "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=600&q=80",
-        "note": "Vé combo người lớn 150.000đ/vé",
-        "date": "2026-09-22",
-        "createdBy": "user_e",
-        "createdAt": "2026-09-22T09:30:00.000Z"
-      },
-      {
-        "id": "exp_1791954741259_o11x",
-        "title": "aaa",
-        "amount": 400000,
-        "paidBy": "user_b",
-        "participants": [
-          "user_a",
-          "user_b",
-          "user_c",
-          "user_d",
-          "user_e"
-        ],
-        "splitType": "equal",
-        "individualAmounts": {},
-        "billImageUrl": "",
-        "note": "",
-        "date": "2026-10-14",
-        "createdBy": "user_a",
-        "createdAt": "2026-10-14T05:12:21.259Z"
-      },
-      {
-        "id": "exp_1791954802031_nva3",
-        "title": "b",
-        "amount": 1000000,
-        "paidBy": "user_b",
-        "participants": [
-          "user_a",
-          "user_b",
-          "user_c",
-          "user_d",
-          "user_e"
-        ],
-        "splitType": "equal",
-        "individualAmounts": {},
-        "billImageUrl": "",
-        "note": "",
-        "date": "2026-10-14",
-        "createdBy": "user_a",
-        "createdAt": "2026-10-14T05:13:22.031Z"
-      }
-    ],
-    "trip_1791953512680": [
-      {
-        "id": "exp_1791954482440_5frw",
-        "title": "ffff",
-        "amount": 300000,
-        "paidBy": "user_d",
-        "participants": [
-          "user_e",
-          "user_d"
-        ],
-        "splitType": "custom",
-        "individualAmounts": {
-          "user_e": 200000,
-          "user_d": 100000
-        },
-        "billImageUrl": "",
-        "note": "",
-        "date": "2026-10-14",
-        "createdBy": "user_d",
-        "createdAt": "2026-10-14T05:08:02.440Z",
-        "updatedAt": "2026-10-14T05:08:37.776Z"
-      }
-    ],
-    "trip_1791953523071": []
+    "trip_1791970508811": []
   },
   "settlements": {
-    "trip_dalat_2026": [],
-    "trip_1791953512680": [],
-    "trip_1791953523071": []
+    "trip_1791970508811": []
+  },
+  "friends": {},
+  "friendRequests": [],
+  "notifications": {
+    "BXGuLOWJItNUhcXWPv7FpAhTuS92": [
+      {
+        "id": "notif_1791971190886_0v0x0",
+        "userId": "BXGuLOWJItNUhcXWPv7FpAhTuS92",
+        "type": "SYSTEM",
+        "title": "Chào mừng bạn đến với Spliqo! 🎉",
+        "message": "Tạo chuyến đi, thêm chi phí và chia tiền công bằng. Hệ thống sẽ tự động tối ưu giao dịch chuyển khoản VietQR cho bạn.",
+        "link": "/trips",
+        "actor": null,
+        "read": true,
+        "createdAt": "2026-10-14T09:46:30.886Z"
+      }
+    ]
   }
 }

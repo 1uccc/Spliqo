@@ -1,7 +1,7 @@
 {
-  "name": "splitmate-server",
+  "name": "spliqo-server",
   "version": "1.0.0",
-  "description": "Backend API for SplitMate - Group Expense Management",
+  "description": "Backend API for Spliqo - Group Expense Management",
   "main": "app.js",
   "type": "module",
   "scripts": {
@@ -9,6 +9,7 @@
     "dev": "node --watch app.js"
   },
   "dependencies": {
+    "cloudinary": "^2.11.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",

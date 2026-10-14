@@ -1,0 +1,575 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import api from '../services/api';
+import Modal from '../components/Modal';
+import { 
+  Users, 
+  UserPlus, 
+  UserCheck, 
+  UserX, 
+  Search, 
+  Send, 
+  Compass, 
+  Sparkles, 
+  Check, 
+  CheckCircle2, 
+  Loader2, 
+  CreditCard, 
+  Calendar, 
+  ArrowRight,
+  Smile,
+  Mail,
+  Phone,
+  Flame,
+  Plus
+} from 'lucide-react';
+
+export default function FriendsPage() {
+  const { currentUser } = useAuth();
+  const { showToast } = useToast();
+  const { t, language } = useLanguage();
+
+  const [friends, setFriends] = useState([]);
+  const [suggested, setSuggested] = useState([]);
+  const [requests, setRequests] = useState({ incoming: [], outgoing: [] });
+  const [userTrips, setUserTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Tabs: ALL (Bạn bè) | SUGGESTED (Gợi ý kết bạn) | REQUESTS (Lời mời)
+  const [activeTab, setActiveTab] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Modal: Mời vào chuyến đi
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [selectedFriend, setSelectedFriend] = useState(null);
+  const [invitingTripId, setInvitingTripId] = useState(null);
+
+  const fetchFriendsAndTrips = async () => {
+    try {
+      setLoading(true);
+      const [friendsRes, tripsRes] = await Promise.all([
+        api.get('/friends'),
+        api.get('/trips')
+      ]);
+
+      setFriends(friendsRes.friends || []);
+      setSuggested(friendsRes.suggested || []);
+      setRequests(friendsRes.requests || { incoming: [], outgoing: [] });
+      setUserTrips(tripsRes || []);
+    } catch (err) {
+      console.error('[fetchFriendsAndTrips] Error:', err);
+      showToast(err.message || 'Lỗi khi tải dữ liệu bạn bè', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFriendsAndTrips();
+  }, [currentUser?.uid]);
+
+  // Kết bạn trực tiếp
+  const handleAddFriend = async (targetUserId, targetName) => {
+    try {
+      const res = await api.post('/friends', { targetUserId });
+      showToast(res.message || `Đã kết bạn với ${targetName}!`, 'success');
+      fetchFriendsAndTrips();
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi kết bạn', 'error');
+    }
+  };
+
+  // Hủy kết bạn
+  const handleRemoveFriend = async (friendId, friendName) => {
+    if (!window.confirm(`Bạn có chắc muốn hủy kết bạn với ${friendName}?`)) {
+      return;
+    }
+    try {
+      const res = await api.delete(`/friends/${friendId}`);
+      showToast(res.message || 'Đã hủy kết bạn', 'info');
+      fetchFriendsAndTrips();
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi hủy kết bạn', 'error');
+    }
+  };
+
+  // Chấp nhận lời mời kết bạn
+  const handleAcceptRequest = async (fromUserId, requestId) => {
+    try {
+      const res = await api.post('/friends/accept', { fromUserId, requestId });
+      showToast(res.message || 'Đã chấp nhận kết bạn!', 'success');
+      fetchFriendsAndTrips();
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi chấp nhận lời mời', 'error');
+    }
+  };
+
+  // Mở modal mời vào chuyến đi
+  const openInviteModal = (friend) => {
+    setSelectedFriend(friend);
+    setInviteModalOpen(true);
+  };
+
+  // Thực hiện mời bạn vào chuyến đi
+  const handleInviteToTrip = async (tripId) => {
+    if (!selectedFriend) return;
+    try {
+      setInvitingTripId(tripId);
+      const res = await api.post('/friends/invite-trip', {
+        friendId: selectedFriend.uid,
+        tripId
+      });
+      showToast(res.message || `Đã mời ${selectedFriend.displayName} vào chuyến đi!`, 'success');
+      fetchFriendsAndTrips();
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi mời bạn bè vào chuyến đi', 'error');
+    } finally {
+      setInvitingTripId(null);
+    }
+  };
+
+  // Lọc tìm kiếm
+  const filteredFriends = friends.filter(f => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      f.displayName?.toLowerCase().includes(q) ||
+      f.email?.toLowerCase().includes(q) ||
+      f.phone?.toLowerCase().includes(q) ||
+      f.bankName?.toLowerCase().includes(q)
+    );
+  });
+
+  const filteredSuggested = suggested.filter(u => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      u.displayName?.toLowerCase().includes(q) ||
+      u.email?.toLowerCase().includes(q) ||
+      u.bankName?.toLowerCase().includes(q)
+    );
+  });
+
+  return (
+    <div className="space-y-6 animate-fade-in text-[#18181b]">
+      
+      {/* 1. Top Section Header & Segmented Tactile Tabs */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-1">
+        <div className="shrink-0 min-w-0">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18181b] dark:text-white flex items-center gap-2.5">
+            <Users className="w-6 h-6 text-[#18181b] dark:text-white shrink-0" />
+            <span className="whitespace-nowrap">{t('friendsHeader', 'Bạn bè & Kết nối')}</span>
+          </h2>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+            {t('friendsSubtitle', 'Kết nối cùng bạn bè, quản lý số tài khoản và mời tham gia các chuyến du lịch dễ dàng')}
+          </p>
+        </div>
+
+        {/* Tactile Tab Bar */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 w-full md:w-auto shrink-0 flex-nowrap">
+          <button
+            onClick={() => setActiveTab('ALL')}
+            className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'ALL' ? 'active-purple' : ''}`}
+          >
+            <UserCheck className="w-4 h-4 text-zinc-500 shrink-0" />
+            <span className="whitespace-nowrap shrink-0">{t('myFriendsTab', 'Bạn bè của tôi')}</span>
+            <span className="tactile-badge w-5 h-5 rounded-full bg-white/80 dark:bg-white/15 dark:text-white text-[11px] font-bold flex items-center justify-center shrink-0 border border-black/5 dark:border-white/10 leading-none">
+              {friends.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('SUGGESTED')}
+            className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'SUGGESTED' ? 'active-purple' : ''}`}
+          >
+            <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+            <span className="whitespace-nowrap shrink-0">{t('suggestedFriendsTab', 'Gợi ý kết bạn')}</span>
+            <span className="tactile-badge w-5 h-5 rounded-full bg-white/80 dark:bg-white/15 dark:text-white text-[11px] font-bold flex items-center justify-center shrink-0 border border-black/5 dark:border-white/10 leading-none">
+              {suggested.length}
+            </span>
+          </button>
+
+          {requests.incoming.length > 0 && (
+            <button
+              onClick={() => setActiveTab('REQUESTS')}
+              className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'REQUESTS' ? 'active-purple' : ''}`}
+            >
+              <Send className="w-4 h-4 text-purple-600 shrink-0" />
+              <span className="whitespace-nowrap shrink-0">{t('invitationsTab', 'Lời mời')}</span>
+              <span className="tactile-badge w-5 h-5 rounded-full bg-purple-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 leading-none">
+                {requests.incoming.length}
+              </span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 2. Search Bar & Summary Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t('searchFriendsPlaceholder', 'Tìm theo tên, email, ngân hàng, STK...')}
+            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-[#1f1f26] rounded-full border border-[#dedbd0] dark:border-[#2e2e38] text-xs font-medium text-[#18181b] dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-900 dark:focus:border-white shadow-xs transition-all"
+          />
+        </div>
+
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#1a1a20] text-zinc-700 dark:text-zinc-300 rounded-full border border-[#dedbd0] dark:border-[#2e2e38] shadow-xs text-xs font-semibold self-start sm:self-auto">
+          <Smile className="w-4 h-4 text-amber-500" />
+          <span>{friends.length} {t('friendsUnit', 'bạn bè')} • {t('readyToInviteStatus', 'Sẵn sàng mời vào')} {userTrips.length} {t('readyToInviteTrips', 'chuyến đi')}</span>
+        </div>
+      </div>
+
+      {/* 3. Main Content Views */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <div key={n} className="h-56 bg-white dark:bg-[#1f1f26] rounded-3xl border border-[#dedbd0] dark:border-[#2e2e38] animate-pulse p-5" />
+          ))}
+        </div>
+      ) : activeTab === 'ALL' ? (
+        /* --- TAB: DANH SÁCH BẠN BÈ --- */
+        filteredFriends.length === 0 ? (
+          <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#1a1a20] border border-[#dedbd0] dark:border-[#2e2e38] shadow-xs space-y-3">
+            <div className="w-14 h-14 rounded-full bg-[#edebe4] dark:bg-[#252530] text-zinc-600 dark:text-zinc-400 mx-auto flex items-center justify-center">
+              <Users className="w-7 h-7 stroke-[1.8]" />
+            </div>
+            <h3 className="font-bold text-[#18181b] dark:text-white text-base">
+              {searchQuery ? t('noFriendsFound', 'Không tìm thấy bạn bè phù hợp') : t('noFriendsYet', 'Bạn chưa có người bạn nào trong danh sách')}
+            </h3>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+              {searchQuery ? t('tryAnotherKeyword', 'Thử tìm kiếm với từ khóa khác') : t('exploreSuggested', 'Khám phá các thành viên trong mục Gợi ý kết bạn để cùng lập chuyến đi và chia tiền!')}
+            </p>
+            {!searchQuery && (
+              <button
+                onClick={() => setActiveTab('SUGGESTED')}
+                className="tactile-btn-dark mt-2"
+              >
+                <UserPlus className="w-4 h-4" /> {t('viewSuggestedBtn', 'Xem gợi ý kết bạn')}
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filteredFriends.map((friend) => (
+              <div
+                key={friend.uid}
+                className="tactile-card p-5 flex flex-col justify-between hover:shadow-md transition-all duration-300"
+              >
+                <div>
+                  {/* Friend Header: Avatar + Name + Status Pill */}
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={friend.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend.uid}`}
+                        alt={friend.displayName}
+                        className="w-11 h-11 rounded-full object-cover bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/10 shrink-0 shadow-xs"
+                      />
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-bold text-[#18181b] dark:text-white truncate">
+                          {friend.displayName}
+                        </h4>
+                        <div className="flex items-center gap-1.5 text-[11px] text-zinc-400 dark:text-zinc-400 truncate">
+                          <Mail className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{friend.email}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 shrink-0">
+                      {t('friendBadge', 'Bạn bè')}
+                    </span>
+                  </div>
+
+                  {/* Dual Micro-boxes (Matching Tactile Bento Card Pattern) */}
+                  <div className="grid grid-cols-2 gap-2.5 mb-4">
+                    {/* Box 1: Bank Account info */}
+                    <div className="tactile-chip p-2.5 flex flex-col justify-between min-h-[56px]">
+                      <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1">
+                        <CreditCard className="w-3 h-3" /> {t('bankHeader', 'NGÂN HÀNG')}
+                      </span>
+                      <div className="truncate">
+                        {friend.bankName ? (
+                          <>
+                            <span className="text-xs font-bold text-[#18181b] dark:text-white block truncate">
+                              {friend.bankName}
+                            </span>
+                            <span className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 block truncate">
+                              {friend.bankAccountNumber}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-[11px] text-zinc-400 dark:text-zinc-400 italic">{t('notUpdated', 'Chưa cập nhật')}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Box 2: Mutual trips */}
+                    <div className="tactile-chip p-2.5 flex flex-col justify-between min-h-[56px]">
+                      <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1">
+                        <Compass className="w-3 h-3" /> {t('mutualTripsHeader', 'CHUYẾN ĐI CHUNG')}
+                      </span>
+                      <div>
+                        <span className="text-xs font-bold text-[#18181b] dark:text-white">
+                          {friend.mutualTripsCount || 0} {t('tripsUnit', 'chuyến đi')}
+                        </span>
+                        <span className="text-[10px] text-zinc-400 dark:text-zinc-400 block truncate">
+                          {friend.mutualTripsCount > 0 ? t('activeCompanion', 'Đang đồng hành') : t('noMutualTrips', 'Chưa có chung')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Actions: Primary Button "Mời vào chuyến đi" + Secondary "Hủy kết bạn" */}
+                <div className="flex items-center gap-2 pt-2 border-t border-[#dedbd0]/50 dark:border-[#2e2e38]">
+                  <button
+                    onClick={() => openInviteModal(friend)}
+                    className="flex-1 tactile-btn-dark py-2 text-xs flex items-center justify-center gap-1.5 shadow-xs"
+                    title={language === 'en' ? `Invite ${friend.displayName} to join a trip` : `Mời ${friend.displayName} tham gia một chuyến đi của bạn`}
+                  >
+                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>{t('inviteToTripBtn', 'Mời vào chuyến đi')}</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleRemoveFriend(friend.uid, friend.displayName)}
+                    className="p-2 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+                    title={t('unfriendTitle', 'Hủy kết bạn')}
+                  >
+                    <UserX className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      ) : activeTab === 'SUGGESTED' ? (
+        /* --- TAB: GỢI Ý KẾT BẠN --- */
+        filteredSuggested.length === 0 ? (
+          <div className="p-12 text-center rounded-3xl bg-white border border-[#dedbd0] shadow-xs space-y-3">
+            <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 mx-auto flex items-center justify-center">
+              <CheckCircle2 className="w-7 h-7 stroke-[1.8]" />
+            </div>
+            <h3 className="font-bold text-[#18181b] text-base">{t('friendedAll', 'Bạn đã kết bạn với tất cả mọi người!')}</h3>
+            <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+              {t('noMoreSuggested', 'Không còn thành viên gợi ý mới nào. Bạn có thể mời họ vào các chuyến đi của mình bất cứ lúc nào!')}
+            </p>
+            <button
+              onClick={() => setActiveTab('ALL')}
+              className="tactile-btn-dark mt-2"
+            >
+              <Users className="w-4 h-4" /> {t('myFriendsTab', 'Xem danh sách bạn bè')}
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filteredSuggested.map((user) => (
+              <div
+                key={user.uid}
+                className="tactile-card p-5 flex flex-col justify-between hover:shadow-md transition-all duration-300"
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`}
+                        alt={user.displayName}
+                        className="w-11 h-11 rounded-full object-cover bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/10 shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-bold text-[#18181b] dark:text-white truncate">
+                          {user.displayName}
+                        </h4>
+                        <p className="text-[11px] text-zinc-400 dark:text-zinc-400 truncate">{user.email}</p>
+                      </div>
+                    </div>
+
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#edebe4] dark:bg-[#252530] text-zinc-600 dark:text-zinc-300 border border-[#dedbd0] dark:border-[#32323e] shrink-0">
+                      {t('suggestedBadge', 'Gợi ý')}
+                    </span>
+                  </div>
+
+                  {user.bankName && (
+                    <div className="tactile-chip p-2.5 text-xs mb-3 flex items-center gap-2">
+                      <CreditCard className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                      <span className="text-zinc-700 dark:text-zinc-300 font-medium truncate">
+                        {user.bankName} • {user.bankAccountNumber}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => handleAddFriend(user.uid, user.displayName)}
+                  className="w-full tactile-btn-dark py-2 text-xs flex items-center justify-center gap-1.5 shadow-xs"
+                >
+                  <UserPlus className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>{t('addFriendNow', 'Kết bạn ngay')}</span>
+                </button>
+              </div>
+            ))}
+          </div>
+        )
+      ) : (
+        /* --- TAB: LỜI MỜI KẾT BẠN --- */
+        <div className="space-y-4 max-w-2xl mx-auto">
+          {requests.incoming.length === 0 ? (
+            <div className="p-8 text-center rounded-3xl bg-white dark:bg-[#1a1a20] border border-[#dedbd0] dark:border-[#2e2e38] text-xs text-zinc-500 dark:text-zinc-400">
+              {t('noIncomingRequests', 'Không có lời mời kết bạn nào đang chờ xử lý.')}
+            </div>
+          ) : (
+            requests.incoming.map((req) => (
+              <div
+                key={req.id}
+                className="tactile-card p-4 flex items-center justify-between gap-4"
+              >
+                <div className="flex items-center gap-3">
+                  <img
+                    src={req.fromUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${req.fromUserId}`}
+                    alt=""
+                    className="w-10 h-10 rounded-full object-cover bg-zinc-100 dark:bg-zinc-800"
+                  />
+                  <div>
+                    <h4 className="text-sm font-bold text-[#18181b] dark:text-white">
+                      {req.fromUser?.displayName || t('userDefault', 'Người dùng')}
+                    </h4>
+                    <p className="text-xs text-zinc-400 dark:text-zinc-400">{req.fromUser?.email}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleAcceptRequest(req.fromUserId, req.id)}
+                    className="tactile-btn-dark py-1.5 px-3 text-xs flex items-center gap-1"
+                  >
+                    <Check className="w-3.5 h-3.5" /> {t('accept', 'Đồng ý')}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* 4. MODAL: MỜI BẠN VÀO CHUYẾN ĐI (Exact tactile popup) */}
+      <Modal
+        isOpen={inviteModalOpen}
+        onClose={() => {
+          setInviteModalOpen(false);
+          setSelectedFriend(null);
+        }}
+        title={`${t('inviteModalTitle', 'Mời')} ${selectedFriend?.displayName || ''} ${t('readyToInviteTrips', 'vào chuyến đi')}`}
+        maxWidth="max-w-xl"
+      >
+        <div className="space-y-4">
+          <div className="p-3 bg-[#edebe4]/70 dark:bg-[#252530] rounded-2xl flex items-center gap-3 border border-[#dedbd0] dark:border-[#32323e]">
+            <img
+              src={selectedFriend?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedFriend?.uid}`}
+              alt=""
+              className="w-10 h-10 rounded-full bg-white dark:bg-zinc-800 object-cover border border-black/5 dark:border-white/10"
+            />
+            <div className="min-w-0 flex-1">
+              <h4 className="text-xs font-bold text-[#18181b] dark:text-white truncate">{selectedFriend?.displayName}</h4>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">{selectedFriend?.email}</p>
+            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white dark:bg-[#1a1a20] text-zinc-700 dark:text-zinc-300 border border-[#dedbd0] dark:border-[#32323e]">
+              {t('friendBadge', 'Bạn bè')}
+            </span>
+          </div>
+
+          <div>
+            <h4 className="text-xs font-bold text-[#18181b] dark:text-white uppercase tracking-wider mb-2">
+              {t('selectTripToInvite', 'Chọn chuyến đi cần mời')} ({userTrips.length})
+            </h4>
+
+            {userTrips.length === 0 ? (
+              <div className="p-6 text-center rounded-2xl bg-zinc-50 dark:bg-[#1a1a20] border border-zinc-200 dark:border-[#32323e] text-xs text-zinc-500 dark:text-zinc-400">
+                {t('noTripsToInvite', 'Bạn chưa tham gia chuyến đi nào. Hãy tạo chuyến đi mới trước nhé!')}
+              </div>
+            ) : (
+              <div className="space-y-2.5 max-h-[340px] overflow-y-auto pr-1">
+                {userTrips.map((trip) => {
+                  // Check if friend is already member of this trip
+                  const alreadyMember = selectedFriend?.mutualTrips?.some(t => t.id === trip.id);
+                  const isInvitingThis = invitingTripId === trip.id;
+
+                  return (
+                    <div
+                      key={trip.id}
+                      className="p-3 rounded-2xl bg-white dark:bg-[#212129] border border-[#dedbd0] dark:border-[#32323e] flex items-center justify-between gap-3 hover:border-zinc-400 dark:hover:border-zinc-600 transition-all shadow-xs"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-[#18181b] dark:text-white truncate block">
+                            {trip.name}
+                          </span>
+                          <span className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-[#2a2a35] px-1.5 py-0.2 rounded">
+                            #{trip.tripCode}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-[11px] text-zinc-400 mt-0.5">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" /> {trip.startDate}
+                          </span>
+                          <span className="text-emerald-700 dark:text-emerald-400 font-medium">
+                            {trip.status === 'COMPLETED' ? t('completedTrip', 'Đã hoàn thành') : t('activeTrip', 'Đang hoạt động')}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        {alreadyMember ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            {t('alreadyJoined', 'Đã tham gia')}
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleInviteToTrip(trip.id)}
+                            disabled={isInvitingThis}
+                            className="tactile-btn-dark py-1.5 px-3.5 text-xs flex items-center gap-1.5"
+                          >
+                            {isInvitingThis ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                <span>{t('inviting', 'Đang mời...')}</span>
+                              </>
+                            ) : (
+                              <>
+                                <UserPlus className="w-3.5 h-3.5" />
+                                <span>{t('inviteJoin', 'Mời tham gia')}</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="pt-2 border-t border-[#dedbd0] flex justify-end">
+            <button
+              onClick={() => {
+                setInviteModalOpen(false);
+                setSelectedFriend(null);
+              }}
+              className="px-4 py-2 bg-[#edebe4] hover:bg-[#dedbd0] text-[#18181b] text-xs font-bold rounded-full transition-colors"
+            >
+              {t('close', 'Đóng')}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+    </div>
+  );
+}

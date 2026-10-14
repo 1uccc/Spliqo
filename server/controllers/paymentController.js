@@ -11,9 +11,15 @@ export async function markAsPaid(req, res) {
       return res.status(404).json({ error: 'Không tìm thấy chuyến đi.' });
     }
 
-    // Permission check: only the debtor (payer) can mark as paid
-    if (fromUserId && fromUserId !== currentUserId) {
-      return res.status(403).json({ error: 'Chỉ người chuyển tiền mới có thể đánh dấu đã thanh toán (Mark as Paid).' });
+    // Permission check: debtor (payer) or trip organizer / member can mark as paid
+    const isPayer = !fromUserId || fromUserId === currentUserId;
+    const isCreator = trip.createdBy === currentUserId;
+    if (!isPayer && !isCreator) {
+      const members = dbService.getTripMembers(tripId);
+      const isMember = members.some(m => m.userId === currentUserId);
+      if (!isMember) {
+        return res.status(403).json({ error: 'Chỉ người chuyển tiền hoặc thành viên chuyến đi mới có thể đánh dấu đã thanh toán.' });
+      }
     }
 
     const updated = dbService.saveSettlement(tripId, {
@@ -26,6 +32,23 @@ export async function markAsPaid(req, res) {
       proofImageUrl: proofImageUrl || '',
       note: note || '',
     });
+
+    // Notify the recipient about the payment awaiting confirmation
+    if (toUserId && toUserId !== currentUserId) {
+      const payerName = req.user.displayName || 'Một thành viên';
+      const formattedAmount = (Math.round(Number(amount) || 0)).toLocaleString('vi-VN') + 'đ';
+      dbService.addNotification(toUserId, {
+        type: 'PAYMENT_PAID',
+        title: 'Chờ xác nhận thanh toán',
+        message: `${payerName} vừa đánh dấu đã chuyển ${formattedAmount} cho bạn trong "${trip.name}". Hãy kiểm tra tài khoản và xác nhận.`,
+        link: `/settlements`,
+        actor: {
+          uid: currentUserId,
+          displayName: req.user.displayName,
+          photoURL: req.user.photoURL,
+        }
+      });
+    }
 
     return res.json({
       success: true,
@@ -49,9 +72,15 @@ export async function confirmPayment(req, res) {
       return res.status(404).json({ error: 'Không tìm thấy chuyến đi.' });
     }
 
-    // Permission check: only the recipient can confirm they received money!
-    if (toUserId && toUserId !== currentUserId) {
-      return res.status(403).json({ error: 'Chỉ người nhận tiền mới có quyền xác nhận đã nhận được tiền (Confirm Payment).' });
+    // Permission check: recipient, trip organizer or member can confirm payment
+    const isReceiver = !toUserId || toUserId === currentUserId;
+    const isCreator = trip.createdBy === currentUserId;
+    if (!isReceiver && !isCreator) {
+      const members = dbService.getTripMembers(tripId);
+      const isMember = members.some(m => m.userId === currentUserId);
+      if (!isMember) {
+        return res.status(403).json({ error: 'Chỉ người nhận tiền hoặc trưởng nhóm mới có quyền xác nhận đã nhận được tiền.' });
+      }
     }
 
     const updated = dbService.updateSettlementStatus(tripId, settlementId, 'CONFIRMED', {
@@ -60,6 +89,24 @@ export async function confirmPayment(req, res) {
 
     if (!updated) {
       return res.status(404).json({ error: 'Không tìm thấy khoản thanh toán để xác nhận.' });
+    }
+
+    // Notify the payer that payment was confirmed
+    const payerId = updated.fromUserId;
+    if (payerId && payerId !== currentUserId) {
+      const receiverName = req.user.displayName || 'Người nhận';
+      const formattedAmount = (Math.round(Number(updated.amount) || 0)).toLocaleString('vi-VN') + 'đ';
+      dbService.addNotification(payerId, {
+        type: 'PAYMENT_CONFIRMED',
+        title: 'Thanh toán đã được xác nhận',
+        message: `${receiverName} đã xác nhận đã nhận đủ ${formattedAmount} trong chuyến đi "${trip.name}".`,
+        link: `/settlements`,
+        actor: {
+          uid: currentUserId,
+          displayName: req.user.displayName,
+          photoURL: req.user.photoURL,
+        }
+      });
     }
 
     return res.json({

@@ -125,6 +125,15 @@ export async function updateTrip(req, res) {
       return res.status(403).json({ error: 'Chỉ người tạo chuyến đi mới có quyền chỉnh sửa thông tin.' });
     }
 
+    if (status === 'COMPLETED') {
+      const unsettledDebts = getUnsettledDebts(tripId);
+      if (unsettledDebts.length > 0) {
+        return res.status(400).json({
+          error: `Chưa thể chốt sổ: Vẫn còn ${unsettledDebts.length} khoản công nợ chưa được thanh toán hoặc xác nhận.`
+        });
+      }
+    }
+
     const updated = dbService.updateTrip(tripId, {
       ...(name ? { name: name.trim() } : {}),
       ...(description !== undefined ? { description: description.trim() } : {}),
@@ -162,6 +171,51 @@ export async function deleteTrip(req, res) {
   }
 }
 
+export async function getTripInvitePreview(req, res) {
+  try {
+    const { tripCode } = req.params;
+    if (!tripCode || !tripCode.trim()) {
+      return res.status(400).json({ error: 'Mã chuyến đi không hợp lệ.' });
+    }
+
+    const trip = dbService.getTripByCode(tripCode);
+    if (!trip) {
+      return res.status(404).json({ error: 'Không tìm thấy chuyến đi tương ứng với mã mời này.' });
+    }
+
+    const creatorUser = dbService.getUser(trip.createdBy);
+    const members = dbService.getTripMembers(trip.id);
+    const currentUserId = req.user?.uid;
+    const isMember = currentUserId ? members.some(m => m.userId === currentUserId) : false;
+
+    return res.json({
+      trip: {
+        id: trip.id,
+        name: trip.name,
+        description: trip.description || '',
+        startDate: trip.startDate,
+        endDate: trip.endDate,
+        status: trip.status || 'ACTIVE',
+        tripCode: trip.tripCode,
+        createdAt: trip.createdAt
+      },
+      creator: {
+        displayName: creatorUser?.displayName || 'Trưởng nhóm',
+        photoURL: creatorUser?.photoURL || ''
+      },
+      memberCount: members.length,
+      membersPreview: members.slice(0, 5).map(m => ({
+        displayName: m.displayName || 'Thành viên',
+        photoURL: m.photoURL || ''
+      })),
+      isMember
+    });
+  } catch (err) {
+    console.error('[getTripInvitePreview] Error:', err);
+    return res.status(500).json({ error: 'Lỗi khi lấy thông tin lời mời tham gia.' });
+  }
+}
+
 export async function joinTrip(req, res) {
   try {
     const { tripCode } = req.body;
@@ -179,10 +233,33 @@ export async function joinTrip(req, res) {
     const members = dbService.getTripMembers(trip.id);
     const alreadyMember = members.some(m => m.userId === userId);
     if (alreadyMember) {
-      return res.status(400).json({ error: 'You are already a member of this trip. Bạn đã là thành viên của chuyến đi này.' });
+      return res.json({
+        success: true,
+        alreadyMember: true,
+        message: `Bạn đã là thành viên của chuyến đi ${trip.name}.`,
+        trip
+      });
     }
 
     dbService.addMemberToTrip(trip.id, userId, 'Member');
+
+    try {
+      if (trip.createdBy && trip.createdBy !== userId) {
+        dbService.addNotification(trip.createdBy, {
+          type: 'TRIP_INVITE',
+          title: 'Thành viên mới tham gia',
+          message: `${req.user.displayName || 'Một thành viên'} vừa tham gia chuyến đi "${trip.name}" của bạn.`,
+          link: `/trips/${trip.id}`,
+          actor: {
+            uid: userId,
+            displayName: req.user.displayName,
+            photoURL: req.user.photoURL,
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('[joinTrip] Notification error:', e.message);
+    }
 
     return res.json({
       success: true,
@@ -193,6 +270,22 @@ export async function joinTrip(req, res) {
     console.error('[joinTrip] Error:', err);
     return res.status(500).json({ error: 'Lỗi khi tham gia chuyến đi.' });
   }
+}
+
+function getUnsettledDebts(tripId) {
+  const members = dbService.getTripMembers(tripId);
+  const expenses = dbService.getTripExpenses(tripId);
+  const { memberTotals } = calculateMemberTotals(expenses, members);
+  const optimized = optimizeSettlements(memberTotals);
+  const existingSettlements = dbService.getTripSettlements(tripId);
+
+  const memberMap = {};
+  members.forEach(m => {
+    memberMap[m.userId] = m;
+  });
+
+  const reconciled = reconcileSettlements(optimized, existingSettlements, memberMap);
+  return reconciled.filter(s => s.status !== 'CONFIRMED');
 }
 
 export async function completeTrip(req, res) {
@@ -206,13 +299,39 @@ export async function completeTrip(req, res) {
     }
 
     if (trip.createdBy !== userId) {
-      return res.status(403).json({ error: 'Chỉ người tạo chuyến đi mới có thể đánh dấu hoàn thành.' });
+      return res.status(403).json({ error: 'Chỉ người tạo chuyến đi mới có quyền chốt sổ hoàn thành.' });
+    }
+
+    if (trip.status === 'COMPLETED') {
+      return res.json({
+        success: true,
+        message: 'Chuyến đi đã được chốt sổ hoàn tất.',
+        trip
+      });
+    }
+
+    // Condition: All debts must be settled and confirmed
+    const unsettledDebts = getUnsettledDebts(tripId);
+    if (unsettledDebts.length > 0) {
+      return res.status(400).json({
+        error: `Chưa thể chốt sổ chuyến đi: Vẫn còn ${unsettledDebts.length} khoản công nợ chưa được thanh toán hoặc xác nhận. Tất cả thành viên phải hoàn tất thanh toán trước khi chốt sổ.`,
+        unsettledCount: unsettledDebts.length,
+        unsettledDebts: unsettledDebts.map(s => ({
+          id: s.id,
+          fromUserId: s.fromUserId,
+          fromUserName: s.fromUser?.displayName || 'Thành viên',
+          toUserId: s.toUserId,
+          toUserName: s.toUser?.displayName || 'Thành viên',
+          amount: s.amount,
+          status: s.status
+        }))
+      });
     }
 
     const updated = dbService.updateTrip(tripId, { status: 'COMPLETED' });
     return res.json({
       success: true,
-      message: 'Chuyến đi đã được đánh dấu hoàn thành. Đã chốt chi phí và chuyển sang giai đoạn thanh toán.',
+      message: 'Chúc mừng! Chuyến đi đã chốt sổ thành công. Toàn bộ công nợ đã được tất toán.',
       trip: updated
     });
   } catch (err) {

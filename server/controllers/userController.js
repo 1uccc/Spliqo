@@ -15,6 +15,7 @@ export async function updateProfile(req, res) {
     const userId = req.user.uid;
     const {
       displayName,
+      email,
       phone,
       bankName,
       bankAccountNumber,
@@ -23,9 +24,13 @@ export async function updateProfile(req, res) {
       photoURL,
     } = req.body;
 
+    const existingUser = dbService.getUser(userId) || {};
+
     const updated = dbService.saveUser({
+      ...existingUser,
       uid: userId,
-      ...(displayName ? { displayName: displayName.trim() } : {}),
+      ...(email !== undefined && email !== '' ? { email: email.trim() } : {}),
+      ...(displayName !== undefined && displayName !== '' ? { displayName: displayName.trim() } : {}),
       ...(phone !== undefined ? { phone: phone.trim() } : {}),
       ...(bankName !== undefined ? { bankName: bankName.trim().toUpperCase() } : {}),
       ...(bankAccountNumber !== undefined ? { bankAccountNumber: bankAccountNumber.trim() } : {}),

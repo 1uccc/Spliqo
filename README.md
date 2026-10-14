@@ -1,4 +1,4 @@
-# SplitMate - Split Expenses. Stay Friends. 💸
+# Spliqo - Split Expenses. Stay Friends. 💸
 
 > **Web App quản lý và chia sẻ chi phí nhóm** thông minh, minh bạch và sòng phẳng dành cho các hoạt động du lịch, ăn uống, cà phê, tiệc tùng, team building và sinh hoạt nhóm.
 
@@ -6,7 +6,7 @@
 
 ## 🌟 Điểm nổi bật & Triết lý thiết kế
 
-SplitMate được thiết kế theo đúng bài toán thực tế:
+Spliqo được thiết kế theo đúng bài toán thực tế:
 - **1 Chuyến đi (Trip) có nhiều thành viên (Members)**.
 - **Nhiều khoản chi (Expenses)** diễn ra liên tục (tiền xe, khách sạn, ăn trưa, cà phê, vé tham quan...).
 - **Mỗi khoản chi do một thành viên khác nhau thanh toán** (không cố định người tạo).

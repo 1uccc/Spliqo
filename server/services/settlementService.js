@@ -1,5 +1,5 @@
 /**
- * Settlement Service for SplitMate
+ * Settlement Service for Spliqo
  * Implements Debt Simplification (Minimum Cash Flow algorithm) to minimize transactions,
  * and handles settlement payment lifecycle and VietQR formatting.
  */
@@ -157,7 +157,7 @@ export function generateVietQRUrl({ bankName, bankAccountNumber, bankAccountHold
   const cleanBank = encodeURIComponent(bankName.trim().toUpperCase());
   const cleanAcc = encodeURIComponent(bankAccountNumber.trim());
   const cleanAmount = Math.round(Number(amount) || 0);
-  const memo = encodeURIComponent(`SplitMate ${tripName}`.slice(0, 50));
+  const memo = encodeURIComponent(`Spliqo ${tripName}`.slice(0, 50));
   const holder = encodeURIComponent((bankAccountHolder || '').trim().toUpperCase());
 
   return `https://img.vietqr.io/image/${cleanBank}-${cleanAcc}-compact2.png?amount=${cleanAmount}&addInfo=${memo}&accountName=${holder}`;

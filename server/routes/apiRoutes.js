@@ -1,5 +1,5 @@
 import express from 'express';
-import { authMiddleware } from '../middleware/authMiddleware.js';
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/authMiddleware.js';
 import {
   createTrip,
   getTrips,
@@ -7,7 +7,8 @@ import {
   updateTrip,
   deleteTrip,
   joinTrip,
-  completeTrip
+  completeTrip,
+  getTripInvitePreview
 } from '../controllers/tripController.js';
 import {
   getMembers,
@@ -23,7 +24,8 @@ import {
 import {
   getTripSummary,
   getTripBalances,
-  getTripSettlements
+  getTripSettlements,
+  getUserSettlementsOverview
 } from '../controllers/calculationController.js';
 import {
   markAsPaid,
@@ -43,11 +45,25 @@ import {
   acceptFriendRequest,
   inviteFriendToTrip
 } from '../controllers/friendController.js';
+import {
+  getNotifications,
+  markAsRead,
+  markAllAsRead,
+  deleteNotification,
+  clearAllNotifications
+} from '../controllers/notificationController.js';
+import { uploadImage } from '../controllers/uploadController.js';
 
 const router = express.Router();
 
+// Public invite preview (allows unauthenticated guest preview with optional user context)
+router.get('/trips/invite/:tripCode', optionalAuthMiddleware, getTripInvitePreview);
+
 // Apply auth middleware to all protected API routes
 router.use(authMiddleware);
+
+// --- Media & Cloudinary Upload ---
+router.post('/upload', uploadImage);
 
 // --- User Profile ---
 router.get('/users/profile', getProfile);
@@ -88,8 +104,16 @@ router.get('/trips/:tripId/balances', getTripBalances);
 router.get('/trips/:tripId/settlements', getTripSettlements);
 
 // --- Payments & Settlements ---
+router.get('/settlements/overview', getUserSettlementsOverview);
 router.post('/trips/:tripId/settlements/:settlementId/pay', markAsPaid);
 router.post('/trips/:tripId/settlements/:settlementId/confirm', confirmPayment);
 router.get('/trips/:tripId/settlements/history', getSettlementHistory);
+
+// --- Notifications ---
+router.get('/notifications', getNotifications);
+router.put('/notifications/read-all', markAllAsRead);
+router.put('/notifications/:notifId/read', markAsRead);
+router.delete('/notifications/:notifId', deleteNotification);
+router.delete('/notifications', clearAllNotifications);
 
 export default router;

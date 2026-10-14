@@ -1,5 +1,5 @@
 /**
- * Calculation Service for SplitMate
+ * Calculation Service for Spliqo
  * Handles calculating expense shares, member totals, balances, and invariant validation.
  */
 

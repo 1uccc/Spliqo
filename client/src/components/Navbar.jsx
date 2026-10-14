@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 export default function Navbar() {
-  const { currentUser, logout, switchDemoUser, demoUsers, isFirebaseLive } = useAuth();
+  const { currentUser, logout, isFirebaseLive } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [switchOpen, setSwitchOpen] = useState(false);
   const location = useLocation();
@@ -91,33 +91,10 @@ export default function Navbar() {
                   className="absolute right-0 mt-2 w-64 liquid-glass-card rounded-3xl py-2 z-50 animate-fade-in"
                   onClick={() => setSwitchOpen(false)}
                 >
-                  <div className="px-3 py-2 border-b border-white/20 text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                    <span>Đổi người dùng (Test)</span>
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <div className="px-3 py-2 border-b border-white/20 text-xs">
+                    <div className="font-bold text-slate-800">{currentUser?.displayName}</div>
+                    <div className="text-[10px] text-slate-400 truncate">{currentUser?.email}</div>
                   </div>
-                  {demoUsers.map((u) => (
-                    <button
-                      key={u.uid}
-                      onClick={() => switchDemoUser(u.uid)}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-xs hover:bg-emerald-500/10 transition-all rounded-xl mx-1 ${
-                        currentUser?.uid === u.uid ? 'bg-emerald-500/10 font-bold text-emerald-800' : 'text-slate-700'
-                      }`}
-                      style={{ width: 'calc(100% - 8px)' }}
-                    >
-                      <img
-                        src={u.photoURL}
-                        alt=""
-                        className="w-7 h-7 rounded-xl bg-white/50 ring-1 ring-white/30"
-                      />
-                      <div className="flex-1 truncate">
-                        <div className="truncate">{u.displayName}</div>
-                        <div className="text-[10px] text-slate-400">{u.bankName ? `${u.bankName} • ${u.bankAccountNumber}` : u.email}</div>
-                      </div>
-                      {currentUser?.uid === u.uid && (
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
-                      )}
-                    </button>
-                  ))}
                   <div className="border-t border-white/20 mt-1 pt-1 px-3 py-1">
                     <button
                       onClick={logout}
