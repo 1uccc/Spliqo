@@ -26,6 +26,8 @@ jobs:
       - name: Build Frontend Production Bundle
         working-directory: client
         run: npm run build
+        env:
+          VITE_API_BASE_URL: https://spliqo-backend.onrender.com/api
 
       - name: Deploy Preview Channel to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0

@@ -2,6 +2,10 @@ node_modules/
 dist/
 .env
 .env*
+!client/.env.production
+!client/.env.example
+!client/.env.production.example
+!server/.env.example
 *serviceAccount*.json
 .DS_Store
 *.log
