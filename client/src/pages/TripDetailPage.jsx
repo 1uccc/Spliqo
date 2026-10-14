@@ -1043,8 +1043,12 @@ export default function TripDetailPage() {
             ) : (
               <div className="divide-y divide-[#e6e4dc]/70 dark:divide-[#272732]">
                 {settlements.map((s) => {
-                  const isPayer = s.fromUserId === currentUser?.uid;
-                  const isReceiver = s.toUserId === currentUser?.uid;
+                  const currentUid = String(currentUser?.uid || currentUser?.id || '');
+                  const fromUid = String(s.fromUserId || s.fromUser?.id || s.fromUser?.uid || '');
+                  const toUid = String(s.toUserId || s.toUser?.id || s.toUser?.uid || '');
+
+                  const isPayer = Boolean(currentUid && fromUid && currentUid === fromUid);
+                  const isReceiver = Boolean(currentUid && toUid && currentUid === toUid);
 
                   return (
                     <div
@@ -1142,7 +1146,7 @@ export default function TripDetailPage() {
                           )}
                         </span>
 
-                        {/* Button 1: QR Modal */}
+                        {/* Button 1: QR Modal (Mọi thành viên đều có thể mở xem) */}
                         <button
                           onClick={() => {
                             setSelectedSettlement(s);
@@ -1154,8 +1158,8 @@ export default function TripDetailPage() {
                           <span>{t('viewVietQR', 'Mở mã VietQR')}</span>
                         </button>
 
-                        {/* Button 2: XÁC NHẬN ĐÃ CHUYỂN */}
-                        {s.status !== 'CONFIRMED' && s.status !== 'PAID' && (
+                        {/* Button 2: XÁC NHẬN ĐÃ CHUYỂN - Chỉ người nợ tiền (s.fromUserId) mới thấy */}
+                        {isPayer && s.status !== 'CONFIRMED' && s.status !== 'PAID' && (
                           <button
                             onClick={() => handleMarkAsPaid(s)}
                             className="tactile-btn-dark text-xs flex items-center gap-1.5 shadow-xs"
@@ -1165,8 +1169,8 @@ export default function TripDetailPage() {
                           </button>
                         )}
 
-                        {/* Button 3: XÁC NHẬN ĐÃ NHẬN TIỀN */}
-                        {s.status === 'PAID' && (
+                        {/* Button 3: XÁC NHẬN ĐÃ NHẬN TIỀN - Chỉ người nhận tiền (s.toUserId) mới thấy khi người nợ đã bấm chuyển */}
+                        {isReceiver && s.status === 'PAID' && (
                           <button
                             onClick={() => handleConfirmPayment(s)}
                             className="tactile-btn-dark text-xs flex items-center gap-1.5 shadow-xs"

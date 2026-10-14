@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import Modal from './Modal';
 import { formatVND } from '../services/calculation';
-import { Copy, Check, QrCode, Building, CreditCard, User, ExternalLink, Loader2 } from 'lucide-react';
+import { Copy, Check, QrCode, Building, CreditCard, User, ExternalLink, Loader2, Clock } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function VietQRModal({
   isOpen,
@@ -17,8 +18,16 @@ export default function VietQRModal({
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
+  const { currentUser } = useAuth();
 
   if (!settlement) return null;
+
+  const currentUid = String(currentUser?.uid || currentUser?.id || '');
+  const fromUid = String(settlement.fromUserId || settlement.fromUser?.id || settlement.fromUser?.uid || '');
+  const toUid = String(settlement.toUserId || settlement.toUser?.id || settlement.toUser?.uid || '');
+
+  const isUserPayer = Boolean((currentUid && fromUid && currentUid === fromUid) || isPayer);
+  const isUserReceiver = Boolean(currentUid && toUid && currentUid === toUid);
 
   const recipient = settlement.toUser || {};
   const amount = settlement.amount || 0;
@@ -169,8 +178,8 @@ export default function VietQRModal({
             </button>
           )}
 
-          {/* NÚT XÁC NHẬN ĐÃ CHUYỂN */}
-          {isPending && (
+          {/* NÚT XÁC NHẬN ĐÃ CHUYỂN - Chỉ hiển thị cho người nợ tiền (isUserPayer) */}
+          {isPending && isUserPayer && (
             <button
               onClick={handleMarkPaid}
               disabled={loading}
@@ -189,7 +198,8 @@ export default function VietQRModal({
                 <span>Đã gửi thông báo chuyển tiền • Đang chờ người nhận duyệt</span>
               </div>
 
-              {onConfirmPayment && (
+              {/* Chỉ người nhận tiền (isUserReceiver) mới có nút duyệt */}
+              {onConfirmPayment && isUserReceiver && (
                 <button
                   onClick={handleConfirmPaid}
                   disabled={loading}
@@ -200,6 +210,18 @@ export default function VietQRModal({
                 </button>
               )}
             </div>
+          )}
+
+          {/* Nếu là người nhận và người nợ đã đưa tiền mặt / thanh toán trực tiếp */}
+          {isPending && isUserReceiver && onConfirmPayment && (
+            <button
+              onClick={handleConfirmPaid}
+              disabled={loading}
+              className="tactile-btn-pill w-full py-2.5 justify-center text-xs font-bold border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 flex items-center gap-2 cursor-pointer"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 text-emerald-500" />}
+              <span>Đã nhận tiền (Xác nhận tất toán)</span>
+            </button>
           )}
 
           {/* ĐÃ TẤT TOÁN */}
