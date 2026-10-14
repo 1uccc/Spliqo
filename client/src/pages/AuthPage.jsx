@@ -171,6 +171,13 @@ export default function AuthPage() {
                     ? t('registerSubtitle', 'Tạo tài khoản mới để chia sẻ chi phí và quyết toán VietQR')
                     : t('loginSubtitle', 'Chào mừng quay trở lại! Đăng nhập để quản lý chi tiêu nhóm')}
               </p>
+
+              {redirectTarget.includes('/join/') && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 dark:bg-amber-400/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-[11px] font-bold mt-2.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  <span>{t('authJoinBanner', 'Đăng nhập hoặc đăng ký để tiếp tục tham gia chuyến đi')}</span>
+                </div>
+              )}
             </div>
 
             {/* Segmented Tactile Tab Switcher (Đăng nhập / Đăng ký) */}

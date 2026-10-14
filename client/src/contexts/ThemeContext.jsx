@@ -5,24 +5,25 @@ const ThemeContext = createContext();
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     try {
-      const saved = localStorage.getItem('splitmate_theme');
+      const saved = localStorage.getItem('spliqo_theme_v2');
       if (saved === 'dark' || saved === 'light') return saved;
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark';
-      }
+      // Default theme is strictly light mode
+      return 'light';
     } catch (e) {
       console.warn('Error reading theme from localStorage:', e);
+      return 'light';
     }
-    return 'light';
   });
 
   useEffect(() => {
     const root = document.documentElement;
     if (theme === 'dark') {
       root.classList.add('dark');
+      localStorage.setItem('spliqo_theme_v2', 'dark');
       localStorage.setItem('splitmate_theme', 'dark');
     } else {
       root.classList.remove('dark');
+      localStorage.setItem('spliqo_theme_v2', 'light');
       localStorage.setItem('splitmate_theme', 'light');
     }
   }, [theme]);
