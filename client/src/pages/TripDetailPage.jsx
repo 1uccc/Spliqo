@@ -555,26 +555,6 @@ export default function TripDetailPage() {
       {/* TAB CONTENT 1: OVERVIEW */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
-          {/* Invariant Verification Banner */}
-          <div className="p-5 rounded-3xl liquid-glass-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-emerald-500/20" style={{ background: 'rgba(16, 185, 129, 0.08)' }}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/25">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-xs sm:text-sm font-bold text-emerald-900 dark:text-emerald-300">
-                  Chuẩn xác tài chính: Định luật cân bằng sổ sách
-                </h4>
-                <p className="text-[11px] sm:text-xs text-emerald-800 dark:text-emerald-300/80">
-                  Σ Đã trả ({formatVND(balances?.sumPaid || 0)}) = Σ Phải chịu ({formatVND(balances?.sumOwed || 0)}) = Tổng chi tiêu ({formatVND(balances?.totalExpense || 0)})
-                </p>
-              </div>
-            </div>
-            <span className="self-start sm:self-center text-[11px] font-bold px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-sm shadow-emerald-500/25">
-              Tổng chênh lệch = {formatVND(balances?.sumBalance || 0)} (Cân bằng tuyệt đối ✓)
-            </span>
-          </div>
-
           {/* Top Payer Highlight */}
           {balances?.topPayer && (
             <div className="p-5 rounded-3xl liquid-glass-card flex items-center justify-between border border-teal-500/20" style={{ background: 'linear-gradient(135deg, rgba(20,184,166,0.08), rgba(16,185,129,0.05))' }}>
