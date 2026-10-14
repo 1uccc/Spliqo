@@ -232,7 +232,7 @@ export default function JoinTripPage() {
                 <Flame className="w-7 h-7 text-amber-400 fill-amber-400" />
               </div>
               <h1 className="text-2xl font-black tracking-tight text-[#18181b] dark:text-white">
-                Spliqo
+                Spli<span className="text-amber-500">qo</span>
               </h1>
               <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-[11px] font-bold mt-1.5 border border-amber-200 dark:border-amber-800/40">
                 <Sparkles className="w-3 h-3" />
