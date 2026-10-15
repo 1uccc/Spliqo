@@ -2,7 +2,7 @@
  * Spliqo Service Worker - PWA & Offline Support
  */
 
-const CACHE_NAME = 'spliqo-pwa-v1';
+const CACHE_NAME = 'spliqo-pwa-v2';
 
 // Essential App Shell resources to precache
 const PRECACHE_ASSETS = [
@@ -11,7 +11,8 @@ const PRECACHE_ASSETS = [
   '/manifest.webmanifest',
   '/favicon.svg',
   '/pwa-icon-192.svg',
-  '/pwa-icon-512.svg'
+  '/pwa-icon-512.svg',
+  '/pwa-icon-maskable.svg'
 ];
 
 self.addEventListener('install', (event) => {
