@@ -1,9 +1,92 @@
 import React from 'react';
 import { formatVND } from '../../services/calculation';
+import TripBudgetGauge from './TripBudgetGauge';
+import { Sparkles, RotateCw, Crown } from 'lucide-react';
 
-export default function TripOverviewTab({ balances, currentUser, t }) {
+export default function TripOverviewTab({
+  trip,
+  expenses = [],
+  members = [],
+  balances,
+  currentUser,
+  onSaveBudget,
+  onOpenLuckyWheel,
+  onOpenTripWrapped,
+  t
+}) {
   return (
     <div className="space-y-6">
+      {/* 1. SMART TRIP BUDGET GAUGE & BURN RATE WARNING */}
+      <TripBudgetGauge
+        trip={trip}
+        expenses={expenses}
+        members={members}
+        balances={balances}
+        onSaveBudget={onSaveBudget}
+        t={t}
+      />
+
+      {/* Gamification & Wrapped Quick Banner */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Lucky Wheel Card */}
+        <div 
+          onClick={onOpenLuckyWheel}
+          className="tactile-card p-4 sm:p-5 flex items-center justify-between gap-3 cursor-pointer hover:border-amber-400/50 hover:scale-[1.01] transition-all group relative overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.06), rgba(249, 115, 22, 0.03))' }}
+        >
+          <div className="flex items-center gap-3 relative z-10">
+            <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center shrink-0 group-hover:rotate-45 transition-transform">
+              <RotateCw className="w-5 h-5 stroke-[2.2]" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-extrabold text-[#18181b] dark:text-white">
+                  Vòng xoay may mắn 🎡
+                </span>
+                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
+                  Game
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+                Ai trả chầu cafe, trà sữa hôm nay? Quay ngay!
+              </p>
+            </div>
+          </div>
+          <span className="text-xs font-bold text-amber-600 dark:text-amber-400 shrink-0 relative z-10 group-hover:translate-x-0.5 transition-transform">
+            Chơi →
+          </span>
+        </div>
+
+        {/* Wrapped Recap Card */}
+        <div 
+          onClick={onOpenTripWrapped}
+          className="tactile-card p-4 sm:p-5 flex items-center justify-between gap-3 cursor-pointer hover:border-purple-400/50 hover:scale-[1.01] transition-all group relative overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.06), rgba(79, 70, 229, 0.03))' }}
+        >
+          <div className="flex items-center gap-3 relative z-10">
+            <div className="w-11 h-11 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <Sparkles className="w-5 h-5 stroke-[2.2]" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-extrabold text-[#18181b] dark:text-white">
+                  Spliqo Wrapped 📊
+                </span>
+                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300">
+                  Recap
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+                Ký ức tài chính, đại gia chi bạo & thẻ Story
+              </p>
+            </div>
+          </div>
+          <span className="text-xs font-bold text-purple-600 dark:text-purple-400 shrink-0 relative z-10 group-hover:translate-x-0.5 transition-transform">
+            Xem →
+          </span>
+        </div>
+      </div>
+
       {/* Top Payer Highlight */}
       {balances?.topPayer && (
         <div 
@@ -17,9 +100,12 @@ export default function TripOverviewTab({ balances, currentUser, t }) {
               className="w-12 h-12 rounded-2xl bg-white/50 dark:bg-white/10 shadow-lg ring-2 ring-white/40 dark:ring-white/10"
             />
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-teal-800 dark:text-teal-300">
-                {t('topPayerTitle', 'Người chi trả nhiều nhất')}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <Crown className="w-3.5 h-3.5 text-amber-500" />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-teal-800 dark:text-teal-300">
+                  {t('topPayerTitle', 'Người chi trả nhiều nhất')}
+                </span>
+              </div>
               <div className="text-base font-bold text-slate-900 dark:text-white">
                 {balances.topPayer.displayName}
               </div>

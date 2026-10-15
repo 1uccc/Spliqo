@@ -261,6 +261,18 @@
   }
 }
 
+/* Date input mobile fix: prevent native picker from causing horizontal overflow */
+input[type="date"] {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+
 /* Cross-browser no-scrollbar utility */
 .no-scrollbar::-webkit-scrollbar {
   display: none !important;

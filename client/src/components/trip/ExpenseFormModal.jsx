@@ -131,7 +131,7 @@ export default function ExpenseFormModal({
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+          <div className="flex flex-wrap gap-1.5 pb-1">
             {SUPPORTED_CURRENCIES.map((c) => {
               const isSelected = (expCurrency || 'VND') === c.code;
               return (
@@ -152,7 +152,7 @@ export default function ExpenseFormModal({
                       }
                     }
                   }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
                     isSelected
                       ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-xs scale-105'
                       : 'bg-[#f4f3ec] dark:bg-[#1a1a22] text-zinc-600 dark:text-zinc-400 border border-[#e6e4dc] dark:border-[#2e2e38] hover:border-zinc-400'
@@ -384,7 +384,7 @@ export default function ExpenseFormModal({
 
         {/* Date & Note */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
+          <div className="min-w-0">
             <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
               {t('expenseDate', 'Ngày chi')}
             </label>
@@ -392,7 +392,8 @@ export default function ExpenseFormModal({
               type="date"
               value={expDate}
               onChange={(e) => setExpDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-2xl bg-[#f4f3ec] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2e2e38] text-xs text-[#18181b] dark:text-white outline-none focus:border-zinc-900 dark:focus:border-purple-500 focus:bg-white dark:focus:bg-[#20202c] transition-colors"
+              className="w-full max-w-full px-3 py-2 rounded-2xl bg-[#f4f3ec] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2e2e38] text-xs text-[#18181b] dark:text-white outline-none focus:border-zinc-900 dark:focus:border-purple-500 focus:bg-white dark:focus:bg-[#20202c] transition-colors appearance-none"
+              style={{ boxSizing: 'border-box' }}
             />
           </div>
           <div>

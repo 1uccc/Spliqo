@@ -80,7 +80,7 @@ export default function Modal({
         <div
           ref={contentRef}
           data-modal-content="true"
-          className="p-4 sm:p-6 overflow-y-auto flex-1 bg-white dark:bg-[#18181f] text-[#18181b] dark:text-zinc-100 custom-scrollbar overscroll-contain"
+          className="p-4 sm:p-6 overflow-y-auto overflow-x-hidden flex-1 bg-white dark:bg-[#18181f] text-[#18181b] dark:text-zinc-100 custom-scrollbar overscroll-contain"
         >
           {children}
         </div>

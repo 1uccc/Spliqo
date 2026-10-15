@@ -20,6 +20,8 @@ import ExpenseDetailModal from '../components/trip/ExpenseDetailModal';
 import CompleteTripModal from '../components/trip/CompleteTripModal';
 import InviteFriendsModal from '../components/trip/InviteFriendsModal';
 import SmartNudgeModal from '../components/SmartNudgeModal';
+import LuckyWheelModal from '../components/trip/LuckyWheelModal';
+import TripWrappedModal from '../components/trip/TripWrappedModal';
 import confetti from 'canvas-confetti';
 import { 
   ArrowLeft, 
@@ -34,7 +36,8 @@ import {
   CheckCircle2, 
   Share2,
   AlertCircle,
-  WifiOff
+  WifiOff,
+  RotateCw
 } from 'lucide-react';
 
 export default function TripDetailPage() {
@@ -75,6 +78,10 @@ export default function TripDetailPage() {
   // Complete Trip Modal State
   const [completeTripModalOpen, setCompleteTripModalOpen] = useState(false);
   const [completingTrip, setCompletingTrip] = useState(false);
+
+  // Lucky Wheel & Trip Wrapped Modals State
+  const [luckyWheelModalOpen, setLuckyWheelModalOpen] = useState(false);
+  const [tripWrappedModalOpen, setTripWrappedModalOpen] = useState(false);
 
   // Invite Link & QR Modal State
   const [inviteLinkModalOpen, setInviteLinkModalOpen] = useState(false);
@@ -549,11 +556,58 @@ export default function TripDetailPage() {
       confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
       setCompleteTripModalOpen(false);
       loadTripData();
+
+      // Automatically open Spliqo Wrapped celebration recap
+      setTimeout(() => {
+        setTripWrappedModalOpen(true);
+      }, 600);
     } catch (err) {
       showToast(err.message || 'Lỗi khi hoàn thành chuyến đi', 'error');
     } finally {
       setCompletingTrip(false);
     }
+  };
+
+  // Update Trip Budget Handler
+  const handleSaveBudget = async (budgetObj) => {
+    try {
+      await api.put(`/trips/${tripId}`, {
+        budget: budgetObj
+      });
+      setTrip((prev) => ({ ...prev, budget: budgetObj }));
+      showToast(budgetObj ? 'Đã lưu hạn mức chi tiêu của chuyến đi!' : 'Đã xóa hạn mức chi tiêu.', 'success');
+      loadTripData();
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi cập nhật hạn mức', 'error');
+      throw err;
+    }
+  };
+
+  // Gamification: Select Lucky Wheel winner to create expense
+  const handlePickWinnerForExpense = (winnerMember, mode) => {
+    const winnerId = winnerMember.userId || winnerMember.uid || winnerMember.id;
+    setSelectedExpense(null);
+    setEditingExpense(null);
+    setExpTitle(
+      mode === 'payer' 
+        ? 'Chầu ăn uống / Cafe (Bao trọn) 👑' 
+        : mode === 'lucky_free' 
+        ? 'Chầu ăn uống (Được khao) 🎁' 
+        : 'Chầu cafe / trà sữa 🧋'
+    );
+    setExpAmount('');
+    setExpCurrency('VND');
+    setExpOriginalAmount('');
+    setExpExchangeRate(1);
+    setExpPaidBy(winnerId);
+    setExpParticipants(members.map(m => m.userId || m.uid || m.id));
+    setExpSplitType('equal');
+    setExpIndividualAmounts({});
+    setExpBillImageUrl('');
+    setExpDate(new Date().toISOString().split('T')[0]);
+    setExpNote(`Quay từ Vòng xoay may mắn 🎲: ${winnerMember.displayName} được chọn!`);
+    setLuckyWheelModalOpen(false);
+    setAddExpenseModalOpen(true);
   };
 
   // Filtered & sorted expenses
@@ -679,6 +733,28 @@ export default function TripDetailPage() {
                 <Share2 className="w-3.5 h-3.5" />
                 <span>Mời bằng link</span>
               </button>
+
+              {/* Lucky Wheel Quick Trigger */}
+              <button
+                type="button"
+                onClick={() => setLuckyWheelModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-300 text-xs font-bold transition-all border border-amber-200 dark:border-amber-800/50 cursor-pointer shadow-xs active:scale-95"
+                title="Vòng xoay may mắn - Ai trả chầu này?"
+              >
+                <RotateCw className="w-3.5 h-3.5 text-amber-500" />
+                <span>Vòng xoay 🎡</span>
+              </button>
+
+              {/* Spliqo Wrapped Quick Trigger */}
+              <button
+                type="button"
+                onClick={() => setTripWrappedModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 text-xs font-bold transition-all border border-purple-200 dark:border-purple-800/50 cursor-pointer shadow-xs active:scale-95"
+                title="Spliqo Wrapped - Thẻ ký ức chuyến đi"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+                <span>Wrapped 📊</span>
+              </button>
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#18181b] dark:text-white tracking-tight">
@@ -757,8 +833,14 @@ export default function TripDetailPage() {
       {/* TAB CONTENT 1: OVERVIEW */}
       {activeTab === 'overview' && (
         <TripOverviewTab
+          trip={trip}
+          expenses={expenses}
+          members={members}
           balances={balances}
           currentUser={currentUser}
+          onSaveBudget={handleSaveBudget}
+          onOpenLuckyWheel={() => setLuckyWheelModalOpen(true)}
+          onOpenTripWrapped={() => setTripWrappedModalOpen(true)}
           t={t}
         />
       )}
@@ -955,6 +1037,27 @@ export default function TripDetailPage() {
           }}
         />
       )}
+
+      {/* MODAL: LUCKY WHEEL (VÒNG XOAY MAY MẮN) */}
+      <LuckyWheelModal
+        isOpen={luckyWheelModalOpen}
+        onClose={() => setLuckyWheelModalOpen(false)}
+        members={members}
+        onPickWinnerForExpense={handlePickWinnerForExpense}
+        t={t}
+      />
+
+      {/* MODAL: SPLIQO WRAPPED (THẺ KÝ ỨC CHUYẾN ĐI) */}
+      <TripWrappedModal
+        isOpen={tripWrappedModalOpen}
+        onClose={() => setTripWrappedModalOpen(false)}
+        trip={trip}
+        expenses={expenses}
+        members={members}
+        balances={balances}
+        settlements={settlements}
+        t={t}
+      />
     </div>
   );
 }

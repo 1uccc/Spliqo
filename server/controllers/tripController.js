@@ -14,7 +14,7 @@ function generateTripCode() {
 
 export async function createTrip(req, res) {
   try {
-    const { name, description = '', startDate = '', endDate = '' } = req.body;
+    const { name, description = '', startDate = '', endDate = '', budget = null } = req.body;
     const userId = req.user.uid;
 
     if (!name || !name.trim()) {
@@ -33,6 +33,7 @@ export async function createTrip(req, res) {
       startDate: startDate || new Date().toISOString().split('T')[0],
       endDate: endDate || new Date().toISOString().split('T')[0],
       status: 'ACTIVE',
+      budget: budget || null,
       createdAt: new Date().toISOString()
     };
 
@@ -115,15 +116,22 @@ export async function updateTrip(req, res) {
   try {
     const { tripId } = req.params;
     const userId = req.user.uid;
-    const { name, description, startDate, endDate, status } = req.body;
+    const { name, description, startDate, endDate, status, budget } = req.body;
 
     const trip = dbService.getTrip(tripId);
     if (!trip) {
       return res.status(404).json({ error: 'Không tìm thấy chuyến đi.' });
     }
 
-    if (trip.createdBy !== userId) {
-      return res.status(403).json({ error: 'Chỉ người tạo chuyến đi mới có quyền chỉnh sửa thông tin.' });
+    const members = dbService.getTripMembers(tripId);
+    const isMember = members.some(m => (m.userId || m.uid || m.id) === userId) || trip.createdBy === userId;
+    if (!isMember) {
+      return res.status(403).json({ error: 'Bạn không phải là thành viên của chuyến đi này.' });
+    }
+
+    // Only creator can complete or change trip status
+    if (status && trip.createdBy !== userId) {
+      return res.status(403).json({ error: 'Chỉ người tạo chuyến đi mới có quyền chốt sổ chuyến đi.' });
     }
 
     if (status === 'COMPLETED') {
@@ -141,6 +149,7 @@ export async function updateTrip(req, res) {
       ...(startDate ? { startDate } : {}),
       ...(endDate ? { endDate } : {}),
       ...(status ? { status } : {}),
+      ...(budget !== undefined ? { budget } : {}),
     });
 
     try {
