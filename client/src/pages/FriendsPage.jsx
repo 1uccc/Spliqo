@@ -25,7 +25,7 @@ import {
 
 export default function FriendsPage() {
   const { showToast } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [friends, setFriends] = useState([]);
   const [suggested, setSuggested] = useState([]);

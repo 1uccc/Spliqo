@@ -15,7 +15,7 @@ import {
 
 export default function InviteTripModal({ isOpen, onClose, trip, onOpenFriendList }) {
   const { showToast } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [showQR, setShowQR] = useState(true);

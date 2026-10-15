@@ -114,6 +114,13 @@ export default function MainLayout({ onOpenAddExpense }) {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [pendingQueueCount, setPendingQueueCount] = useState(0);
 
+  // Server Status & Ping Monitor
+  const [serverState, setServerState] = useState('checking'); // 'online' | 'waking' | 'offline' | 'checking'
+  const [latency, setLatency] = useState(null);
+  const [isChecking, setIsChecking] = useState(false);
+  const [lastChecked, setLastChecked] = useState(null);
+  const [serverStatusOpen, setServerStatusOpen] = useState(false);
+
   useEffect(() => {
     const handleBeforeInstall = (e) => {
       e.preventDefault();
