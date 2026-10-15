@@ -745,14 +745,14 @@ export default function TripDetailPage() {
                 <span>Vòng xoay 🎡</span>
               </button>
 
-              {/* Spliqo Wrapped Quick Trigger */}
+              {/* Spliqo Wrapped Quick Trigger (Neo-Retro) */}
               <button
                 type="button"
                 onClick={() => setTripWrappedModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 text-xs font-bold transition-all border border-purple-200 dark:border-purple-800/50 cursor-pointer shadow-xs active:scale-95"
-                title="Spliqo Wrapped - Thẻ ký ức chuyến đi"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-950/60 hover:bg-orange-100 dark:hover:bg-orange-900/60 text-[#ff5400] dark:text-orange-400 text-xs font-black transition-all border border-orange-300 dark:border-orange-800/60 cursor-pointer shadow-xs active:scale-95"
+                title="Spliqo Wrapped - Thẻ ký ức Neo-Retro"
               >
-                <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+                <Sparkles className="w-3.5 h-3.5 text-[#ff5400]" />
                 <span>Wrapped 📊</span>
               </button>
             </div>

@@ -57,23 +57,23 @@ export default function TripOverviewTab({
           </span>
         </div>
 
-        {/* Wrapped Recap Card */}
+        {/* Wrapped Recap Card (Neo-Retro Style) */}
         <div 
           onClick={onOpenTripWrapped}
-          className="tactile-card p-4 sm:p-5 flex items-center justify-between gap-3 cursor-pointer hover:border-purple-400/50 hover:scale-[1.01] transition-all group relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.06), rgba(79, 70, 229, 0.03))' }}
+          className="tactile-card p-4 sm:p-5 flex items-center justify-between gap-3 cursor-pointer hover:border-[#ff5400] hover:scale-[1.01] transition-all group relative overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, rgba(255, 84, 0, 0.08), rgba(24, 24, 27, 0.02))' }}
         >
           <div className="flex items-center gap-3 relative z-10">
-            <div className="w-11 h-11 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <Sparkles className="w-5 h-5 stroke-[2.2]" />
+            <div className="w-11 h-11 rounded-2xl bg-[#ff5400]/10 border border-[#ff5400]/30 text-[#ff5400] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <Sparkles className="w-5 h-5 stroke-[2.4]" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-extrabold text-[#18181b] dark:text-white">
+                <span className="text-xs font-black text-[#18181b] dark:text-white uppercase tracking-tight">
                   Spliqo Wrapped 📊
                 </span>
-                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300">
-                  Recap
+                <span className="text-[10px] font-black px-1.5 py-0.2 rounded-md bg-[#ff5400] text-white">
+                  NEO-RETRO
                 </span>
               </div>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
@@ -81,7 +81,7 @@ export default function TripOverviewTab({
               </p>
             </div>
           </div>
-          <span className="text-xs font-bold text-purple-600 dark:text-purple-400 shrink-0 relative z-10 group-hover:translate-x-0.5 transition-transform">
+          <span className="text-xs font-black text-[#ff5400] shrink-0 relative z-10 group-hover:translate-x-0.5 transition-transform">
             Xem →
           </span>
         </div>
