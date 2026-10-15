@@ -185,9 +185,9 @@ export default function AvatarPickerModal({ isOpen, onClose, currentPhotoURL, on
               />
               <button
                 type="submit"
-                className="px-3 py-1.5 rounded-xl bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] text-[11px] font-bold shadow-xs hover:opacity-90 shrink-0 cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] text-[11px] font-bold shadow-xs hover:opacity-90 shrink-0 cursor-pointer"
               >
-                Áp dụng
+                Tạo
               </button>
             </form>
           </div>

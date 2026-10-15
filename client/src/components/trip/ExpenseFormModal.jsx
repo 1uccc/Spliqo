@@ -47,8 +47,27 @@ export default function ExpenseFormModal({
       onClose={onClose}
       title={editingExpense ? t('editExpense', 'Chỉnh sửa khoản chi') : t('addExpense', 'Thêm khoản chi mới')}
       maxWidth="max-w-xl"
+      footer={
+        <div className="flex items-center justify-end gap-2.5 w-full">
+          <button
+            type="button"
+            onClick={onClose}
+            className="tactile-btn-pill cursor-pointer px-4 py-2 text-xs font-semibold"
+          >
+            {t('cancel', 'Hủy')}
+          </button>
+          <button
+            type="submit"
+            form="expense-form"
+            disabled={submitting}
+            className="tactile-btn-dark disabled:opacity-50 cursor-pointer px-5 py-2 text-xs font-bold flex items-center gap-1.5 shadow-sm"
+          >
+            {submitting ? t('saving', 'Đang lưu...') : editingExpense ? t('updateExpense', 'Cập nhật khoản chi') : t('saveExpense', 'Lưu khoản chi')}
+          </button>
+        </div>
+      }
     >
-      <form onSubmit={onSaveExpense} className="space-y-4">
+      <form id="expense-form" onSubmit={onSaveExpense} className="space-y-4">
         {/* Bill Attachment Action */}
         <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#f4f3ec] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2e2e38]">
           <div className="flex items-center gap-3">
@@ -159,7 +178,7 @@ export default function ExpenseFormModal({
                 required
                 step={expCurrency === 'VND' ? '1000' : 'any'}
                 min={expCurrency === 'VND' ? '1' : '0.01'}
-                placeholder={expCurrency === 'VND' ? '600000' : '150'}
+                placeholder="0"
                 value={expCurrency === 'VND' ? expAmount : expOriginalAmount}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -252,17 +271,17 @@ export default function ExpenseFormModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 rounded-2xl bg-[#f4f3ec] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2e2e38]">
+          <div className="flex flex-wrap gap-2 p-2.5 sm:p-3 rounded-2xl bg-[#f4f3ec] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2e2e38]">
             {members.map((m) => {
               const memberId = m.userId || m.uid || m.id;
               const isChecked = expParticipants.includes(memberId);
               return (
                 <label
                   key={memberId}
-                  className={`flex items-center gap-2 p-2.5 rounded-xl cursor-pointer text-xs font-semibold transition-all select-none ${
+                  className={`flex-1 min-w-[130px] flex items-center gap-2 p-2.5 rounded-xl cursor-pointer text-xs font-semibold transition-all select-none ${
                     isChecked
                       ? 'bg-white dark:bg-[#212129] text-zinc-900 dark:text-white shadow-xs border border-[#e6e4dc] dark:border-[#32323e]'
-                      : 'text-zinc-600 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5 border border-transparent'
                   }`}
                 >
                   <input
@@ -388,24 +407,6 @@ export default function ExpenseFormModal({
               className="w-full px-3 py-2 rounded-2xl bg-[#f4f3ec] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2e2e38] text-xs text-[#18181b] dark:text-white outline-none focus:border-zinc-900 dark:focus:border-purple-500 focus:bg-white dark:focus:bg-[#20202c] transition-colors"
             />
           </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#e6e4dc] dark:border-[#2e2e38]">
-          <button
-            type="button"
-            onClick={onClose}
-            className="tactile-btn-pill cursor-pointer"
-          >
-            {t('cancel', 'Hủy')}
-          </button>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="tactile-btn-dark disabled:opacity-50 cursor-pointer"
-          >
-            {submitting ? t('saving', 'Đang lưu...') : editingExpense ? t('updateExpense', 'Cập nhật khoản chi') : t('saveExpense', 'Lưu khoản chi')}
-          </button>
         </div>
       </form>
     </Modal>

@@ -332,7 +332,7 @@ export default function MainLayout({ onOpenAddExpense }) {
       <div className="flex-1 min-w-0 flex flex-col my-3 mr-3 ml-3 md:ml-3 sm:my-4 sm:mr-4 sm:ml-4">
         
         {/* Floating Top Header Bar (Detached Capsule/Pill - Responsive on mobile) */}
-        <div className="sticky top-0 z-20 pt-1 pb-3 sm:pb-4 bg-[#f4f3ec]/95 dark:bg-[#0f0f12]/95 backdrop-blur-xs">
+        <div className="sticky top-0 z-20 pt-[max(0.25rem,env(safe-area-inset-top))] pb-2.5 sm:pb-4 bg-[#f4f3ec]/95 dark:bg-[#0f0f12]/95 backdrop-blur-xs">
           <header className="w-full h-14 sm:h-16 bg-[#edebe4] dark:bg-[#1a1a20] rounded-full border border-[#dedbd0] dark:border-[#2e2e38] px-3 sm:px-6 md:px-8 flex items-center justify-between shadow-xs">
             {/* Left: Mobile Flame Icon + Page Title */}
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 mr-2">

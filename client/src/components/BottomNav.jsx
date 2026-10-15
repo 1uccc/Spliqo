@@ -57,7 +57,7 @@ export default function BottomNav() {
 
   return (
     <>
-      <nav className="md:hidden fixed bottom-3 left-3 right-3 z-40 bg-white/95 dark:bg-[#1a1a20]/95 backdrop-blur-md px-1.5 py-1.5 rounded-full border border-[#dedbd0] dark:border-[#2e2e38] shadow-xl flex items-center justify-between gap-1 select-none">
+      <nav className="md:hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 max-w-md mx-auto z-40 bg-white/95 dark:bg-[#1a1a20]/95 backdrop-blur-md px-1.5 py-1.5 rounded-full border border-[#dedbd0] dark:border-[#2e2e38] shadow-xl flex items-center justify-between gap-1 select-none">
         {/* 1. Trang chủ */}
         <Link
           to="/dashboard"
