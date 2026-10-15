@@ -4,7 +4,19 @@ import { realtimeService } from '../services/realtimeService.js';
 export async function getMembers(req, res) {
   try {
     const { tripId } = req.params;
+    const currentUserId = req.user.uid;
+
+    const trip = dbService.getTrip(tripId);
+    if (!trip) {
+      return res.status(404).json({ error: 'Không tìm thấy chuyến đi.' });
+    }
+
     const members = dbService.getTripMembers(tripId);
+    const isMember = members.some(m => m.userId === currentUserId);
+    if (!isMember) {
+      return res.status(403).json({ error: 'Bạn không có quyền xem danh sách thành viên của chuyến đi này.' });
+    }
+
     return res.json(members);
   } catch (err) {
     console.error('[getMembers] Error:', err);

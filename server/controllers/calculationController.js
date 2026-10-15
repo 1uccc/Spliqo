@@ -11,6 +11,11 @@ export async function getTripSummary(req, res) {
     }
 
     const members = dbService.getTripMembers(tripId);
+    const isMember = members.some(m => m.userId === req.user.uid);
+    if (!isMember) {
+      return res.status(403).json({ error: 'Bạn không có quyền truy cập dữ liệu chuyến đi này.' });
+    }
+
     const expenses = dbService.getTripExpenses(tripId);
 
     const { totalExpense, memberTotals, invariantsSatisfied } = calculateMemberTotals(expenses, members);
@@ -42,6 +47,11 @@ export async function getTripBalances(req, res) {
     }
 
     const members = dbService.getTripMembers(tripId);
+    const isMember = members.some(m => m.userId === req.user.uid);
+    if (!isMember) {
+      return res.status(403).json({ error: 'Bạn không có quyền truy cập dữ liệu chuyến đi này.' });
+    }
+
     const expenses = dbService.getTripExpenses(tripId);
 
     const { totalExpense, memberTotals, invariantsSatisfied } = calculateMemberTotals(expenses, members);
@@ -82,6 +92,11 @@ export async function getTripSettlements(req, res) {
     }
 
     const members = dbService.getTripMembers(tripId);
+    const isMember = members.some(m => m.userId === req.user.uid);
+    if (!isMember) {
+      return res.status(403).json({ error: 'Bạn không có quyền truy cập dữ liệu chuyến đi này.' });
+    }
+
     const expenses = dbService.getTripExpenses(tripId);
 
     const { totalExpense, memberTotals } = calculateMemberTotals(expenses, members);

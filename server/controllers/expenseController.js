@@ -193,7 +193,19 @@ export async function addExpense(req, res) {
 export async function getExpenses(req, res) {
   try {
     const { tripId } = req.params;
+    const currentUserId = req.user.uid;
     const { search, payer, sortBy = 'date', sortOrder = 'desc' } = req.query;
+
+    const trip = dbService.getTrip(tripId);
+    if (!trip) {
+      return res.status(404).json({ error: 'Không tìm thấy chuyến đi.' });
+    }
+
+    const members = dbService.getTripMembers(tripId);
+    const isMember = members.some(m => m.userId === currentUserId);
+    if (!isMember) {
+      return res.status(403).json({ error: 'Bạn không có quyền truy cập khoản chi của chuyến đi này.' });
+    }
 
     let list = dbService.getTripExpenses(tripId);
 
@@ -232,6 +244,19 @@ export async function getExpenses(req, res) {
 export async function getExpenseById(req, res) {
   try {
     const { tripId, expenseId } = req.params;
+    const currentUserId = req.user.uid;
+
+    const trip = dbService.getTrip(tripId);
+    if (!trip) {
+      return res.status(404).json({ error: 'Không tìm thấy chuyến đi.' });
+    }
+
+    const members = dbService.getTripMembers(tripId);
+    const isMember = members.some(m => m.userId === currentUserId);
+    if (!isMember) {
+      return res.status(403).json({ error: 'Bạn không có quyền xem khoản chi này.' });
+    }
+
     const expense = dbService.getExpense(tripId, expenseId);
     if (!expense) {
       return res.status(404).json({ error: 'Không tìm thấy khoản chi.' });
