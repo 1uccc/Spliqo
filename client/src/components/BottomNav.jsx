@@ -125,8 +125,28 @@ export default function BottomNav() {
         isOpen={createModalOpen} 
         onClose={() => setCreateModalOpen(false)} 
         title={t('createTrip', 'Tạo chuyến đi nhanh')}
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <button
+              type="button"
+              onClick={() => setCreateModalOpen(false)}
+              className="tactile-btn-pill text-xs font-semibold px-4 py-2 cursor-pointer"
+            >
+              {t('cancel', 'Hủy')}
+            </button>
+            <button
+              type="submit"
+              form="bottom-nav-create-trip-form"
+              disabled={submitting}
+              className="tactile-btn-dark text-xs font-bold px-4 py-2 disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              <span>{t('createTripBtn', 'Tạo chuyến')}</span>
+            </button>
+          </div>
+        }
       >
-        <form onSubmit={handleCreateTrip} className="space-y-4 text-[#18181b] dark:text-[#f4f4f5]">
+        <form id="bottom-nav-create-trip-form" onSubmit={handleCreateTrip} className="space-y-4 text-[#18181b] dark:text-[#f4f4f5]">
           <div>
             <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
               {t('tripNameGroupRequired', 'Tên chuyến đi / Nhóm *')}
@@ -183,24 +203,6 @@ export default function BottomNav() {
           <p className="text-[11px] text-zinc-400 italic">
             {t('autoTripCodeHint', '* Sau khi tạo, hệ thống sẽ tự động cấp một mã chuyến đi để bạn mời bạn bè tham gia.')}
           </p>
-
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={() => setCreateModalOpen(false)}
-              className="tactile-btn-pill text-xs font-semibold px-4 py-2"
-            >
-              {t('cancel', 'Hủy')}
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="tactile-btn-dark text-xs font-bold px-4 py-2 disabled:opacity-50 flex items-center gap-1.5"
-            >
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              <span>{t('createTripBtn', 'Tạo chuyến')}</span>
-            </button>
-          </div>
         </form>
       </Modal>
     </>

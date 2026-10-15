@@ -24,6 +24,58 @@ export default function CompleteTripModal({
       onClose={onClose}
       title={t('completeTripModalTitle', 'Chốt sổ chuyến đi')}
       maxWidth="max-w-xl"
+      footer={
+        !isAllSettled ? (
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 w-full">
+            <button
+              type="button"
+              onClick={onClose}
+              className="tactile-btn-pill text-xs order-2 sm:order-1 cursor-pointer px-4 py-2"
+            >
+              {t('close', 'Đóng')}
+            </button>
+
+            <button
+              type="button"
+              onClick={onGoToSettlementTab}
+              className="tactile-btn-dark text-xs flex items-center justify-center gap-1.5 order-1 sm:order-2 cursor-pointer px-4 py-2"
+            >
+              <span>{t('viewSettlementTabBtn', 'Đến mục Quyết toán để xử lý')}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-end gap-2.5 w-full">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={completingTrip}
+              className="tactile-btn-pill text-xs cursor-pointer px-4 py-2"
+            >
+              {t('cancel', 'Hủy bỏ')}
+            </button>
+
+            <button
+              type="button"
+              onClick={onConfirmCompleteTrip}
+              disabled={completingTrip}
+              className="tactile-btn-dark text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/15 cursor-pointer px-5 py-2 font-bold"
+            >
+              {completingTrip ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+                  <span>{t('closingTripProgress', 'Đang chốt sổ...')}</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>{t('confirmCloseTripBtn', 'Xác nhận chốt sổ ngay')}</span>
+                </>
+              )}
+            </button>
+          </div>
+        )
+      }
     >
       <div className="space-y-5">
         {!isAllSettled ? (
@@ -107,28 +159,6 @@ export default function CompleteTripModal({
                 ))}
               </div>
             </div>
-
-            {/* Action Buttons */}
-            <div className="pt-3 border-t border-[#e6e4dc] dark:border-[#2e2e38] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-              <button
-                type="button"
-                onClick={onClose}
-                className="tactile-btn-pill text-xs order-2 sm:order-1 cursor-pointer"
-              >
-                {t('close', 'Đóng')}
-              </button>
-
-              <div className="flex items-center gap-2 order-1 sm:order-2">
-                <button
-                  type="button"
-                  onClick={onGoToSettlementTab}
-                  className="tactile-btn-dark text-xs flex items-center justify-center gap-1.5 flex-1 sm:flex-none cursor-pointer"
-                >
-                  <span>{t('viewSettlementTabBtn', 'Đến mục Quyết toán để xử lý')}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
           </>
         ) : (
           /* CASE 2: ALL SETTLED - READY TO COMPLETE */
@@ -170,37 +200,6 @@ export default function CompleteTripModal({
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400 text-center">
               * {t('archivedTripNotice', 'Sau khi chốt sổ, chuyến đi sẽ được lưu trữ với trạng thái "Đã chốt sổ", không phát sinh thêm chi phí mới.')}
             </p>
-
-            {/* Action Buttons */}
-            <div className="pt-3 border-t border-[#e6e4dc] dark:border-[#2e2e38] flex items-center justify-end gap-2.5">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={completingTrip}
-                className="tactile-btn-pill text-xs cursor-pointer"
-              >
-                {t('cancel', 'Hủy bỏ')}
-              </button>
-
-              <button
-                type="button"
-                onClick={onConfirmCompleteTrip}
-                disabled={completingTrip}
-                className="tactile-btn-dark text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/15 cursor-pointer"
-              >
-                {completingTrip ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
-                    <span>{t('closingTripProgress', 'Đang chốt sổ...')}</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>{t('confirmCloseTripBtn', 'Xác nhận chốt sổ ngay')}</span>
-                  </>
-                )}
-              </button>
-            </div>
           </>
         )}
       </div>

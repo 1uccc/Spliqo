@@ -360,48 +360,72 @@ export default function DashboardPage() {
       )}
 
       {/* Modal: Create Trip */}
-      <Modal isOpen={createModalOpen} onClose={() => setCreateModalOpen(false)} title={t('createTrip', 'Tạo chuyến đi mới')}>
-        <form onSubmit={handleCreateTrip} className="space-y-4">
+      <Modal
+        isOpen={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        title={t('createTrip', 'Tạo chuyến đi mới')}
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <button
+              type="button"
+              onClick={() => setCreateModalOpen(false)}
+              className="tactile-btn-pill px-4 py-2 text-xs font-semibold cursor-pointer"
+            >
+              {t('cancel', 'Hủy')}
+            </button>
+            <button
+              type="submit"
+              form="dashboard-create-trip-form"
+              disabled={submitting}
+              className="tactile-btn-dark px-4 py-2 text-xs font-bold disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              {t('createTrip', 'Tạo chuyến đi')}
+            </button>
+          </div>
+        }
+      >
+        <form id="dashboard-create-trip-form" onSubmit={handleCreateTrip} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-zinc-700 mb-1">{t('tripNameGroupRequired', 'Tên chuyến đi / Nhóm *')}</label>
+            <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('tripNameGroupRequired', 'Tên chuyến đi / Nhóm *')}</label>
             <input
               type="text"
               required
               placeholder={t('tripNamePlaceholder', 'Ví dụ: Đà Lạt 3N2Đ, Ăn lẩu Haidilao...')}
               value={tripName}
               onChange={(e) => setTripName(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-2xl bg-[#f4f3ec] border border-[#e6e4dc] text-sm text-[#18181b] outline-none focus:border-zinc-900 focus:bg-white transition-colors"
+              className="w-full px-4 py-2.5 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-sm text-[#18181b] dark:text-white outline-none focus:border-zinc-900 focus:bg-white transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-zinc-700 mb-1">{t('shortDescription', 'Mô tả ngắn')}</label>
+            <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('shortDescription', 'Mô tả ngắn')}</label>
             <textarea
               rows={2}
               placeholder={t('tripDescPlaceholder', 'Chuyến đi khám phá, nghỉ dưỡng cùng hội bạn thân...')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-2 rounded-2xl bg-[#f4f3ec] border border-[#e6e4dc] text-sm text-[#18181b] outline-none focus:border-zinc-900 focus:bg-white transition-colors resize-none"
+              className="w-full px-4 py-2 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-sm text-[#18181b] dark:text-white outline-none focus:border-zinc-900 focus:bg-white transition-colors resize-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-zinc-700 mb-1">{t('startDate', 'Ngày bắt đầu')}</label>
+              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('startDate', 'Ngày bắt đầu')}</label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-2xl bg-[#f4f3ec] border border-[#e6e4dc] text-xs text-[#18181b] outline-none"
+                className="w-full px-3 py-2 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-xs text-[#18181b] dark:text-white outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-zinc-700 mb-1">{t('endDate', 'Ngày kết thúc')}</label>
+              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('endDate', 'Ngày kết thúc')}</label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-2xl bg-[#f4f3ec] border border-[#e6e4dc] text-xs text-[#18181b] outline-none"
+                className="w-full px-3 py-2 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-xs text-[#18181b] dark:text-white outline-none"
               />
             </div>
           </div>
@@ -409,32 +433,38 @@ export default function DashboardPage() {
           <p className="text-[11px] text-zinc-400 italic">
             {t('autoTripCodeHint', '* Sau khi tạo, hệ thống sẽ tự động cấp một mã chuyến đi để bạn gửi cho bạn bè cùng tham gia.')}
           </p>
+        </form>
+      </Modal>
 
-          <div className="flex items-center justify-end gap-2 pt-2">
+      {/* Modal: Join Trip */}
+      <Modal
+        isOpen={joinModalOpen}
+        onClose={() => setJoinModalOpen(false)}
+        title={t('joinTripWithCode', 'Tham gia chuyến đi bằng mã')}
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
             <button
               type="button"
-              onClick={() => setCreateModalOpen(false)}
-              className="tactile-btn-pill"
+              onClick={() => setJoinModalOpen(false)}
+              className="tactile-btn-pill px-4 py-2 text-xs font-semibold cursor-pointer"
             >
               {t('cancel', 'Hủy')}
             </button>
             <button
               type="submit"
+              form="dashboard-join-trip-form"
               disabled={submitting}
-              className="tactile-btn-dark disabled:opacity-50"
+              className="tactile-btn-dark px-4 py-2 text-xs font-bold disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              {t('createTrip', 'Tạo chuyến đi')}
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
+              {t('joinNow', 'Tham gia ngay')}
             </button>
           </div>
-        </form>
-      </Modal>
-
-      {/* Modal: Join Trip */}
-      <Modal isOpen={joinModalOpen} onClose={() => setJoinModalOpen(false)} title={t('joinTripWithCode', 'Tham gia chuyến đi bằng mã')}>
-        <form onSubmit={handleJoinTrip} className="space-y-4">
+        }
+      >
+        <form id="dashboard-join-trip-form" onSubmit={handleJoinTrip} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-zinc-700 mb-1">{t('enterTripCodeRequired', 'Nhập mã Trip Code *')}</label>
+            <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('enterTripCodeRequired', 'Nhập mã Trip Code *')}</label>
             <input
               type="text"
               required
@@ -442,31 +472,13 @@ export default function DashboardPage() {
               placeholder={t('enterTripCodePlaceholder', 'Ví dụ: DL26A8')}
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              className="w-full px-4 py-3 rounded-2xl bg-[#f4f3ec] border border-[#e6e4dc] text-center text-lg font-mono font-bold tracking-widest uppercase outline-none focus:border-zinc-900 focus:bg-white transition-colors"
+              className="w-full px-4 py-3 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-center text-lg font-mono font-bold tracking-widest uppercase outline-none focus:border-zinc-900 focus:bg-white transition-colors"
             />
           </div>
 
           <p className="text-[11px] text-zinc-400 text-center">
             {t('tripCodeHint', 'Mã chuyến đi gồm các ký tự được trưởng nhóm chia sẻ.')}
           </p>
-
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={() => setJoinModalOpen(false)}
-              className="tactile-btn-pill"
-            >
-              {t('cancel', 'Hủy')}
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="tactile-btn-dark disabled:opacity-50"
-            >
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
-              {t('joinNow', 'Tham gia ngay')}
-            </button>
-          </div>
         </form>
       </Modal>
     </div>

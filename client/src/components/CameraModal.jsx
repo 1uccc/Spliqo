@@ -50,7 +50,33 @@ export default function CameraModal({ isOpen, onClose, currentImageUrl, onImageS
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Hóa đơn thanh toán" maxWidth="max-w-md">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Hóa đơn thanh toán"
+      maxWidth="max-w-md"
+      footer={
+        <div className="flex items-center justify-end gap-2 w-full">
+          <button
+            type="button"
+            onClick={onClose}
+            className="tactile-btn-pill px-4 py-2 text-xs font-semibold cursor-pointer"
+          >
+            Đóng
+          </button>
+          {preview && (
+            <button
+              type="button"
+              onClick={handleConfirm}
+              className="tactile-btn-dark px-4 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              <Check className="w-4 h-4 text-emerald-400" />
+              Sử dụng ảnh này
+            </button>
+          )}
+        </div>
+      }
+    >
       <div className="space-y-4">
         {/* Hidden inputs */}
         <input
@@ -146,27 +172,6 @@ export default function CameraModal({ isOpen, onClose, currentImageUrl, onImageS
             <span>Chưa có ảnh hóa đơn. Chọn chụp ảnh hoặc tải lên từ máy.</span>
           </div>
         )}
-
-        {/* Bottom controls */}
-        <div className="flex items-center justify-end gap-2 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="tactile-btn-pill"
-          >
-            Đóng
-          </button>
-          {preview && (
-            <button
-              type="button"
-              onClick={handleConfirm}
-              className="tactile-btn-dark flex items-center gap-1.5"
-            >
-              <Check className="w-4 h-4 text-emerald-400" />
-              Sử dụng ảnh này
-            </button>
-          )}
-        </div>
       </div>
     </Modal>
   );

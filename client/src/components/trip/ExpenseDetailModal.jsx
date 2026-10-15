@@ -40,6 +40,25 @@ export default function ExpenseDetailModal({
       onClose={onClose}
       title={t('expenseDetailAndHistory', 'Chi tiết khoản chi & Lịch sử chỉnh sửa')}
       maxWidth="max-w-xl"
+      footer={
+        <div className="flex items-center justify-between w-full">
+          <button
+            type="button"
+            onClick={() => onDeleteExpense(selectedExpense.id)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-bold transition-colors cursor-pointer"
+          >
+            <Trash2 className="w-4 h-4" /> {t('deleteExpense', 'Xóa khoản chi')}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onOpenEditExpense(selectedExpense)}
+            className="tactile-btn-dark text-xs font-bold px-4 py-2 flex items-center gap-1.5 cursor-pointer shadow-xs"
+          >
+            <Edit3 className="w-3.5 h-3.5" /> {t('edit', 'Chỉnh sửa')}
+          </button>
+        </div>
+      }
     >
       <div className="space-y-4">
         <div className="text-center p-4 rounded-2xl bg-[#edebe4]/70 dark:bg-[#1a1a22] border border-[#dedbd0] dark:border-[#2e2e38]">
@@ -385,25 +404,6 @@ export default function ExpenseDetailModal({
               );
             })}
           </div>
-        </div>
-
-        {/* Action buttons: Edit, Delete */}
-        <div className="flex items-center justify-between pt-3 border-t border-[#dedbd0] dark:border-[#2e2e38]">
-          <button
-            type="button"
-            onClick={() => onDeleteExpense(selectedExpense.id)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-bold transition-colors cursor-pointer"
-          >
-            <Trash2 className="w-4 h-4" /> {t('deleteExpense', 'Xóa khoản chi')}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onOpenEditExpense(selectedExpense)}
-            className="tactile-btn-dark text-xs flex items-center gap-1.5 cursor-pointer"
-          >
-            <Edit3 className="w-3.5 h-3.5" /> {t('edit', 'Chỉnh sửa')}
-          </button>
         </div>
       </div>
     </Modal>

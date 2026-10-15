@@ -743,6 +743,19 @@ export default function FriendsPage() {
         }}
         title={`${t('inviteModalTitle', 'Mời')} ${selectedFriend?.displayName || ''} ${t('readyToInviteTrips', 'vào chuyến đi')}`}
         maxWidth="max-w-xl"
+        footer={
+          <div className="flex justify-end w-full">
+            <button
+              onClick={() => {
+                setInviteModalOpen(false);
+                setSelectedFriend(null);
+              }}
+              className="px-5 py-2 bg-[#edebe4] dark:bg-[#252530] hover:bg-[#dedbd0] dark:hover:bg-[#2e2e3a] text-[#18181b] dark:text-white text-xs font-bold rounded-full transition-colors cursor-pointer"
+            >
+              {t('close', 'Đóng')}
+            </button>
+          </div>
+        }
       >
         <div className="space-y-4">
           <div className="p-3 bg-[#edebe4]/70 dark:bg-[#252530] rounded-2xl flex items-center gap-3 border border-[#dedbd0] dark:border-[#32323e]">
@@ -831,18 +844,6 @@ export default function FriendsPage() {
                 })}
               </div>
             )}
-          </div>
-
-          <div className="pt-2 border-t border-[#dedbd0] flex justify-end">
-            <button
-              onClick={() => {
-                setInviteModalOpen(false);
-                setSelectedFriend(null);
-              }}
-              className="px-4 py-2 bg-[#edebe4] hover:bg-[#dedbd0] text-[#18181b] text-xs font-bold rounded-full transition-colors"
-            >
-              {t('close', 'Đóng')}
-            </button>
           </div>
         </div>
       </Modal>

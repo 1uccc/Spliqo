@@ -91,7 +91,56 @@ export default function VietQRModal({
   const isPending = !isPaid && !isConfirmed;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Thanh toán cho ${recipient.displayName || 'thành viên'}`} maxWidth="max-w-md">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Thanh toán cho ${recipient.displayName || 'thành viên'}`}
+      maxWidth="max-w-md"
+      footer={
+        <div className="flex items-center gap-2 w-full">
+          <button
+            type="button"
+            onClick={onClose}
+            className="tactile-btn-pill px-4 py-2.5 justify-center border border-[#e6e4dc] dark:border-[#2e2e38] text-xs font-bold cursor-pointer"
+          >
+            Đóng
+          </button>
+
+          {isPending && isUserPayer && (
+            <button
+              onClick={handleMarkPaid}
+              disabled={loading}
+              className="tactile-btn-dark flex-1 py-2.5 px-4 justify-center text-xs font-bold disabled:opacity-50 flex items-center gap-2 cursor-pointer shadow-sm"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 text-emerald-400" />}
+              <span>Xác nhận đã chuyển</span>
+            </button>
+          )}
+
+          {isPaid && onConfirmPayment && isUserReceiver && (
+            <button
+              onClick={handleConfirmPaid}
+              disabled={loading}
+              className="tactile-btn-dark flex-1 py-2.5 px-4 justify-center text-xs font-bold disabled:opacity-50 flex items-center gap-2 cursor-pointer shadow-sm"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 text-emerald-400" />}
+              <span>Xác nhận đã nhận tiền</span>
+            </button>
+          )}
+
+          {isPending && isUserReceiver && onConfirmPayment && (
+            <button
+              onClick={handleConfirmPaid}
+              disabled={loading}
+              className="tactile-btn-pill flex-1 py-2.5 px-4 justify-center text-xs font-bold border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 flex items-center gap-2 cursor-pointer"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 text-emerald-500" />}
+              <span>Xác nhận tất toán</span>
+            </button>
+          )}
+        </div>
+      }
+    >
       <div className="space-y-5 text-[#18181b] dark:text-zinc-100">
         {/* Amount Banner */}
         <div className="p-4 rounded-2xl bg-[#f4f3ec] dark:bg-[#1a1a20] border border-[#e6e4dc] dark:border-[#2e2e38] text-center">
@@ -166,72 +215,31 @@ export default function VietQRModal({
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-col gap-2 pt-2">
-          {cleanAcc && (
-            <button
-              onClick={handleCopyAccount}
-              className="tactile-btn-pill w-full py-2.5 justify-center border border-[#e6e4dc] dark:border-[#2e2e38] text-xs font-bold"
-            >
-              {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-              <span>{copied ? 'Đã sao chép số tài khoản' : 'Sao chép số tài khoản'}</span>
-            </button>
-          )}
+        {/* Copy Account Quick Button */}
+        {cleanAcc && (
+          <button
+            onClick={handleCopyAccount}
+            className="tactile-btn-pill w-full py-2.5 justify-center border border-[#e6e4dc] dark:border-[#2e2e38] text-xs font-bold"
+          >
+            {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+            <span>{copied ? 'Đã sao chép số tài khoản' : 'Sao chép số tài khoản'}</span>
+          </button>
+        )}
 
-          {/* NÚT XÁC NHẬN ĐÃ CHUYỂN - Chỉ hiển thị cho người nợ tiền (isUserPayer) */}
-          {isPending && isUserPayer && (
-            <button
-              onClick={handleMarkPaid}
-              disabled={loading}
-              className="tactile-btn-dark w-full py-3 justify-center text-xs font-bold disabled:opacity-50 flex items-center gap-2 cursor-pointer shadow-sm"
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 text-emerald-400" />}
-              <span>Xác nhận đã chuyển</span>
-            </button>
-          )}
+        {/* Status Badges */}
+        {isPaid && (
+          <div className="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-2xl border border-amber-200 dark:border-amber-800 text-center text-xs font-semibold text-amber-800 dark:text-amber-300 flex items-center justify-center gap-1.5">
+            <Clock className="w-3.5 h-3.5" />
+            <span>Đã gửi thông báo chuyển tiền • Đang chờ người nhận duyệt</span>
+          </div>
+        )}
 
-          {/* ĐÃ CHUYỂN - CHỜ DUYỆT */}
-          {isPaid && (
-            <div className="space-y-2">
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-2xl border border-amber-200 dark:border-amber-800 text-center text-xs font-semibold text-amber-800 dark:text-amber-300 flex items-center justify-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" />
-                <span>Đã gửi thông báo chuyển tiền • Đang chờ người nhận duyệt</span>
-              </div>
-
-              {/* Chỉ người nhận tiền (isUserReceiver) mới có nút duyệt */}
-              {onConfirmPayment && isUserReceiver && (
-                <button
-                  onClick={handleConfirmPaid}
-                  disabled={loading}
-                  className="tactile-btn-dark w-full py-3 justify-center text-xs font-bold disabled:opacity-50 flex items-center gap-2 cursor-pointer shadow-sm"
-                >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 text-emerald-400" />}
-                  <span>Xác nhận đã nhận tiền</span>
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Nếu là người nhận và người nợ đã đưa tiền mặt / thanh toán trực tiếp */}
-          {isPending && isUserReceiver && onConfirmPayment && (
-            <button
-              onClick={handleConfirmPaid}
-              disabled={loading}
-              className="tactile-btn-pill w-full py-2.5 justify-center text-xs font-bold border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 flex items-center gap-2 cursor-pointer"
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 text-emerald-500" />}
-              <span>Đã nhận tiền (Xác nhận tất toán)</span>
-            </button>
-          )}
-
-          {/* ĐÃ TẤT TOÁN */}
-          {isConfirmed && (
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800 text-center text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center justify-center gap-1.5">
-              <Check className="w-4 h-4 text-emerald-600" />
-              <span>Giao dịch đã tất toán thành công</span>
-            </div>
-          )}
-        </div>
+        {isConfirmed && (
+          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800 text-center text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center justify-center gap-1.5">
+            <Check className="w-4 h-4 text-emerald-600" />
+            <span>Giao dịch đã tất toán thành công</span>
+          </div>
+        )}
       </div>
     </Modal>
   );

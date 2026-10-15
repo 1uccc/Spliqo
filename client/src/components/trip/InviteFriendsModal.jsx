@@ -20,6 +20,23 @@ export default function InviteFriendsModal({
       onClose={onClose}
       title={t ? t('inviteFriendsModalTitle', 'Mời bạn bè vào chuyến đi') : 'Mời bạn bè vào chuyến đi'}
       maxWidth="max-w-lg"
+      footer={
+        <div className="flex items-center justify-between w-full">
+          <Link
+            to="/friends"
+            className="text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white underline"
+          >
+            Quản lý bạn bè
+          </Link>
+          <button
+            type="button"
+            onClick={onClose}
+            className="tactile-btn-pill py-1.5 px-4 text-xs font-bold text-zinc-600 dark:text-zinc-300 cursor-pointer"
+          >
+            Đóng
+          </button>
+        </div>
+      }
     >
       <div className="space-y-4">
         <p className="text-xs text-zinc-500">
@@ -98,22 +115,6 @@ export default function InviteFriendsModal({
             })}
           </div>
         )}
-
-        <div className="pt-2 border-t border-[#dedbd0] dark:border-[#2e2e38] flex items-center justify-between">
-          <Link
-            to="/friends"
-            className="text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white underline"
-          >
-            Quản lý bạn bè
-          </Link>
-          <button
-            type="button"
-            onClick={onClose}
-            className="tactile-btn-pill py-1.5 px-4 text-xs font-bold text-zinc-600 dark:text-zinc-300"
-          >
-            Đóng
-          </button>
-        </div>
       </div>
     </Modal>
   );

@@ -87,6 +87,17 @@ export default function InviteTripModal({ isOpen, onClose, trip, onOpenFriendLis
         </div>
       }
       maxWidth="max-w-md"
+      footer={
+        <div className="flex justify-end w-full">
+          <button
+            type="button"
+            onClick={onClose}
+            className="tactile-btn-pill px-5 py-2.5 text-xs font-bold cursor-pointer"
+          >
+            {t('close', 'Đóng')}
+          </button>
+        </div>
+      }
     >
       <div className="space-y-4 text-xs">
         

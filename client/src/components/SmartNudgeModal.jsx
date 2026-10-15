@@ -233,6 +233,39 @@ export default function SmartNudgeModal({
       onClose={onClose}
       title="Nhắc chuyển khoản nhẹ nhàng"
       maxWidth="max-w-lg"
+      footer={
+        <div className="flex items-center gap-2 w-full">
+          <button
+            type="button"
+            onClick={onClose}
+            className="tactile-btn-pill px-4 py-2.5 justify-center border border-[#e6e4dc] dark:border-[#2e2e38] text-xs font-bold cursor-pointer"
+          >
+            Đóng
+          </button>
+          <button
+            onClick={handleSendInApp}
+            disabled={sendingInApp || cooldownSeconds > 0}
+            className="flex-1 tactile-btn-dark py-2.5 px-4 justify-center text-xs sm:text-sm font-bold disabled:opacity-60 flex items-center gap-2 cursor-pointer shadow-sm transition-all"
+          >
+            {sendingInApp ? (
+              <>
+                <Clock className="w-4 h-4 animate-spin text-emerald-400" />
+                <span>Đang gửi thông báo...</span>
+              </>
+            ) : cooldownSeconds > 0 ? (
+              <>
+                <Clock className="w-4 h-4 text-amber-400" />
+                <span>Đã gửi • Đợi {cooldownSeconds}s</span>
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4 text-emerald-400" />
+                <span>Gửi thông báo trong App</span>
+              </>
+            )}
+          </button>
+        </div>
+      }
     >
       <div className="space-y-5 text-[#18181b] dark:text-zinc-100">
         {/* 1. Context Banner: Debtor Info & Amount */}
@@ -357,34 +390,6 @@ export default function SmartNudgeModal({
           )}
         </div>
 
-        {/* 5. Primary Action: In-App Smart Nudge (Realtime SSE) */}
-        <div className="pt-1">
-          <button
-            onClick={handleSendInApp}
-            disabled={sendingInApp || cooldownSeconds > 0}
-            className="w-full tactile-btn-dark py-3 px-4 rounded-2xl flex items-center justify-center gap-2 text-xs sm:text-sm font-bold shadow-md cursor-pointer disabled:opacity-60 transition-all"
-          >
-            {sendingInApp ? (
-              <>
-                <Clock className="w-4 h-4 animate-spin text-emerald-400" />
-                <span>Đang gửi thông báo...</span>
-              </>
-            ) : cooldownSeconds > 0 ? (
-              <>
-                <Clock className="w-4 h-4 text-amber-400" />
-                <span>Đã gửi • Vui lòng đợi {cooldownSeconds}s</span>
-              </>
-            ) : (
-              <>
-                <Send className="w-4 h-4 text-emerald-400" />
-                <span>Gửi thông báo trong App Spliqo (Tức thì)</span>
-              </>
-            )}
-          </button>
-          <p className="text-[11px] text-center text-zinc-400 dark:text-zinc-500 mt-1.5">
-            Người nhận sẽ thấy chuông thông báo và popup nhắc nhở khi mở ứng dụng.
-          </p>
-        </div>
 
         {/* 6. External Share Channels: Zalo, Telegram, Web Share, Copy */}
         <div className="space-y-2 pt-2 border-t border-[#e6e4dc] dark:border-[#2e2e38]">
