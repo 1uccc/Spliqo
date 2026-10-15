@@ -388,19 +388,19 @@ export default function LuckyWheelModal({
             />
           </div>
 
-          {/* Tactile Spin Button (Warm Amber & Dark Bento) */}
+          {/* Tactile Spin Button (Monochrome Black & White) */}
           <button
             type="button"
             onClick={spinWheel}
             disabled={spinning || members.length < 2}
             className={`mt-4 px-8 py-3 rounded-full font-extrabold text-sm flex items-center gap-2 shadow-lg transition-all cursor-pointer ${
               spinning
-                ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed shadow-none'
-                : 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-amber-500/25 hover:scale-105 active:scale-95'
+                ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed shadow-none'
+                : 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] hover:bg-black dark:hover:bg-zinc-100 shadow-zinc-900/20 dark:shadow-white/10 hover:scale-105 active:scale-95 border border-black/10 dark:border-white/20'
             }`}
           >
             <RotateCw className={`w-4 h-4 ${spinning ? 'animate-spin' : ''}`} />
-            <span>{spinning ? 'Đang quay...' : 'QUAY NGAY 🎲'}</span>
+            <span>{spinning ? 'Đang quay...' : 'QUAY NGAY'}</span>
           </button>
         </div>
 

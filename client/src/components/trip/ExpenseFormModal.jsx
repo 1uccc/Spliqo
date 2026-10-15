@@ -131,7 +131,7 @@ export default function ExpenseFormModal({
             )}
           </div>
 
-          <div className="flex flex-wrap gap-1.5 pb-1">
+          <div className="flex flex-wrap items-center justify-center gap-2 py-1">
             {SUPPORTED_CURRENCIES.map((c) => {
               const isSelected = (expCurrency || 'VND') === c.code;
               return (
@@ -152,14 +152,14 @@ export default function ExpenseFormModal({
                       }
                     }
                   }}
-                  className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 min-w-[70px] sm:min-w-[76px] text-center ${
                     isSelected
-                      ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-xs scale-105'
-                      : 'bg-[#f4f3ec] dark:bg-[#1a1a22] text-zinc-600 dark:text-zinc-400 border border-[#e6e4dc] dark:border-[#2e2e38] hover:border-zinc-400'
+                      ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-md scale-105 ring-2 ring-zinc-900/10 dark:ring-white/20'
+                      : 'bg-[#f4f3ec] dark:bg-[#1a1a22] text-zinc-600 dark:text-zinc-400 border border-[#e6e4dc] dark:border-[#2e2e38] hover:border-zinc-400 hover:bg-[#edece4] dark:hover:bg-[#252530]'
                   }`}
                 >
-                  <span>{c.flag}</span>
-                  <span>{c.code}</span>
+                  <span className="text-xs leading-none">{c.flag}</span>
+                  <span className="font-mono tracking-tight">{c.code}</span>
                 </button>
               );
             })}
