@@ -28,23 +28,23 @@ export default function TripOverviewTab({
 
       {/* Gamification & Wrapped Quick Banner */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {/* Lucky Wheel Card (Neo-Retro Style) */}
+        {/* Lucky Wheel Card */}
         <div 
           onClick={onOpenLuckyWheel}
-          className="tactile-card p-4 sm:p-5 flex items-center justify-between gap-3 cursor-pointer hover:border-[#ff5400] hover:scale-[1.01] transition-all group relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, rgba(255, 84, 0, 0.08), rgba(24, 24, 27, 0.02))' }}
+          className="tactile-card p-4 sm:p-5 flex items-center justify-between gap-3 cursor-pointer hover:border-amber-400/50 hover:scale-[1.01] transition-all group relative overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.06), rgba(249, 115, 22, 0.03))' }}
         >
           <div className="flex items-center gap-3 relative z-10">
-            <div className="w-11 h-11 rounded-2xl bg-[#ff5400]/10 border border-[#ff5400]/30 text-[#ff5400] flex items-center justify-center shrink-0 group-hover:rotate-45 transition-transform">
-              <RotateCw className="w-5 h-5 stroke-[2.4]" />
+            <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center shrink-0 group-hover:rotate-45 transition-transform">
+              <RotateCw className="w-5 h-5 stroke-[2.2]" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-black text-[#18181b] dark:text-white uppercase tracking-tight">
+                <span className="text-xs font-extrabold text-[#18181b] dark:text-white">
                   Vòng xoay may mắn 🎡
                 </span>
-                <span className="text-[10px] font-black px-1.5 py-0.2 rounded-md bg-[#18181b] text-white">
-                  ARCADE
+                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
+                  Game
                 </span>
               </div>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
@@ -52,7 +52,7 @@ export default function TripOverviewTab({
               </p>
             </div>
           </div>
-          <span className="text-xs font-black text-[#ff5400] shrink-0 relative z-10 group-hover:translate-x-0.5 transition-transform">
+          <span className="text-xs font-bold text-amber-600 dark:text-amber-400 shrink-0 relative z-10 group-hover:translate-x-0.5 transition-transform">
             Chơi →
           </span>
         </div>

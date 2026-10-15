@@ -11,20 +11,22 @@ import {
   PartyPopper,
   Volume2,
   VolumeX,
-  Dice5
+  Flame
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-// High-contrast Neo-Retro graphic palette (Tangerine, Black, Cream, Yellow, Burnt Orange)
-const RETRO_WHEEL_PALETTE = [
-  { bg: '#ff5400', text: '#ffffff' }, // Tangerine Orange
-  { bg: '#18181b', text: '#ffffff' }, // Jet Black
-  { bg: '#fef08a', text: '#18181b' }, // Retro Yellow
-  { bg: '#ffffff', text: '#18181b' }, // Paper White
-  { bg: '#fed7aa', text: '#18181b' }, // Warm Peach
-  { bg: '#ea580c', text: '#ffffff' }, // Burnt Tangerine
-  { bg: '#f4f3ec', text: '#18181b' }, // Warm Cream Grey
-  { bg: '#27272a', text: '#ffffff' }  // Dark Slate
+// Harmonious Spliqo Fintech & Tactile Palette (Amber, Emerald, Indigo, Teal, Violet, Sunset)
+const SPLIQO_WHEEL_PALETTE = [
+  '#f59e0b', // Warm Amber (Spliqo Brand)
+  '#10b981', // Emerald Green (Cash Balance)
+  '#6366f1', // Indigo (Tech / Smart)
+  '#ec4899', // Soft Coral Pink
+  '#0d9488', // Deep Teal
+  '#8b5cf6', // Electric Violet
+  '#f97316', // Sunset Orange
+  '#3b82f6', // Bright Azure
+  '#14b8a6', // Mint
+  '#f43f5e'  // Warm Crimson
 ];
 
 export default function LuckyWheelModal({
@@ -54,9 +56,9 @@ export default function LuckyWheelModal({
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(700, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(140, ctx.currentTime + 0.035);
-      gain.gain.setValueAtTime(0.14, ctx.currentTime);
+      osc.frequency.setValueAtTime(650, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(130, ctx.currentTime + 0.035);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.035);
       osc.connect(gain);
       gain.connect(ctx.destination);
@@ -80,7 +82,7 @@ export default function LuckyWheelModal({
         osc.type = 'sine';
         osc.frequency.value = freq;
         const startTime = ctx.currentTime + idx * 0.09;
-        gain.gain.setValueAtTime(0.16, startTime);
+        gain.gain.setValueAtTime(0.14, startTime);
         gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
         osc.connect(gain);
         gain.connect(ctx.destination);
@@ -92,7 +94,7 @@ export default function LuckyWheelModal({
     }
   };
 
-  // Draw the Wheel onto Canvas in Neo-Retro Brutalism style
+  // Draw the Wheel onto Canvas with Spliqo Tactile Bento styling
   const drawWheel = (currentAngle) => {
     const canvas = canvasRef.current;
     if (!canvas || members.length === 0) return;
@@ -101,7 +103,7 @@ export default function LuckyWheelModal({
     const height = canvas.height;
     const centerX = width / 2;
     const centerY = height / 2;
-    const radius = width / 2 - 20;
+    const radius = width / 2 - 18;
     const numSlices = members.length;
     const sliceAngle = (2 * Math.PI) / numSlices;
 
@@ -112,23 +114,23 @@ export default function LuckyWheelModal({
     ctx.translate(centerX, centerY);
     ctx.rotate(currentAngle);
 
-    // Draw Slices with Brutalist solid borders
+    // Draw Slices with smooth vibrant colors and crisp white dividers
     members.forEach((member, i) => {
       const startA = i * sliceAngle;
       const endA = startA + sliceAngle;
-      const sliceStyle = RETRO_WHEEL_PALETTE[i % RETRO_WHEEL_PALETTE.length];
+      const color = SPLIQO_WHEEL_PALETTE[i % SPLIQO_WHEEL_PALETTE.length];
 
       // Wedge
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.arc(0, 0, radius, startA, endA);
       ctx.closePath();
-      ctx.fillStyle = sliceStyle.bg;
+      ctx.fillStyle = color;
       ctx.fill();
 
-      // Sharp Brutalist Divider Lines
-      ctx.lineWidth = 3.5;
-      ctx.strokeStyle = '#18181b';
+      // Clean White Divider Line
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#ffffff';
       ctx.stroke();
 
       // Slice Text
@@ -136,54 +138,47 @@ export default function LuckyWheelModal({
       const textAngle = startA + sliceAngle / 2;
       ctx.rotate(textAngle);
       ctx.textAlign = 'right';
-      ctx.fillStyle = sliceStyle.text;
-      ctx.font = '900 13px monospace, system-ui, sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 12.5px Outfit, Plus Jakarta Sans, system-ui, sans-serif';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+      ctx.shadowBlur = 3;
 
-      const name = (member.displayName || `MEMBER ${i + 1}`).toUpperCase();
-      const truncated = name.length > 12 ? name.substring(0, 10) + '..' : name;
-      ctx.fillText(truncated, radius - 24, 5);
+      const name = member.displayName || `Thành viên ${i + 1}`;
+      const truncated = name.length > 13 ? name.substring(0, 11) + '..' : name;
+      ctx.fillText(truncated, radius - 24, 4.5);
       ctx.restore();
     });
 
     ctx.restore();
 
-    // Outer Thick Brutalist Rim
+    // Outer Bento Ring (Dark with subtle gold accent)
     ctx.beginPath();
-    ctx.arc(centerX, centerY, radius + 2, 0, 2 * Math.PI);
-    ctx.lineWidth = 7;
+    ctx.arc(centerX, centerY, radius + 3, 0, 2 * Math.PI);
+    ctx.lineWidth = 5;
     ctx.strokeStyle = '#18181b';
     ctx.stroke();
 
-    // Outer Rivet Studs (Retro Arcade detail)
-    const numStuds = Math.max(12, numSlices * 2);
-    for (let s = 0; s < numStuds; s++) {
-      const studAngle = (s * 2 * Math.PI) / numStuds;
-      const sx = centerX + (radius + 10) * Math.cos(studAngle);
-      const sy = centerY + (radius + 10) * Math.sin(studAngle);
-      ctx.beginPath();
-      ctx.arc(sx, sy, 3, 0, 2 * Math.PI);
-      ctx.fillStyle = '#ff5400';
-      ctx.fill();
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = '#18181b';
-      ctx.stroke();
-    }
-
-    // Center Brutalist Hub with Hard Drop Shadow look
+    // Subtle Gold Inner Accent Ring
     ctx.beginPath();
-    ctx.arc(centerX, centerY, 28, 0, 2 * Math.PI);
-    ctx.fillStyle = '#18181b';
-    ctx.fill();
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = '#ff5400';
+    ctx.arc(centerX, centerY, radius + 6, 0, 2 * Math.PI);
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#fbbf24';
     ctx.stroke();
 
-    // Center Star Icon ★
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 20px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('★', centerX, centerY);
+    // Center Bento Hub (Tactile dark circle with gold metallic border)
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 24, 0, 2 * Math.PI);
+    ctx.fillStyle = '#18181b';
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#fbbf24';
+    ctx.stroke();
+
+    // Center Gold Accent Dot
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 8, 0, 2 * Math.PI);
+    ctx.fillStyle = '#fbbf24';
+    ctx.fill();
   };
 
   useEffect(() => {
@@ -209,7 +204,7 @@ export default function LuckyWheelModal({
     const targetIndex = Math.floor(Math.random() * numSlices);
 
     // Calculate angle: Pointer is at top (3 * PI / 2)
-    const extraSpins = 6 + Math.floor(Math.random() * 3); // 6 to 8 full rotations
+    const extraSpins = 5 + Math.floor(Math.random() * 3); // 5 to 7 full rotations
     const sliceCenterAngle = targetIndex * sliceAngle + sliceAngle / 2;
     
     const targetOffset = (3 * Math.PI / 2) - sliceCenterAngle;
@@ -221,7 +216,7 @@ export default function LuckyWheelModal({
 
     const startRot = rotationRef.current;
     const totalDelta = finalRotation - startRot;
-    const duration = 4600; // 4.6 seconds
+    const duration = 4400; // 4.4 seconds
     const startTime = performance.now();
 
     const animate = (currentTime) => {
@@ -229,7 +224,7 @@ export default function LuckyWheelModal({
       const progress = Math.min(1, elapsed / duration);
 
       // Deceleration easing (ease-out quintic)
-      const easeOut = 1 - Math.pow(1 - progress, 5);
+      const easeOut = 1 - Math.pow(1 - progress, 4.5);
       const currentAngle = startRot + totalDelta * easeOut;
       rotationRef.current = currentAngle;
 
@@ -251,7 +246,7 @@ export default function LuckyWheelModal({
         setWinner(winMember);
         playFanfare();
         confetti({
-          particleCount: 90,
+          particleCount: 85,
           spread: 75,
           origin: { y: 0.6 }
         });
@@ -269,19 +264,19 @@ export default function LuckyWheelModal({
 
   const modeDescriptions = {
     payer: {
-      title: '👑 AI BAO TRỌN?',
+      title: '👑 Ai bao trọn?',
       desc: 'Người được quay trúng sẽ là đại gia thanh toán toàn bộ cho cả nhóm.',
-      banner: '★ ĐẠI GIA CHẦU NÀY ĐÃ LỘ DIỆN! ★'
+      banner: 'Đại gia chầu này đã lộ diện!'
     },
     advance: {
-      title: '💳 AI ỨNG TRƯỚC?',
+      title: '💳 Ai ứng trước?',
       desc: 'Người này quẹt thẻ/chuyển khoản trả trước, sau đó chia bill đều.',
-      banner: '★ THỦ QUỸ LÂM THỜI ĐƯỢC CHỌN! ★'
+      banner: 'Thủ quỹ lâm thời được chọn!'
     },
     lucky_free: {
-      title: '🎁 AI ĐƯỢC KHAO 0Đ?',
+      title: '🎁 Ai được khao 0đ?',
       desc: 'Cả nhóm chia tiền, riêng bạn này may mắn được khao miễn phí.',
-      banner: '★ SỐ ĐỎ HÔM NAY: ĐƯỢC KHAO 0Đ! ★'
+      banner: 'Số đỏ hôm nay: Được cả nhóm bao trọn 0đ!'
     }
   };
 
@@ -291,11 +286,14 @@ export default function LuckyWheelModal({
       onClose={spinning ? () => {} : onClose}
       title={
         <div className="flex items-center gap-2">
-          <span className="px-2.5 py-0.5 rounded-md bg-[#ff5400] text-white font-black text-xs tracking-wider uppercase">
-            NEO-RETRO
+          <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
+            <RotateCw className="w-3.5 h-3.5 stroke-[2.4]" />
+          </div>
+          <span className="font-extrabold text-[#18181b] dark:text-white">
+            Vòng Xoay May Mắn
           </span>
-          <span className="font-black text-[#18181b] dark:text-white uppercase tracking-tight">
-            Vòng Xoay May Mắn 🎡
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
+            🎡 Game
           </span>
         </div>
       }
@@ -305,10 +303,10 @@ export default function LuckyWheelModal({
           <button
             type="button"
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className="p-2 rounded-xl border-2 border-[#18181b] bg-white text-[#18181b] shadow-[2px_2px_0px_#18181b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
+            className="p-2 rounded-xl text-zinc-500 hover:text-zinc-800 dark:hover:text-white hover:bg-[#f4f3ec] dark:hover:bg-[#252530] transition-colors cursor-pointer"
             title={soundEnabled ? 'Tắt âm thanh' : 'Bật âm thanh'}
           >
-            {soundEnabled ? <Volume2 className="w-4 h-4 text-[#ff5400] stroke-[2.5]" /> : <VolumeX className="w-4 h-4 text-zinc-400 stroke-[2.5]" />}
+            {soundEnabled ? <Volume2 className="w-4 h-4 text-amber-500 stroke-[2.2]" /> : <VolumeX className="w-4 h-4 text-zinc-400 stroke-[2.2]" />}
           </button>
 
           <div className="flex items-center gap-2">
@@ -316,7 +314,7 @@ export default function LuckyWheelModal({
               type="button"
               onClick={onClose}
               disabled={spinning}
-              className="px-4 py-2 rounded-xl border-2 border-[#18181b] bg-white text-[#18181b] font-bold text-xs shadow-[2px_2px_0px_#18181b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
+              className="tactile-btn-pill text-xs px-4 py-2 cursor-pointer"
             >
               {t('close', 'Đóng')}
             </button>
@@ -324,31 +322,19 @@ export default function LuckyWheelModal({
               <button
                 type="button"
                 onClick={handleUseWinner}
-                className="px-4 py-2 rounded-xl border-2 border-[#18181b] bg-[#ff5400] hover:bg-[#ea580c] text-white font-black text-xs flex items-center gap-1.5 shadow-[3px_3px_0px_#18181b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
+                className="tactile-btn-dark text-xs px-4 py-2 flex items-center gap-1.5 font-bold cursor-pointer shadow-md"
               >
                 <span>Tạo khoản chi với {winner.displayName}</span>
-                <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                <ArrowRight className="w-3.5 h-3.5 stroke-[2.2]" />
               </button>
             )}
           </div>
         </div>
       }
     >
-      <div 
-        className="space-y-4 p-4 rounded-3xl border-[3px] border-[#18181b] shadow-[6px_6px_0px_#18181b] bg-[#fbf9f3] text-[#18181b] relative overflow-hidden select-none"
-        style={{
-          backgroundImage: 'radial-gradient(#18181b 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-          backgroundColor: '#fbf9f3'
-        }}
-      >
-        {/* Top Tape Sticker */}
-        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-0.5 bg-[#18181b] border-2 border-[#18181b] text-white text-[10px] font-mono font-black uppercase tracking-widest rotate-[1deg] shadow-[2px_2px_0px_#ff5400]">
-          ★ SPLIQO ARCADE WHEEL ★
-        </div>
-
-        {/* Brutalist Mode Selector */}
-        <div className="grid grid-cols-3 gap-2 pt-2">
+      <div className="space-y-4">
+        {/* Bento Mode Selector (Matching Spliqo tactile tabs) */}
+        <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-[#f4f3ec] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2e2e38]">
           {[
             { id: 'payer', label: 'Ai bao trọn', icon: Crown },
             { id: 'advance', label: 'Ai ứng trước', icon: CreditCard },
@@ -365,14 +351,14 @@ export default function LuckyWheelModal({
                   setGameMode(mode.id);
                   setWinner(null);
                 }}
-                className={`py-2 px-1.5 rounded-xl border-2 border-[#18181b] text-xs font-black flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                className={`py-2 px-2 rounded-xl text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
                   active
-                    ? 'bg-[#ff5400] text-white shadow-[3px_3px_0px_#18181b] -translate-x-0.5 -translate-y-0.5'
-                    : 'bg-white text-[#18181b] shadow-[2px_2px_0px_#18181b] hover:bg-zinc-50'
+                    ? 'bg-white dark:bg-[#2c2c36] text-[#18181b] dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
                 }`}
               >
-                <Icon className="w-4 h-4 stroke-[2.5]" />
-                <span className="text-[10px] font-mono uppercase truncate w-full text-center tracking-tight">
+                <Icon className={`w-3.5 h-3.5 ${active ? 'text-amber-500' : ''}`} />
+                <span className="text-[11px] truncate w-full text-center tracking-tight">
                   {mode.label}
                 </span>
               </button>
@@ -380,67 +366,64 @@ export default function LuckyWheelModal({
           })}
         </div>
 
-        {/* Subtitle tag */}
-        <div className="p-2 rounded-xl bg-white border-2 border-[#18181b] shadow-[2px_2px_0px_#18181b] text-center">
-          <p className="text-[11px] font-bold text-zinc-700 font-mono">
-            {modeDescriptions[gameMode]?.desc}
-          </p>
-        </div>
+        {/* Subtitle helper */}
+        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 text-center">
+          {modeDescriptions[gameMode]?.desc}
+        </p>
 
         {/* Wheel Container */}
-        <div className="relative flex flex-col items-center justify-center pt-2 pb-1">
-          {/* Top Brutalist Indicator Arrow */}
-          <div className="absolute top-0 z-20 flex flex-col items-center -translate-y-2">
-            <div className="w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-t-[24px] border-t-[#ff5400] drop-shadow-[0_3px_0_#18181b] animate-bounce" />
+        <div className="relative flex flex-col items-center justify-center pt-2 pb-1 select-none">
+          {/* Top Amber Arrow Indicator */}
+          <div className="absolute top-0 z-20 flex flex-col items-center -translate-y-1">
+            <div className="w-0 h-0 border-l-[13px] border-l-transparent border-r-[13px] border-r-transparent border-t-[20px] border-t-amber-400 drop-shadow-md animate-bounce" />
           </div>
 
           {/* Canvas Wheel */}
-          <div className="relative w-64 h-64 sm:w-72 sm:h-72 drop-shadow-[4px_4px_0_#18181b]">
+          <div className="relative w-64 h-64 sm:w-72 sm:h-72">
             <canvas
               ref={canvasRef}
               width={288}
               height={288}
-              className="w-full h-full"
+              className="w-full h-full drop-shadow-xl"
             />
           </div>
 
-          {/* Brutalist Spin Button */}
+          {/* Tactile Spin Button (Warm Amber & Dark Bento) */}
           <button
             type="button"
             onClick={spinWheel}
             disabled={spinning || members.length < 2}
-            className={`mt-4 px-9 py-3 rounded-2xl font-black text-sm uppercase tracking-wider flex items-center gap-2 border-[3px] border-[#18181b] transition-all cursor-pointer ${
+            className={`mt-4 px-8 py-3 rounded-full font-extrabold text-sm flex items-center gap-2 shadow-lg transition-all cursor-pointer ${
               spinning
-                ? 'bg-zinc-300 text-zinc-500 cursor-not-allowed shadow-none'
-                : 'bg-[#ff5400] hover:bg-[#ea580c] text-white shadow-[4px_4px_0px_#18181b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_#18181b]'
+                ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed shadow-none'
+                : 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-amber-500/25 hover:scale-105 active:scale-95'
             }`}
           >
-            <RotateCw className={`w-4 h-4 stroke-[3] ${spinning ? 'animate-spin' : ''}`} />
-            <span>{spinning ? 'ĐANG QUAY...' : 'QUAY NGAY 🎲'}</span>
+            <RotateCw className={`w-4 h-4 ${spinning ? 'animate-spin' : ''}`} />
+            <span>{spinning ? 'Đang quay...' : 'QUAY NGAY 🎲'}</span>
           </button>
         </div>
 
-        {/* Result Announcement in Neo-Retro Brutalism Card */}
+        {/* Winner Announcement Card (Matching Tactile Bento card) */}
         {winner && (
-          <div className="p-4 rounded-2xl bg-white border-[3px] border-[#18181b] shadow-[4px_4px_0px_#18181b] text-center space-y-2 animate-fade-in">
-            <div className="inline-block px-3 py-0.5 rounded-md bg-[#ff5400] text-white text-[10px] font-mono font-black uppercase tracking-wider border border-[#18181b]">
-              {modeDescriptions[gameMode]?.banner}
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-emerald-500/10 border border-amber-500/30 text-center space-y-2 animate-fade-in">
+            <div className="flex items-center justify-center gap-1.5 text-amber-700 dark:text-amber-400 font-bold text-xs">
+              <PartyPopper className="w-4 h-4 text-amber-500" />
+              <span>{modeDescriptions[gameMode]?.banner}</span>
             </div>
 
             <div className="flex items-center justify-center gap-3 py-1">
-              <div className="w-14 h-14 rounded-2xl bg-[#fef08a] border-2 border-[#18181b] shadow-[3px_3px_0px_#18181b] p-0.5 overflow-hidden">
-                <img
-                  src={winner.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${winner.userId || winner.uid || winner.id}`}
-                  alt=""
-                  className="w-full h-full rounded-xl object-cover"
-                />
-              </div>
+              <img
+                src={winner.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${winner.userId || winner.uid || winner.id}`}
+                alt=""
+                className="w-12 h-12 rounded-2xl bg-white shadow-md ring-2 ring-amber-400 object-cover"
+              />
               <div className="text-left">
-                <div className="text-xl font-black text-[#18181b] uppercase tracking-tight">
+                <div className="text-lg font-extrabold text-[#18181b] dark:text-white">
                   {winner.displayName}
                 </div>
-                <div className="text-xs font-mono font-bold text-zinc-600">
-                  {gameMode === 'payer' ? 'HÔM NAY LÀM ĐẠI GIA KHAO NHÓM!' : gameMode === 'advance' ? 'QUẸT THẺ ỨNG TIỀN TRƯỚC!' : 'ĐƯỢC CẢ NHÓM BAO TRỌN 0Đ!'}
+                <div className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
+                  {gameMode === 'payer' ? 'Hôm nay được làm đại gia khao nhóm!' : gameMode === 'advance' ? 'Được chọn quẹt thẻ thanh toán trước!' : 'Được cả nhóm bao trọn 0đ!'}
                 </div>
               </div>
             </div>
@@ -448,16 +431,10 @@ export default function LuckyWheelModal({
         )}
 
         {members.length < 2 && (
-          <p className="text-xs text-rose-600 text-center font-black font-mono">
-            CẦN ÍT NHẤT 2 THÀNH VIÊN ĐỂ BẮT ĐẦU VÒNG XOAY.
+          <p className="text-xs text-rose-500 text-center font-medium">
+            Chuyến đi cần ít nhất 2 thành viên để bắt đầu vòng xoay.
           </p>
         )}
-
-        {/* Bottom Vintage Barcode Stamp */}
-        <div className="flex items-center justify-between text-[10px] font-mono font-bold text-zinc-500 pt-2 border-t border-dashed border-[#18181b]/20">
-          <span>|||| | || |||| |</span>
-          <span>SPLIQO ROULETTE 2026</span>
-        </div>
       </div>
     </Modal>
   );

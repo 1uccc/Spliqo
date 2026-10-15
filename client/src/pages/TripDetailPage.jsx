@@ -734,14 +734,14 @@ export default function TripDetailPage() {
                 <span>Mời bằng link</span>
               </button>
 
-              {/* Lucky Wheel Quick Trigger (Neo-Retro) */}
+              {/* Lucky Wheel Quick Trigger */}
               <button
                 type="button"
                 onClick={() => setLuckyWheelModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-950/60 hover:bg-orange-100 dark:hover:bg-orange-900/60 text-[#ff5400] dark:text-orange-400 text-xs font-black transition-all border border-orange-300 dark:border-orange-800/60 cursor-pointer shadow-xs active:scale-95"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-300 text-xs font-bold transition-all border border-amber-200 dark:border-amber-800/50 cursor-pointer shadow-xs active:scale-95"
                 title="Vòng xoay may mắn - Ai trả chầu này?"
               >
-                <RotateCw className="w-3.5 h-3.5 text-[#ff5400]" />
+                <RotateCw className="w-3.5 h-3.5 text-amber-500" />
                 <span>Vòng xoay 🎡</span>
               </button>
 
