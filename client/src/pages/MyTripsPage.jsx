@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -29,7 +29,7 @@ export default function MyTripsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTripForInvite, setSelectedTripForInvite] = useState(null);
 
-  const fetchTrips = async () => {
+  const fetchTrips = useCallback(async () => {
     try {
       setLoading(true);
       const data = await api.get('/trips');
@@ -39,11 +39,11 @@ export default function MyTripsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
     fetchTrips();
-  }, [currentUser?.uid]);
+  }, [fetchTrips, currentUser?.uid]);
 
   const filteredTrips = trips.filter((trip) => {
     const matchStatus =

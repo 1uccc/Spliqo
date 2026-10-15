@@ -1,0 +1,57 @@
+{
+  "id": "/",
+  "name": "Spliqo - Chia Tiền Nhóm & Quản Lý Chi Tiêu",
+  "short_name": "Spliqo",
+  "description": "Quản lý chi tiêu nhóm, chia tiền thông minh, hoạt động ngoại tuyến và quyết toán công nợ VietQR tức thì.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "window-controls-overlay"],
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "categories": ["finance", "travel", "productivity", "utilities"],
+  "lang": "vi",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/pwa-icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-icon-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "32x32",
+      "type": "image/svg+xml"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Chuyến đi của tôi",
+      "short_name": "Chuyến đi",
+      "description": "Xem danh sách các chuyến đi đang hoạt động",
+      "url": "/trips",
+      "icons": [{ "src": "/pwa-icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Quyết toán công nợ",
+      "short_name": "Quyết toán",
+      "description": "Xem ai nợ ai và tạo mã VietQR thanh toán",
+      "url": "/settlements",
+      "icons": [{ "src": "/pwa-icon-192.svg", "sizes": "192x192" }]
+    }
+  ]
+}

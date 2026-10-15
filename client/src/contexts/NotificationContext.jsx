@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import api from '../services/api';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
+import { createRealtimeStream } from '../services/realtime';
 
 const NotificationContext = createContext(null);
 
@@ -15,7 +16,7 @@ export function NotificationProvider({ children }) {
   const prevNotifIdsRef = useRef(new Set());
   const initialLoadRef = useRef(true);
 
-  const fetchNotifications = async (silent = false) => {
+  const fetchNotifications = useCallback(async (silent = false) => {
     if (!currentUser?.uid) {
       setNotifications([]);
       setUnreadCount(0);
@@ -41,14 +42,14 @@ export function NotificationProvider({ children }) {
       initialLoadRef.current = false;
       setNotifications(list);
       setUnreadCount(unread);
-    } catch (e) {
+    } catch {
       // Quiet fail on polling error
     } finally {
       if (!silent) setLoading(false);
     }
-  };
+  }, [currentUser?.uid, showToast]);
 
-  // Initial fetch and polling every 12 seconds
+  // Real-time SSE connection replacing 12-second polling
   useEffect(() => {
     if (!currentUser?.uid) {
       setNotifications([]);
@@ -58,14 +59,45 @@ export function NotificationProvider({ children }) {
       return;
     }
 
+    // Initial fetch
     fetchNotifications();
 
-    const interval = setInterval(() => {
-      fetchNotifications(true);
-    }, 12000);
+    // Establish real-time SSE stream
+    const eventSource = createRealtimeStream();
 
-    return () => clearInterval(interval);
-  }, [currentUser?.uid]);
+    if (eventSource) {
+      eventSource.addEventListener('NOTIFICATION_NEW', (event) => {
+        try {
+          const newNotif = JSON.parse(event.data);
+          if (newNotif && newNotif.id) {
+            setNotifications(prev => {
+              if (prev.some(n => n.id === newNotif.id)) return prev;
+              return [newNotif, ...prev];
+            });
+            setUnreadCount(prev => prev + 1);
+            showToast(`🔔 ${newNotif.title}: ${newNotif.message}`, 'info');
+          }
+        } catch (err) {
+          console.warn('[Notification SSE] Parse error:', err);
+        }
+      });
+    }
+
+    // Re-sync quietly when user returns to tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchNotifications(true);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchNotifications, currentUser?.uid, showToast]);
 
   const markAsRead = async (notifId) => {
     try {
@@ -73,7 +105,7 @@ export function NotificationProvider({ children }) {
       setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true } : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
       await api.put(`/notifications/${notifId}/read`);
-    } catch (e) {
+    } catch {
       fetchNotifications(true);
     }
   };
@@ -83,7 +115,7 @@ export function NotificationProvider({ children }) {
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
       await api.put('/notifications/read-all');
-    } catch (e) {
+    } catch {
       fetchNotifications(true);
     }
   };
@@ -96,7 +128,7 @@ export function NotificationProvider({ children }) {
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
       await api.delete(`/notifications/${notifId}`);
-    } catch (e) {
+    } catch {
       fetchNotifications(true);
     }
   };
@@ -106,7 +138,7 @@ export function NotificationProvider({ children }) {
       setNotifications([]);
       setUnreadCount(0);
       await api.delete('/notifications');
-    } catch (e) {
+    } catch {
       fetchNotifications(true);
     }
   };

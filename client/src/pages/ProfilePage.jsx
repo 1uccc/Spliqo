@@ -4,21 +4,14 @@ import { useToast } from '../contexts/ToastContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { 
   User, 
-  Mail, 
-  Phone, 
-  Building, 
-  CreditCard, 
-  QrCode, 
   Save, 
   Loader2, 
-  Camera, 
-  CheckCircle2, 
-  Sparkles,
-  ExternalLink,
-  Globe,
-  Check,
-  Palette,
-  RefreshCw
+  Globe, 
+  Check, 
+  Palette, 
+  RefreshCw,
+  Building,
+  QrCode
 } from 'lucide-react';
 import AvatarPickerModal from '../components/AvatarPickerModal';
 import { auth } from '../firebase/config';

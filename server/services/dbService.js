@@ -1,7 +1,8 @@
-import fs from 'fs';
+import fs, { promises as fsPromises } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { db, isFirebaseConfigured } from '../config/firebase.js';
+import { realtimeService } from './realtimeService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,10 +28,43 @@ const DEFAULT_DATA = {
 
 class DBService {
   constructor() {
+    this._saveDebounceTimer = null;
+    this._isSaving = false;
+    this._hasPendingSave = false;
+    this._debounceMs = 300;
     this.data = this.loadData();
     if (isFirebaseConfigured && db) {
       this.initFirestoreSync();
     }
+    this._registerExitHandlers();
+  }
+
+  _registerExitHandlers() {
+    const flushSync = () => {
+      if (this._saveDebounceTimer || this._hasPendingSave || this._isSaving) {
+        if (this._saveDebounceTimer) {
+          clearTimeout(this._saveDebounceTimer);
+          this._saveDebounceTimer = null;
+        }
+        try {
+          fs.writeFileSync(STORE_FILE, JSON.stringify(this.data, null, 2), 'utf-8');
+          this._hasPendingSave = false;
+          this._isSaving = false;
+        } catch (e) {
+          console.error('[DBService] Error flushing store.json on exit:', e.message);
+        }
+      }
+    };
+
+    process.on('beforeExit', flushSync);
+    process.on('SIGINT', () => {
+      flushSync();
+      process.exit(0);
+    });
+    process.on('SIGTERM', () => {
+      flushSync();
+      process.exit(0);
+    });
   }
 
   async initFirestoreSync() {
@@ -227,12 +261,56 @@ class DBService {
     return JSON.parse(JSON.stringify(DEFAULT_DATA));
   }
 
-  saveData(data) {
-    try {
-      fs.writeFileSync(STORE_FILE, JSON.stringify(data || this.data, null, 2), 'utf-8');
-    } catch (e) {
-      console.error('[DBService] Error saving store.json:', e.message);
+  async _performSave() {
+    if (this._isSaving) {
+      this._hasPendingSave = true;
+      return;
     }
+    this._isSaving = true;
+    this._hasPendingSave = false;
+
+    try {
+      const content = JSON.stringify(this.data, null, 2);
+      await fsPromises.writeFile(STORE_FILE, content, 'utf-8');
+    } catch (e) {
+      console.error('[DBService] Error saving store.json asynchronously:', e.message);
+    } finally {
+      this._isSaving = false;
+      if (this._hasPendingSave) {
+        this._performSave();
+      }
+    }
+  }
+
+  saveData(data = null, immediate = false) {
+    if (data) {
+      this.data = data;
+    }
+
+    if (immediate) {
+      if (this._saveDebounceTimer) {
+        clearTimeout(this._saveDebounceTimer);
+        this._saveDebounceTimer = null;
+      }
+      return this._performSave();
+    }
+
+    if (this._saveDebounceTimer) {
+      clearTimeout(this._saveDebounceTimer);
+    }
+
+    this._saveDebounceTimer = setTimeout(() => {
+      this._saveDebounceTimer = null;
+      this._performSave();
+    }, this._debounceMs);
+  }
+
+  async flush() {
+    if (this._saveDebounceTimer) {
+      clearTimeout(this._saveDebounceTimer);
+      this._saveDebounceTimer = null;
+    }
+    await this._performSave();
   }
 
   // --- Users ---
@@ -321,9 +399,12 @@ class DBService {
     const list = this.data.tripMembers[tripId] || [];
     return list.map(m => {
       const user = this.getUser(m.userId) || {};
+      const memberId = m.userId || user.uid || user.userId || user.id;
       return {
         ...user,
-        userId: m.userId,
+        userId: memberId,
+        uid: memberId,
+        id: memberId,
         role: m.role || 'Member',
         joinedAt: m.joinedAt || new Date().toISOString()
       };
@@ -649,6 +730,13 @@ class DBService {
 
     this.saveData();
     this.syncToFirestore('notifications', userId, { list: this.data.notifications[userId] });
+
+    try {
+      realtimeService.sendToUser(userId, 'NOTIFICATION_NEW', newNotif);
+    } catch (e) {
+      console.warn('[DBService] Realtime notification dispatch failed:', e.message);
+    }
+
     return newNotif;
   }
 

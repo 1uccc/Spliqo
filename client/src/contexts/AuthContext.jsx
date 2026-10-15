@@ -14,30 +14,15 @@ import {
   onAuthStateChanged
 } from 'firebase/auth';
 import api from '../services/api';
+import { 
+  DEMO_USERS, 
+  sanitizeDisplayName, 
+  getDicebearAvatar, 
+  sanitizePhotoURL 
+} from '../utils/userUtils';
+
 
 const AuthContext = createContext(null);
-
-export const DEMO_USERS = [];
-
-export const sanitizeDisplayName = (name, uid, email) => {
-  if (!name) return email ? email.split('@')[0] : 'Người dùng';
-  if (uid && (name === uid || name === uid.toUpperCase() || name.includes(uid))) {
-    return email ? email.split('@')[0] : 'Người dùng';
-  }
-  if (name.length >= 25 && !name.includes(' ')) {
-    return email ? email.split('@')[0] : 'Người dùng';
-  }
-  return name;
-};
-
-export const getDicebearAvatar = (uid) => `https://api.dicebear.com/7.x/avataaars/svg?seed=${uid || 'user'}`;
-
-export const sanitizePhotoURL = (photoURL, uid) => {
-  if (!photoURL || photoURL.includes('googleusercontent.com')) {
-    return getDicebearAvatar(uid);
-  }
-  return photoURL;
-};
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
@@ -51,8 +36,8 @@ export function AuthProvider({ children }) {
       unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
         if (fbUser) {
           const token = await fbUser.getIdToken();
-          localStorage.setItem('splitmate_token', token);
-          localStorage.setItem('splitmate_user_id', fbUser.uid);
+          localStorage.setItem('spliqo_token', token);
+          localStorage.setItem('spliqo_user_id', fbUser.uid);
 
           const googleName = fbUser.displayName || '';
           const googleEmail = fbUser.email || '';
@@ -79,7 +64,7 @@ export function AuthProvider({ children }) {
                   email: googleEmail || profile?.email,
                   photoURL: profilePhoto,
                 });
-              } catch (err) {}
+              } catch {}
             }
 
             const activeUser = {
@@ -93,7 +78,7 @@ export function AuthProvider({ children }) {
             };
 
             setCurrentUser(activeUser);
-          } catch (e) {
+          } catch {
             setCurrentUser({
               uid: fbUser.uid,
               displayName: sanitizeDisplayName(googleName, fbUser.uid, googleEmail),
@@ -102,22 +87,22 @@ export function AuthProvider({ children }) {
             });
           }
         } else {
-          localStorage.removeItem('splitmate_token');
-          localStorage.removeItem('splitmate_user_id');
+          localStorage.removeItem('spliqo_token');
+          localStorage.removeItem('spliqo_user_id');
           setCurrentUser(null);
         }
         setLoading(false);
       });
     } else {
       // Offline / Local storage session check
-      const savedUserId = localStorage.getItem('splitmate_user_id');
+      const savedUserId = localStorage.getItem('spliqo_user_id');
       if (savedUserId) {
         api.get('/users/profile')
           .then((profile) => {
             setCurrentUser(profile);
           })
           .catch(() => {
-            localStorage.removeItem('splitmate_user_id');
+            localStorage.removeItem('spliqo_user_id');
             setCurrentUser(null);
           })
           .finally(() => {
@@ -138,8 +123,8 @@ export function AuthProvider({ children }) {
     if (isFirebaseLive && auth) {
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const token = await cred.user.getIdToken();
-      localStorage.setItem('splitmate_token', token);
-      localStorage.setItem('splitmate_user_id', cred.user.uid);
+      localStorage.setItem('spliqo_token', token);
+      localStorage.setItem('spliqo_user_id', cred.user.uid);
       const profile = await api.get('/users/profile');
       setCurrentUser(profile);
       return profile;
@@ -151,7 +136,7 @@ export function AuthProvider({ children }) {
         displayName: email.split('@')[0],
         photoURL: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + email,
       };
-      localStorage.setItem('splitmate_user_id', user.uid);
+      localStorage.setItem('spliqo_user_id', user.uid);
       setCurrentUser(user);
       await api.put('/users/profile', user).catch(() => {});
       return user;
@@ -163,8 +148,8 @@ export function AuthProvider({ children }) {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateFirebaseProfile(cred.user, { displayName });
       const token = await cred.user.getIdToken();
-      localStorage.setItem('splitmate_token', token);
-      localStorage.setItem('splitmate_user_id', cred.user.uid);
+      localStorage.setItem('spliqo_token', token);
+      localStorage.setItem('spliqo_user_id', cred.user.uid);
       
       const newProfile = {
         uid: cred.user.uid,
@@ -183,7 +168,7 @@ export function AuthProvider({ children }) {
         displayName: displayName || email.split('@')[0],
         photoURL: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + newUid,
       };
-      localStorage.setItem('splitmate_user_id', newUid);
+      localStorage.setItem('spliqo_user_id', newUid);
       setCurrentUser(newUser);
       await api.put('/users/profile', newUser).catch(() => {});
       return newUser;
@@ -195,8 +180,8 @@ export function AuthProvider({ children }) {
       const cred = await signInWithPopup(auth, googleProvider);
       const fbUser = cred.user;
       const token = await fbUser.getIdToken();
-      localStorage.setItem('splitmate_token', token);
-      localStorage.setItem('splitmate_user_id', fbUser.uid);
+      localStorage.setItem('spliqo_token', token);
+      localStorage.setItem('spliqo_user_id', fbUser.uid);
 
       const realDisplayName = sanitizeDisplayName(fbUser.displayName, fbUser.uid, fbUser.email);
       const realEmail = fbUser.email || '';
@@ -213,7 +198,7 @@ export function AuthProvider({ children }) {
           email: realEmail,
           photoURL: userPhoto,
         });
-      } catch (e) {
+      } catch {
         profile = await api.get('/users/profile').catch(() => null);
       }
 
@@ -243,14 +228,14 @@ export function AuthProvider({ children }) {
     if (isFirebaseLive && auth) {
       await signOut(auth);
     }
-    localStorage.removeItem('splitmate_token');
-    localStorage.removeItem('splitmate_user_id');
+    localStorage.removeItem('spliqo_token');
+    localStorage.removeItem('spliqo_user_id');
     setCurrentUser(null);
   };
 
   const switchDemoUser = async (userId) => {
     if (!userId) return;
-    localStorage.setItem('splitmate_user_id', userId);
+    localStorage.setItem('spliqo_user_id', userId);
     try {
       const profile = await api.get('/users/profile');
       setCurrentUser(profile);

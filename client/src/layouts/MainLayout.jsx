@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth, sanitizeDisplayName } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
+import { sanitizeDisplayName } from '../utils/userUtils';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import BottomNav from '../components/BottomNav';
 import api from '../services/api';
+import { offlineSyncService } from '../services/offlineSyncService';
 import { 
   Home, 
   ShoppingBag, 
-  Clock, 
   Tag, 
   Users, 
   Sun, 
@@ -28,11 +29,12 @@ import {
   Sparkles, 
   LogOut, 
   Flame,
-  CheckCircle2,
   Info,
   Globe,
   Activity,
-  RefreshCw
+  RefreshCw,
+  Download,
+  WifiOff
 } from 'lucide-react';
 
 function formatTimeAgo(isoString) {
@@ -106,16 +108,63 @@ export default function MainLayout({ onOpenAddExpense }) {
   const [helpOpen, setHelpOpen] = useState(false);
   const [notifTab, setNotifTab] = useState('ALL'); // 'ALL' | 'UNREAD'
 
-  // Server Live Status Tracking (Online / Sleeping / Waking up)
-  const [serverState, setServerState] = useState('checking'); // 'checking' | 'online' | 'waking' | 'offline'
-  const [serverStatusOpen, setServerStatusOpen] = useState(false);
-  const [latency, setLatency] = useState(null);
-  const [lastChecked, setLastChecked] = useState(null);
-  const [isChecking, setIsChecking] = useState(false);
+  // PWA Install Prompt & Offline Detection
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [pendingQueueCount, setPendingQueueCount] = useState(0);
 
-  const checkServerHealth = async () => {
-    if (isChecking) return;
-    setIsChecking(true);
+  useEffect(() => {
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBanner(true);
+    };
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      offlineSyncService.syncOfflineQueue();
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
+
+    const updateQueue = () => {
+      setPendingQueueCount(offlineSyncService.getQueueCount());
+    };
+    updateQueue();
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('spliqo:offline-queue-changed', updateQueue);
+    window.addEventListener('spliqo:offline-sync-completed', updateQueue);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('spliqo:offline-queue-changed', updateQueue);
+      window.removeEventListener('spliqo:offline-sync-completed', updateQueue);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setShowInstallBanner(false);
+    }
+    setDeferredPrompt(null);
+  };
+
+  const checkServerHealth = useCallback(async () => {
+    setIsChecking(prevChecking => {
+      if (prevChecking) return true;
+      return true;
+    });
 
     // If server does not reply in 2s, Render free-tier is sleeping and spinning up
     const wakingTimer = setTimeout(() => {
@@ -130,7 +179,7 @@ export default function MainLayout({ onOpenAddExpense }) {
       setLatency(elapsed);
       setServerState('online');
       setLastChecked(new Date());
-    } catch (err) {
+    } catch {
       clearTimeout(wakingTimer);
       const elapsed = Math.round(performance.now() - start);
       setLatency(elapsed);
@@ -139,7 +188,7 @@ export default function MainLayout({ onOpenAddExpense }) {
     } finally {
       setIsChecking(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     checkServerHealth();
@@ -148,7 +197,7 @@ export default function MainLayout({ onOpenAddExpense }) {
       checkServerHealth();
     }, 45000);
     return () => clearInterval(interval);
-  }, []);
+  }, [checkServerHealth]);
 
   const filteredNotifs = notifTab === 'UNREAD' 
     ? notifications.filter(n => !n.read) 
@@ -762,6 +811,20 @@ export default function MainLayout({ onOpenAddExpense }) {
                         </span>
                       </button>
 
+                      {deferredPrompt && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleInstallApp();
+                            setUserDropdownOpen(false);
+                          }}
+                          className="w-full flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300 font-semibold py-2 px-3 rounded-2xl hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
+                        >
+                          <Download className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                          <span>Cài đặt ứng dụng Spliqo</span>
+                        </button>
+                      )}
+
                       <Link
                         to="/profile"
                         className="w-full flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white font-semibold py-2 px-3 rounded-2xl hover:bg-[#edebe4]/60 dark:hover:bg-zinc-800 transition-colors"
@@ -784,6 +847,59 @@ export default function MainLayout({ onOpenAddExpense }) {
             </div>
           </header>
         </div>
+
+        {/* Global Offline Status Banner */}
+        {!isOnline && (
+          <div className="mb-4 px-4 py-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs flex items-center justify-between gap-3 shadow-xs animate-fade-in">
+            <div className="flex items-center gap-2">
+              <WifiOff className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span className="font-semibold">
+                Đang ngoại tuyến (Không có 4G/Wifi). Bạn vẫn có thể ghi chép chi tiêu bình thường
+                {pendingQueueCount > 0 ? ` (${pendingQueueCount} khoản chi chờ đồng bộ)` : ''}.
+              </span>
+            </div>
+            {pendingQueueCount > 0 && (
+              <button
+                onClick={() => offlineSyncService.syncOfflineQueue()}
+                className="px-2.5 py-1 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shrink-0 cursor-pointer"
+              >
+                Đồng bộ ngay
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* PWA Install Banner */}
+        {showInstallBanner && deferredPrompt && (
+          <div className="mb-4 p-3.5 sm:p-4 rounded-2xl bg-[#edebe4] dark:bg-[#1f1f27] border border-[#dedbd0] dark:border-[#2e2e38] flex items-center justify-between gap-3 shadow-xs animate-fade-in">
+            <div className="flex items-center gap-3 min-w-0">
+              <img src="/pwa-icon-192.svg" alt="Spliqo" className="w-9 h-9 rounded-xl shrink-0" />
+              <div className="min-w-0">
+                <h4 className="text-xs sm:text-sm font-bold text-[#18181b] dark:text-white truncate">
+                  Cài đặt Spliqo vào điện thoại
+                </h4>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
+                  Sử dụng như ứng dụng native từ màn hình chính & hoạt động ngoại tuyến khi mất sóng.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={handleInstallApp}
+                className="px-3.5 py-1.5 rounded-xl bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] font-bold text-xs hover:scale-105 active:scale-95 transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Cài đặt</span>
+              </button>
+              <button
+                onClick={() => setShowInstallBanner(false)}
+                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer text-xs"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Main Outlet */}
         <main className="flex-1 w-full pb-24 md:pb-12">

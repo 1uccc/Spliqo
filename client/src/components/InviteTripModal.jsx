@@ -8,16 +8,14 @@ import {
   Check, 
   Share2, 
   QrCode, 
-  Users, 
   UserPlus, 
   Sparkles,
-  ExternalLink,
   ShieldCheck
 } from 'lucide-react';
 
 export default function InviteTripModal({ isOpen, onClose, trip, onOpenFriendList }) {
   const { showToast } = useToast();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [showQR, setShowQR] = useState(true);

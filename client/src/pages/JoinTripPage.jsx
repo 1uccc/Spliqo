@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -70,7 +70,7 @@ export default function JoinTripPage() {
   }, [code, currentUser, t]);
 
   // Handle Joining
-  const handleJoinTrip = async () => {
+  const handleJoinTrip = useCallback(async () => {
     if (!currentUser) {
       sessionStorage.setItem('spliqo_auto_join', code);
       sessionStorage.setItem('spliqo_redirect', `/join/${code}?autoJoin=1`);
@@ -112,7 +112,7 @@ export default function JoinTripPage() {
     } finally {
       setJoining(false);
     }
-  };
+  }, [currentUser, code, navigate, showToast, t, inviteData]);
 
   // Google 1-Click Join for Unauthenticated Guests
   const handleGoogleJoin = async () => {
@@ -156,7 +156,7 @@ export default function JoinTripPage() {
       autoJoinAttempted.current = true;
       handleJoinTrip();
     }
-  }, [authLoading, loading, inviteData, currentUser, searchParams, code]);
+  }, [authLoading, loading, inviteData, currentUser, searchParams, code, handleJoinTrip]);
 
   const handleLoginToJoin = (register = false) => {
     sessionStorage.setItem('spliqo_auto_join', code);

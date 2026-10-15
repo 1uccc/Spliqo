@@ -30,7 +30,8 @@ import {
 import {
   markAsPaid,
   confirmPayment,
-  getSettlementHistory
+  getSettlementHistory,
+  nudgeDebtor
 } from '../controllers/paymentController.js';
 import {
   getProfile,
@@ -55,14 +56,23 @@ import {
   clearAllNotifications
 } from '../controllers/notificationController.js';
 import { uploadImage } from '../controllers/uploadController.js';
+import { realtimeService } from '../services/realtimeService.js';
+import { getExchangeRates } from '../controllers/currencyController.js';
 
 const router = express.Router();
+
+// Public exchange rates endpoint
+router.get('/currencies/rates', getExchangeRates);
 
 // Public invite preview (allows unauthenticated guest preview with optional user context)
 router.get('/trips/invite/:tripCode', optionalAuthMiddleware, getTripInvitePreview);
 
 // Apply auth middleware to all protected API routes
 router.use(authMiddleware);
+
+// --- Real-time Server-Sent Events (SSE) ---
+router.get('/realtime/stream', (req, res) => realtimeService.handleStream(req, res));
+router.get('/trips/:tripId/stream', (req, res) => realtimeService.handleStream(req, res));
 
 // --- Media & Cloudinary Upload ---
 router.post('/upload', uploadImage);
@@ -111,6 +121,7 @@ router.get('/trips/:tripId/settlements', getTripSettlements);
 router.get('/settlements/overview', getUserSettlementsOverview);
 router.post('/trips/:tripId/settlements/:settlementId/pay', markAsPaid);
 router.post('/trips/:tripId/settlements/:settlementId/confirm', confirmPayment);
+router.post('/trips/:tripId/settlements/:settlementId/nudge', nudgeDebtor);
 router.get('/trips/:tripId/settlements/history', getSettlementHistory);
 
 // --- Notifications ---

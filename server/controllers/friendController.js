@@ -1,4 +1,5 @@
 import { dbService } from '../services/dbService.js';
+import { realtimeService } from '../services/realtimeService.js';
 
 export async function getFriendsData(req, res) {
   try {
@@ -243,6 +244,16 @@ export async function inviteFriendToTrip(req, res) {
 
     // Add friend to trip
     dbService.addMemberToTrip(tripId, friendId, 'Member');
+
+    try {
+      realtimeService.broadcastToTrip(tripId, 'MEMBER_UPDATED', {
+        tripId,
+        action: 'INVITED',
+        friendId
+      });
+    } catch (e) {
+      console.warn('[inviteFriendToTrip] Realtime broadcast error:', e.message);
+    }
 
     try {
       dbService.addNotification(friendId, {

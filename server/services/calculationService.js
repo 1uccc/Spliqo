@@ -75,6 +75,8 @@ export function calculateMemberTotals(expenses = [], members = []) {
     if (id) {
       memberMap[id] = {
         userId: id,
+        uid: id,
+        id,
         displayName: member.displayName || 'Thành viên',
         photoURL: member.photoURL || '',
         bankName: member.bankName || '',
@@ -99,7 +101,10 @@ export function calculateMemberTotals(expenses = [], members = []) {
       if (!memberMap[payerId]) {
         memberMap[payerId] = {
           userId: payerId,
+          uid: payerId,
+          id: payerId,
           displayName: 'Thành viên',
+          photoURL: '',
           totalPaid: 0,
           totalOwed: 0,
           balance: 0,
@@ -114,7 +119,10 @@ export function calculateMemberTotals(expenses = [], members = []) {
       if (!memberMap[userId]) {
         memberMap[userId] = {
           userId,
+          uid: userId,
+          id: userId,
           displayName: 'Thành viên',
+          photoURL: '',
           totalPaid: 0,
           totalOwed: 0,
           balance: 0,

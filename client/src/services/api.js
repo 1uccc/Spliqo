@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL =
+export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   (import.meta.env.PROD
     ? 'https://spliqo-backend.onrender.com/api'
@@ -16,8 +16,8 @@ const api = axios.create({
 // Interceptor to attach token and active user ID
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('splitmate_token');
-    const activeUserId = localStorage.getItem('splitmate_user_id');
+    const token = localStorage.getItem('spliqo_token');
+    const activeUserId = localStorage.getItem('spliqo_user_id');
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

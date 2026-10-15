@@ -1,6 +1,7 @@
 import { dbService } from '../services/dbService.js';
 import { calculateMemberTotals, calculateBalances } from '../services/calculationService.js';
 import { optimizeSettlements, reconcileSettlements } from '../services/settlementService.js';
+import { realtimeService } from '../services/realtimeService.js';
 
 function generateTripCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -142,6 +143,15 @@ export async function updateTrip(req, res) {
       ...(status ? { status } : {}),
     });
 
+    try {
+      realtimeService.broadcastToTrip(tripId, 'TRIP_UPDATED', {
+        tripId,
+        trip: updated
+      });
+    } catch (e) {
+      console.warn('[updateTrip] Realtime broadcast error:', e.message);
+    }
+
     return res.json(updated);
   } catch (err) {
     console.error('[updateTrip] Error:', err);
@@ -261,6 +271,20 @@ export async function joinTrip(req, res) {
       console.warn('[joinTrip] Notification error:', e.message);
     }
 
+    try {
+      realtimeService.broadcastToTrip(trip.id, 'MEMBER_UPDATED', {
+        tripId: trip.id,
+        action: 'JOINED',
+        user: {
+          uid: userId,
+          displayName: req.user.displayName,
+          photoURL: req.user.photoURL
+        }
+      });
+    } catch (e) {
+      console.warn('[joinTrip] Realtime broadcast error:', e.message);
+    }
+
     return res.json({
       success: true,
       message: `You joined ${trip.name}. Tham gia thành công!`,
@@ -329,6 +353,17 @@ export async function completeTrip(req, res) {
     }
 
     const updated = dbService.updateTrip(tripId, { status: 'COMPLETED' });
+
+    try {
+      realtimeService.broadcastToTrip(tripId, 'TRIP_UPDATED', {
+        tripId,
+        status: 'COMPLETED',
+        trip: updated
+      });
+    } catch (e) {
+      console.warn('[completeTrip] Realtime broadcast error:', e.message);
+    }
+
     return res.json({
       success: true,
       message: 'Chúc mừng! Chuyến đi đã chốt sổ thành công. Toàn bộ công nợ đã được tất toán.',

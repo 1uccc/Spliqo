@@ -5,12 +5,11 @@ const ThemeContext = createContext();
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     try {
-      const saved = localStorage.getItem('spliqo_theme_v2');
+      const saved = localStorage.getItem('spliqo_theme');
       if (saved === 'dark' || saved === 'light') return saved;
       // Default theme is strictly light mode
       return 'light';
-    } catch (e) {
-      console.warn('Error reading theme from localStorage:', e);
+    } catch {
       return 'light';
     }
   });
@@ -19,12 +18,10 @@ export function ThemeProvider({ children }) {
     const root = document.documentElement;
     if (theme === 'dark') {
       root.classList.add('dark');
-      localStorage.setItem('spliqo_theme_v2', 'dark');
-      localStorage.setItem('splitmate_theme', 'dark');
+      localStorage.setItem('spliqo_theme', 'dark');
     } else {
       root.classList.remove('dark');
-      localStorage.setItem('spliqo_theme_v2', 'light');
-      localStorage.setItem('splitmate_theme', 'light');
+      localStorage.setItem('spliqo_theme', 'light');
     }
   }, [theme]);
 

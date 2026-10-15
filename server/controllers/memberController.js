@@ -1,4 +1,5 @@
 import { dbService } from '../services/dbService.js';
+import { realtimeService } from '../services/realtimeService.js';
 
 export async function getMembers(req, res) {
   try {
@@ -39,6 +40,17 @@ export async function removeMember(req, res) {
     }
 
     const updatedMembers = dbService.removeMemberFromTrip(tripId, targetUserId);
+
+    try {
+      realtimeService.broadcastToTrip(tripId, 'MEMBER_UPDATED', {
+        tripId,
+        action: 'REMOVED',
+        userId: targetUserId
+      });
+    } catch (e) {
+      console.warn('[removeMember] Realtime broadcast error:', e.message);
+    }
+
     return res.json({ success: true, message: 'Đã xóa thành viên khỏi chuyến đi.', members: updatedMembers });
   } catch (err) {
     console.error('[removeMember] Error:', err);

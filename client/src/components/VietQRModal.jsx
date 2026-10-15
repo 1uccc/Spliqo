@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Modal from './Modal';
 import { formatVND } from '../services/calculation';
-import { Copy, Check, QrCode, Building, CreditCard, User, ExternalLink, Loader2, Clock } from 'lucide-react';
+import { Copy, Check, QrCode, Building, CreditCard, User, Loader2, Clock } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
 

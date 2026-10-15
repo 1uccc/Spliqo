@@ -16,8 +16,8 @@ export default function BottomNav() {
   const [submitting, setSubmitting] = useState(false);
   const [tripName, setTripName] = useState('');
   const [description, setDescription] = useState('');
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
 
   const isActive = (path) => {
     if (path === '/dashboard') return location.pathname === '/' || location.pathname === '/dashboard';

@@ -1,0 +1,123 @@
+import React from 'react';
+import { formatVND } from '../../services/calculation';
+
+export default function TripOverviewTab({ balances, currentUser, t }) {
+  return (
+    <div className="space-y-6">
+      {/* Top Payer Highlight */}
+      {balances?.topPayer && (
+        <div 
+          className="p-5 rounded-3xl liquid-glass-card flex items-center justify-between border border-teal-500/20" 
+          style={{ background: 'linear-gradient(135deg, rgba(20,184,166,0.08), rgba(16,185,129,0.05))' }}
+        >
+          <div className="flex items-center gap-3">
+            <img
+              src={balances.topPayer.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${balances.topPayer.userId || balances.topPayer.uid || balances.topPayer.id}`}
+              alt=""
+              className="w-12 h-12 rounded-2xl bg-white/50 dark:bg-white/10 shadow-lg ring-2 ring-white/40 dark:ring-white/10"
+            />
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-teal-800 dark:text-teal-300">
+                {t('topPayerTitle', 'Người chi trả nhiều nhất')}
+              </span>
+              <div className="text-base font-bold text-slate-900 dark:text-white">
+                {balances.topPayer.displayName}
+              </div>
+              <div className="text-xs text-slate-500 dark:text-zinc-400">
+                {t('advancedPaid', 'Đã ứng trước thanh toán:')}{' '}
+                <strong className="text-emerald-700 dark:text-emerald-400">
+                  {formatVND(balances.topPayer.totalPaid)}
+                </strong>
+              </div>
+            </div>
+          </div>
+          <div className="text-right hidden sm:block">
+            <span className="text-xs text-slate-400 dark:text-zinc-400">
+              {t('debtStatus', 'Trạng thái công nợ')}
+            </span>
+            <div className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
+              +{formatVND(balances.topPayer.balance)}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Members Balance Table */}
+      <div className="tactile-card overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#e6e4dc] dark:border-[#272732] flex items-center justify-between bg-[#f4f3ec] dark:bg-[#1a1a22]">
+          <h3 className="text-sm font-bold text-[#18181b] dark:text-white">
+            {t('memberBalanceTableTitle', 'Bảng cân đối công nợ từng thành viên')}
+          </h3>
+          <span className="text-xs text-zinc-500 dark:text-zinc-400">
+            {t('balanceFormula', 'Balance = Đã trả - Phải chịu')}
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider bg-[#faf9f6] dark:bg-[#15151c] border-b border-[#e6e4dc] dark:border-[#272732]">
+                <th className="py-3 px-6">{t('member', 'Thành viên')}</th>
+                <th className="py-3 px-4 text-right">{t('paid', 'Đã trả')}</th>
+                <th className="py-3 px-4 text-right">{t('owed', 'Phải chịu')}</th>
+                <th className="py-3 px-6 text-right">{t('balance', 'Số dư')}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#e6e4dc] dark:divide-[#272732]">
+              {balances?.members?.map((m) => {
+                const memberId = m.userId || m.uid || m.id;
+                const isCreditor = m.balance > 0;
+                const isDebtor = m.balance < 0;
+                const isCurrentUser = memberId === (currentUser?.uid || currentUser?.userId || currentUser?.id);
+
+                return (
+                  <tr key={memberId} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                    <td className="py-3.5 px-6">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={m.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${memberId}`}
+                          alt=""
+                          className="w-8 h-8 rounded-xl bg-white/50 dark:bg-white/10 ring-1 ring-white/30 dark:ring-white/10"
+                        />
+                        <div>
+                          <div className="font-bold text-slate-900 dark:text-white">{m.displayName}</div>
+                          {isCurrentUser && (
+                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                              ({t('you', 'Bạn')})
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="py-3.5 px-4 text-right font-medium text-slate-700 dark:text-zinc-200">
+                      {formatVND(m.totalPaid)}
+                    </td>
+
+                    <td className="py-3.5 px-4 text-right font-medium text-slate-700 dark:text-zinc-200">
+                      {formatVND(m.totalOwed)}
+                    </td>
+
+                    <td className="py-3.5 px-6 text-right">
+                      <span
+                        className={`font-mono font-bold px-3 py-1 rounded-xl text-xs sm:text-sm inline-block backdrop-blur-sm ${
+                          isCreditor
+                            ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-300/30 dark:border-emerald-500/30'
+                            : isDebtor
+                            ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-300/30 dark:border-rose-500/30'
+                            : 'bg-[#f4f3ec] dark:bg-white/10 text-slate-600 dark:text-zinc-300 border border-[#e6e4dc] dark:border-white/10'
+                        }`}
+                      >
+                        {isCreditor ? `+${formatVND(m.balance)}` : isDebtor ? `-${formatVND(Math.abs(m.balance))}` : '0đ (Cân bằng)'}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}

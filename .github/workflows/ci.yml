@@ -54,3 +54,7 @@ jobs:
       - name: Validate Server Syntax
         working-directory: server
         run: node -c app.js
+
+      - name: Run Backend Unit Tests
+        working-directory: server
+        run: npm test

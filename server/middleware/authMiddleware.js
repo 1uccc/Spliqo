@@ -23,10 +23,10 @@ function decodeJwtPayload(token) {
 export async function authMiddleware(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
-    const testUserId = req.headers['x-user-id'];
+    const testUserId = req.headers['x-user-id'] || req.query?.userId || req.query?.user_id;
 
-    let token = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    let token = req.query?.token || req.query?.auth_token || null;
+    if (!token && authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.split('Bearer ')[1].trim();
     }
 
@@ -63,8 +63,14 @@ export async function authMiddleware(req, res, next) {
       }
     }
 
-    // 2. Client Firebase Token parsing when Admin SDK key is not provided on server
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+
+    // 2. Client Firebase Token parsing when Admin SDK key is not provided on server (Development/Demo fallback only)
     if (!isFirebaseConfigured && token && !token.startsWith('mock_')) {
+      if (!isDevelopment) {
+        return res.status(401).json({ error: 'Hệ thống yêu cầu cấu hình Firebase Admin SDK trong môi trường Production.' });
+      }
+
       const decoded = decodeJwtPayload(token);
       if (decoded && (decoded.user_id || decoded.sub)) {
         const uid = decoded.user_id || decoded.sub;
@@ -102,7 +108,7 @@ export async function authMiddleware(req, res, next) {
       }
     }
 
-    // 3. Authenticated requests with X-User-Id or mock token
+    // 3. Authenticated requests with X-User-Id or mock token (Strictly Development / Local Testing Only)
     let targetUid = null;
     if (token && token.startsWith('mock_')) {
       targetUid = token.replace('mock_', '');
@@ -111,6 +117,10 @@ export async function authMiddleware(req, res, next) {
     }
 
     if (targetUid) {
+      if (!isDevelopment) {
+        return res.status(401).json({ error: 'Cơ chế giả lập tài khoản (X-User-Id / Mock Token) bị vô hiệu hóa trong môi trường Production.' });
+      }
+
       let user = dbService.getUser(targetUid);
       if (!user) {
         user = dbService.saveUser({
@@ -133,29 +143,31 @@ export async function authMiddleware(req, res, next) {
 export async function optionalAuthMiddleware(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
-    const testUserId = req.headers['x-user-id'];
+    const testUserId = req.headers['x-user-id'] || req.query?.userId || req.query?.user_id;
 
-    let token = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    let token = req.query?.token || req.query?.auth_token || null;
+    if (!token && authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.split('Bearer ')[1].trim();
     }
+
+    const isDevelopment = process.env.NODE_ENV !== 'production';
 
     if (isFirebaseConfigured && token && !token.startsWith('mock_')) {
       try {
         const decodedToken = await auth.verifyIdToken(token);
         const user = dbService.getUser(decodedToken.uid);
         if (user) req.user = user;
-      } catch (e) {
+      } catch (_e) {
         // Ignore token errors for optional auth
       }
-    } else if (token && !token.startsWith('mock_')) {
+    } else if (isDevelopment && token && !token.startsWith('mock_')) {
       const decoded = decodeJwtPayload(token);
       if (decoded && (decoded.user_id || decoded.sub)) {
         const uid = decoded.user_id || decoded.sub;
         const user = dbService.getUser(uid);
         if (user) req.user = user;
       }
-    } else {
+    } else if (isDevelopment) {
       let targetUid = null;
       if (token && token.startsWith('mock_')) {
         targetUid = token.replace('mock_', '');
@@ -167,7 +179,7 @@ export async function optionalAuthMiddleware(req, res, next) {
         if (user) req.user = user;
       }
     }
-  } catch (err) {
+  } catch (_err) {
     // optional auth never blocks
   }
   return next();

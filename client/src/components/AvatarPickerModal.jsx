@@ -1,15 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import Modal from './Modal';
-import { useLanguage } from '../contexts/LanguageContext';
 import { 
   Sparkles, 
   Check, 
   RefreshCw, 
-  Palette, 
-  Search, 
-  User, 
-  Smile, 
-  Wand2 
+  Palette 
 } from 'lucide-react';
 
 const AVATAR_COLLECTIONS = {
@@ -49,7 +44,6 @@ const RANDOM_SEEDS = [
 ];
 
 export default function AvatarPickerModal({ isOpen, onClose, currentPhotoURL, onSelectAvatar }) {
-  const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState('all');
   const [customSeed, setCustomSeed] = useState('');
   const [selectedSeed, setSelectedSeed] = useState(() => {
@@ -57,7 +51,7 @@ export default function AvatarPickerModal({ isOpen, onClose, currentPhotoURL, on
       try {
         const urlObj = new URL(currentPhotoURL);
         return decodeURIComponent(urlObj.searchParams.get('seed') || 'Felix');
-      } catch (e) {
+      } catch {
         return 'Felix';
       }
     }

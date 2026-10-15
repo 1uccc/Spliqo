@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import api from '../services/api';
 import { formatVND } from '../services/calculation';
+import { createRealtimeStream } from '../services/realtime';
 import VietQRModal from '../components/VietQRModal';
+import SmartNudgeModal from '../components/SmartNudgeModal';
 import { 
   CreditCard, 
   ArrowUpRight, 
@@ -41,8 +43,10 @@ export default function SettlementsPage() {
   const [copiedKey, setCopiedKey] = useState(null);
   const [vietQrModalOpen, setVietQrModalOpen] = useState(false);
   const [selectedSettlement, setSelectedSettlement] = useState(null);
+  const [nudgeModalOpen, setNudgeModalOpen] = useState(false);
+  const [nudgeSettlement, setNudgeSettlement] = useState(null);
 
-  const fetchOverviewData = async () => {
+  const fetchOverviewData = useCallback(async () => {
     try {
       setOverviewLoading(true);
       let overview = null;
@@ -59,35 +63,38 @@ export default function SettlementsPage() {
         let totalReceivable = 0;
         const myDebts = [];
         const owedToMe = [];
+        const currentUid = currentUser?.uid || currentUser?.userId || currentUser?.id;
 
         for (const trip of allTrips) {
           try {
             const tripDetail = await api.get(`/trips/${trip.id}`);
             const expenses = tripDetail.expenses || [];
             const userPaidInTrip = expenses
-              .filter(e => e.payerId === currentUser?.uid)
+              .filter(e => e.paidBy === currentUid)
               .reduce((sum, e) => sum + (e.amount || 0), 0);
             totalSpent += userPaidInTrip;
 
             const tripSettlements = tripDetail.settlements || [];
             tripSettlements.forEach(s => {
+              const toUser = s.toUser || tripDetail.members?.find(m => (m.userId === s.toUserId || m.uid === s.toUserId || m.id === s.toUserId)) || {};
+              const fromUser = s.fromUser || tripDetail.members?.find(m => (m.userId === s.fromUserId || m.uid === s.fromUserId || m.id === s.fromUserId)) || {};
               const enhanced = {
                 ...s,
                 tripId: trip.id,
                 tripName: trip.name,
                 tripCode: trip.tripCode,
-                toUser: s.toUser || tripDetail.members?.find(m => m.uid === s.toUserId) || {},
-                fromUser: s.fromUser || tripDetail.members?.find(m => m.uid === s.fromUserId) || {}
+                toUser,
+                fromUser
               };
 
-              if (s.fromUserId === currentUser?.uid) {
+              if (s.fromUserId === currentUid) {
                 myDebts.push(enhanced);
                 if (s.status !== 'CONFIRMED') {
                   totalDebt += s.amount || 0;
                 }
               }
 
-              if (s.toUserId === currentUser?.uid) {
+              if (s.toUserId === currentUid) {
                 owedToMe.push(enhanced);
                 if (s.status !== 'CONFIRMED') {
                   totalReceivable += s.amount || 0;
@@ -122,11 +129,29 @@ export default function SettlementsPage() {
     } finally {
       setOverviewLoading(false);
     }
-  };
+  }, [currentUser]);
 
   useEffect(() => {
     fetchOverviewData();
-  }, [currentUser?.uid]);
+
+    const eventSource = createRealtimeStream();
+    if (eventSource) {
+      eventSource.addEventListener('NOTIFICATION_NEW', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'PAYMENT_CONFIRMED' || data.type === 'PAYMENT_PAID') {
+            fetchOverviewData();
+          }
+        } catch (err) {
+          console.warn('[Settlements SSE] Error parsing notification:', err);
+        }
+      });
+    }
+
+    return () => {
+      if (eventSource) eventSource.close();
+    };
+  }, [fetchOverviewData]);
 
   // Handle Mark As Paid (Debtor confirms they transferred)
   const handleMarkAsPaid = async (debt) => {
@@ -557,9 +582,22 @@ export default function SettlementsPage() {
                         <span>{isProcessing ? t('loading', 'Đang lưu...') : t('confirmReceipt', 'Xác nhận đã nhận tiền')}</span>
                       </button>
                     ) : (
-                      <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#f4f3ec] dark:bg-[#24242b] text-zinc-600 dark:text-zinc-300 border border-[#e6e4dc] dark:border-[#32323c] flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-zinc-400" /> {t('waitingForMember', 'Chờ thành viên chuyển')}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setNudgeSettlement(credit);
+                            setNudgeModalOpen(true);
+                          }}
+                          className="tactile-btn-pill text-xs flex items-center gap-1.5 border border-amber-300 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 cursor-pointer shadow-xs"
+                          title="Gửi tin nhắn hoặc thông báo nhắc chuyển khoản khéo léo"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                          <span>{t('nudgeDebtor', 'Nhắc nhẹ')}</span>
+                        </button>
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#f4f3ec] dark:bg-[#24242b] text-zinc-500 dark:text-zinc-400 border border-[#e6e4dc] dark:border-[#32323c] flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-zinc-400" /> {t('waitingForMember', 'Chờ chuyển')}
+                        </span>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -587,6 +625,25 @@ export default function SettlementsPage() {
           }}
           onPaymentSuccess={() => {
             fetchOverviewData();
+          }}
+        />
+      )}
+
+      {/* 6. Smart Nudge Modal */}
+      {nudgeSettlement && (
+        <SmartNudgeModal
+          isOpen={nudgeModalOpen}
+          onClose={() => {
+            setNudgeModalOpen(false);
+            setNudgeSettlement(null);
+          }}
+          settlement={nudgeSettlement}
+          tripName={nudgeSettlement?.tripName}
+          onNudgeSent={(updated) => {
+            setSettlementOverview(prev => ({
+              ...prev,
+              owedToMe: prev.owedToMe.map(c => (c.id === updated.id ? { ...c, ...updated } : c))
+            }));
           }}
         />
       )}

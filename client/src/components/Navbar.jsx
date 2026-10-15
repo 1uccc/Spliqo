@@ -2,20 +2,18 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  Users, 
   Layers, 
   User, 
   LogOut, 
   Menu, 
   X, 
   ChevronDown, 
-  Sparkles,
   Compass,
   Flame
 } from 'lucide-react';
 
 export default function Navbar() {
-  const { currentUser, logout, isFirebaseLive } = useAuth();
+  const { currentUser, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [switchOpen, setSwitchOpen] = useState(false);
   const location = useLocation();

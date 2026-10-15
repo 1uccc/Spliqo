@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../contexts/ToastContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import api from '../services/api';
@@ -18,20 +17,15 @@ import {
   Loader2, 
   CreditCard, 
   Calendar, 
-  ArrowRight,
-  Smile,
-  Mail,
-  Phone,
-  Flame,
-  Plus,
-  Clock,
-  X
+  Smile, 
+  Mail, 
+  Plus, 
+  Clock 
 } from 'lucide-react';
 
 export default function FriendsPage() {
-  const { currentUser } = useAuth();
   const { showToast } = useToast();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   const [friends, setFriends] = useState([]);
   const [suggested, setSuggested] = useState([]);
@@ -48,7 +42,7 @@ export default function FriendsPage() {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [invitingTripId, setInvitingTripId] = useState(null);
 
-  const fetchFriendsAndTrips = async () => {
+  const fetchFriendsAndTrips = useCallback(async () => {
     try {
       setLoading(true);
       const [friendsRes, tripsRes] = await Promise.all([
@@ -66,11 +60,11 @@ export default function FriendsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
     fetchFriendsAndTrips();
-  }, [currentUser?.uid]);
+  }, [fetchFriendsAndTrips]);
 
   // 1. Gửi lời mời kết bạn (Friend Request)
   const handleSendRequest = async (targetUserId, targetName) => {
@@ -84,7 +78,7 @@ export default function FriendsPage() {
   };
 
   // 2. Hủy lời mời kết bạn đã gửi
-  const handleCancelRequest = async (targetUserId, requestId, targetName) => {
+  const handleCancelRequest = async (targetUserId, requestId, _targetName) => {
     try {
       const res = await api.post('/friends/cancel', { targetUserId, requestId });
       showToast(res.message || 'Đã hủy lời mời kết bạn', 'info');
@@ -106,7 +100,7 @@ export default function FriendsPage() {
   };
 
   // 4. Từ chối lời mời kết bạn
-  const handleRejectRequest = async (fromUserId, requestId, fromName) => {
+  const handleRejectRequest = async (fromUserId, requestId, _fromName) => {
     try {
       const res = await api.post('/friends/reject', { fromUserId, requestId });
       showToast(res.message || 'Đã từ chối lời mời kết bạn', 'info');

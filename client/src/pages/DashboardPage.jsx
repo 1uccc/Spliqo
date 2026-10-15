@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -15,16 +15,11 @@ import {
   TrendingUp, 
   Users, 
   Receipt, 
-  Calendar, 
-  ChevronRight, 
   Check, 
   Loader2, 
   Sparkles,
-  ArrowRight,
   Info,
-  CheckCircle2,
-  Flag,
-  Share2
+  Flag
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -43,57 +38,44 @@ export default function DashboardPage() {
   const [joinModalOpen, setJoinModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Create Trip form
+  // Create Trip form - lazy initial state to preserve function purity
   const [tripName, setTripName] = useState('');
   const [description, setDescription] = useState('');
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
 
   // Join Trip form
   const [joinCode, setJoinCode] = useState('');
 
-  const fetchTripsAndStats = async () => {
+  const fetchTripsAndStats = useCallback(async () => {
     try {
       setLoading(true);
-      const tripsData = await api.get('/trips');
-      setTrips(tripsData);
+      // Optimized 2-request aggregation: Replaces N+1 loop with dedicated backend overview endpoint
+      const [tripsData, overview] = await Promise.all([
+        api.get('/trips'),
+        api.get('/settlements/overview').catch(() => null)
+      ]);
 
-      // Aggregate global You Owe & You Will Receive across all trips
-      let totalOwe = 0;
-      let totalReceive = 0;
-
-      await Promise.all(
-        tripsData.map(async (t) => {
-          try {
-            const summary = await api.get(`/trips/${t.id}/balances`);
-            const myBal = summary.members?.find((m) => m.userId === currentUser?.uid);
-            if (myBal) {
-              if (myBal.balance > 0) totalReceive += myBal.balance;
-              if (myBal.balance < 0) totalOwe += Math.abs(myBal.balance);
-            }
-          } catch (e) {
-            // ignore non-calculable trips
-          }
-        })
-      );
+      const tripsList = Array.isArray(tripsData) ? tripsData : [];
+      setTrips(tripsList);
 
       setStats({
-        totalTrips: tripsData.length,
-        youOwe: totalOwe,
-        youWillReceive: totalReceive,
+        totalTrips: tripsList.length,
+        youOwe: overview?.totalDebt || 0,
+        youWillReceive: overview?.totalReceivable || 0,
       });
     } catch (err) {
       console.error('Failed to load trips:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (currentUser) {
       fetchTripsAndStats();
     }
-  }, [currentUser]);
+  }, [currentUser, fetchTripsAndStats]);
 
   const handleCreateTrip = async (e) => {
     e.preventDefault();

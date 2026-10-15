@@ -1,5 +1,6 @@
 import { dbService } from '../services/dbService.js';
 import { calculateExpenseShares } from '../services/calculationService.js';
+import { realtimeService } from '../services/realtimeService.js';
 
 export async function addExpense(req, res) {
   try {
@@ -8,6 +9,9 @@ export async function addExpense(req, res) {
     const {
       title,
       amount,
+      currency = 'VND',
+      originalAmount,
+      exchangeRate,
       paidBy,
       participants = [],
       splitType = 'equal',
@@ -90,10 +94,17 @@ export async function addExpense(req, res) {
       initialDetails.push({ field: 'bill', label: 'Hóa đơn', value: 'Đã đính kèm ảnh' });
     }
 
+    const cleanCurrency = (currency || 'VND').toUpperCase();
+    const numExchangeRate = Number(exchangeRate) > 0 ? Number(exchangeRate) : 1;
+    const numOriginalAmount = originalAmount !== undefined && originalAmount !== null ? Number(originalAmount) : numAmount;
+
     const newExpense = {
       id: `exp_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       title: title.trim(),
       amount: numAmount,
+      currency: cleanCurrency,
+      originalAmount: numOriginalAmount,
+      exchangeRate: numExchangeRate,
       paidBy,
       participants,
       splitType,
@@ -157,6 +168,19 @@ export async function addExpense(req, res) {
       }
     } catch (e) {
       console.warn('[addExpense] Notification error:', e.message);
+    }
+
+    try {
+      realtimeService.broadcastToTrip(tripId, 'EXPENSE_ADDED', {
+        expense: newExpense,
+        actor: {
+          uid: currentUserId,
+          displayName: creatorName,
+          photoURL: creatorUser?.photoURL || ''
+        }
+      });
+    } catch (e) {
+      console.warn('[addExpense] Realtime broadcast error:', e.message);
     }
 
     return res.status(201).json(newExpense);
@@ -277,6 +301,9 @@ export async function updateExpense(req, res) {
     const {
       title,
       amount,
+      currency,
+      originalAmount,
+      exchangeRate,
       paidBy,
       participants,
       splitType,
@@ -535,6 +562,9 @@ export async function updateExpense(req, res) {
     const updated = dbService.updateExpense(tripId, expenseId, {
       ...(title ? { title: title.trim() } : {}),
       amount: finalAmount,
+      ...(currency ? { currency: currency.toUpperCase() } : {}),
+      ...(originalAmount !== undefined ? { originalAmount: Number(originalAmount) } : {}),
+      ...(exchangeRate !== undefined ? { exchangeRate: Number(exchangeRate) } : {}),
       paidBy: finalPayer,
       participants: finalParticipants,
       splitType: finalSplitType,
@@ -567,6 +597,19 @@ export async function updateExpense(req, res) {
       console.warn('[updateExpense] Notification error:', e.message);
     }
 
+    try {
+      realtimeService.broadcastToTrip(tripId, 'EXPENSE_UPDATED', {
+        expense: updated,
+        actor: {
+          uid: currentUserId,
+          displayName: updaterName,
+          photoURL: updaterUser?.photoURL || ''
+        }
+      });
+    } catch (e) {
+      console.warn('[updateExpense] Realtime broadcast error:', e.message);
+    }
+
     return res.json(updated);
   } catch (err) {
     console.error('[updateExpense] Error:', err);
@@ -594,6 +637,19 @@ export async function deleteExpense(req, res) {
     }
 
     dbService.deleteExpense(tripId, expenseId);
+
+    try {
+      realtimeService.broadcastToTrip(tripId, 'EXPENSE_DELETED', {
+        expenseId,
+        actor: {
+          uid: currentUserId,
+          displayName: req.user?.displayName || 'Thành viên'
+        }
+      });
+    } catch (e) {
+      console.warn('[deleteExpense] Realtime broadcast error:', e.message);
+    }
+
     return res.json({ success: true, message: 'Đã xóa khoản chi thành công.' });
   } catch (err) {
     console.error('[deleteExpense] Error:', err);

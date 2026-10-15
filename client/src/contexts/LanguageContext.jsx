@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 export const translations = {
   vi: {
@@ -93,6 +93,9 @@ export const translations = {
     accountNumber: 'Số TK',
     accountHolder: 'Chủ TK',
     transferContent: 'Nội dung CK',
+    nudgeDebtor: 'Nhắc nhẹ',
+    smartNudgeTitle: 'Nhắc chuyển khoản nhẹ nhàng',
+    smartNudgeDesc: 'Gửi lời nhắc tinh tế, khéo léo để bạn bè thoải mái chuyển tiền mà không ngại ngùng.',
 
     // Profile Page
     profileTitle: 'Hồ sơ cá nhân & Tài khoản thanh toán',
@@ -187,7 +190,7 @@ export const translations = {
     noIncomingRequests: 'Không có lời mời kết bạn nào đang chờ xử lý.',
     accept: 'Đồng ý',
     decline: 'Từ chối',
-    inviteModalTitle: 'Mời vào chuyến đi',
+    inviteToTripModalTitle: 'Mời vào chuyến đi',
     selectTripToInvite: 'Chọn chuyến đi cần mời',
     noTripsToInvite: 'Bạn chưa tham gia chuyến đi nào. Hãy tạo chuyến đi mới trước nhé!',
     completedTrip: 'Đã hoàn thành',
@@ -380,6 +383,9 @@ export const translations = {
     accountNumber: 'Account No.',
     accountHolder: 'Account Holder',
     transferContent: 'Transfer Note',
+    nudgeDebtor: 'Nudge',
+    smartNudgeTitle: 'Gentle Payment Nudge',
+    smartNudgeDesc: 'Send a polite, friendly reminder to make settling debts comfortable and easy.',
 
     // Profile Page
     profileTitle: 'Profile & Payment Account',
@@ -474,7 +480,7 @@ export const translations = {
     noIncomingRequests: 'No pending friend requests.',
     accept: 'Accept',
     decline: 'Decline',
-    inviteModalTitle: 'Invite to Trip',
+    inviteToTripModalTitle: 'Invite to Trip',
     selectTripToInvite: 'Select trip to invite',
     noTripsToInvite: "You haven't joined any trips yet. Create a trip first!",
     completedTrip: 'Completed',
@@ -583,14 +589,14 @@ const LanguageContext = createContext();
 export function LanguageProvider({ children }) {
   const [language, setLanguageState] = useState(() => {
     try {
-      const saved = localStorage.getItem('splitmate_language');
+      const saved = localStorage.getItem('spliqo_language');
       if (saved === 'en' || saved === 'vi') return saved;
       // Auto-detect browser language
       if (navigator.language && navigator.language.startsWith('en')) {
         return 'en';
       }
-    } catch (e) {
-      console.warn('Error reading language from localStorage:', e);
+    } catch {
+      // fallback
     }
     return 'vi';
   });
@@ -598,9 +604,9 @@ export function LanguageProvider({ children }) {
   const setLanguage = (lang) => {
     setLanguageState(lang);
     try {
-      localStorage.setItem('splitmate_language', lang);
-    } catch (e) {
-      console.warn('Error saving language:', e);
+      localStorage.setItem('spliqo_language', lang);
+    } catch {
+      // fallback
     }
   };
 
