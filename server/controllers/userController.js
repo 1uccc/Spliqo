@@ -52,15 +52,12 @@ export async function getAllUsers(req, res) {
       await dbService.syncAllDataFromFirestore();
     }
     const users = dbService.getAllUsers();
-    // Return public profiles
+    // Return public profiles ONLY (Bank account info is private and only available in personal profile or trip settlements)
     return res.json(users.map(u => ({
       uid: u.uid,
       displayName: u.displayName,
       email: u.email,
       photoURL: u.photoURL,
-      bankName: u.bankName,
-      bankAccountNumber: u.bankAccountNumber,
-      bankAccountHolder: u.bankAccountHolder,
     })));
   } catch (err) {
     console.error('[getAllUsers] Error:', err);

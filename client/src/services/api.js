@@ -21,11 +21,9 @@ api.interceptors.request.use(
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    } else if (activeUserId) {
+    } else if (import.meta.env.DEV && activeUserId) {
+      // Development mock authentication only
       config.headers.Authorization = `Bearer mock_${activeUserId}`;
-    }
-
-    if (activeUserId) {
       config.headers['x-user-id'] = activeUserId;
     }
 

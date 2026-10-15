@@ -541,9 +541,6 @@ class DBService {
         email: u.email || '',
         photoURL: u.photoURL || '',
         phone: u.phone || '',
-        bankName: u.bankName || '',
-        bankAccountNumber: u.bankAccountNumber || u.accountNumber || '',
-        bankAccountHolder: u.bankAccountHolder || u.accountHolder || ''
       }));
   }
 

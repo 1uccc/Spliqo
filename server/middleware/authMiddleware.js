@@ -63,11 +63,13 @@ export async function authMiddleware(req, res, next) {
       }
     }
 
-    const isDevelopment = process.env.NODE_ENV !== 'production';
+    const host = req.headers.host || '';
+    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
+    const isProduction = process.env.NODE_ENV === 'production' || Boolean(process.env.RENDER) || (!isLocalhost && process.env.NODE_ENV !== 'test');
 
     // 2. Client Firebase Token parsing when Admin SDK key is not provided on server (Development/Demo fallback only)
     if (!isFirebaseConfigured && token && !token.startsWith('mock_')) {
-      if (!isDevelopment) {
+      if (isProduction) {
         return res.status(401).json({ error: 'Hệ thống yêu cầu cấu hình Firebase Admin SDK trong môi trường Production.' });
       }
 
@@ -108,7 +110,7 @@ export async function authMiddleware(req, res, next) {
       }
     }
 
-    // 3. Authenticated requests with X-User-Id or mock token (Strictly Development / Local Testing Only)
+    // 3. Authenticated requests with X-User-Id or mock token (Strictly Localhost Testing Only)
     let targetUid = null;
     if (token && token.startsWith('mock_')) {
       targetUid = token.replace('mock_', '');
@@ -117,7 +119,7 @@ export async function authMiddleware(req, res, next) {
     }
 
     if (targetUid) {
-      if (!isDevelopment) {
+      if (isProduction) {
         return res.status(401).json({ error: 'Cơ chế giả lập tài khoản (X-User-Id / Mock Token) bị vô hiệu hóa trong môi trường Production.' });
       }
 
@@ -150,7 +152,9 @@ export async function optionalAuthMiddleware(req, res, next) {
       token = authHeader.split('Bearer ')[1].trim();
     }
 
-    const isDevelopment = process.env.NODE_ENV !== 'production';
+    const host = req.headers.host || '';
+    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
+    const isProduction = process.env.NODE_ENV === 'production' || Boolean(process.env.RENDER) || (!isLocalhost && process.env.NODE_ENV !== 'test');
 
     if (isFirebaseConfigured && token && !token.startsWith('mock_')) {
       try {
@@ -160,14 +164,14 @@ export async function optionalAuthMiddleware(req, res, next) {
       } catch (_e) {
         // Ignore token errors for optional auth
       }
-    } else if (isDevelopment && token && !token.startsWith('mock_')) {
+    } else if (!isProduction && token && !token.startsWith('mock_')) {
       const decoded = decodeJwtPayload(token);
       if (decoded && (decoded.user_id || decoded.sub)) {
         const uid = decoded.user_id || decoded.sub;
         const user = dbService.getUser(uid);
         if (user) req.user = user;
       }
-    } else if (isDevelopment) {
+    } else if (!isProduction) {
       let targetUid = null;
       if (token && token.startsWith('mock_')) {
         targetUid = token.replace('mock_', '');

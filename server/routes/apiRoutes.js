@@ -58,6 +58,7 @@ import {
 import { uploadImage } from '../controllers/uploadController.js';
 import { realtimeService } from '../services/realtimeService.js';
 import { getExchangeRates } from '../controllers/currencyController.js';
+import { strictActionLimiter, uploadLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
@@ -74,8 +75,8 @@ router.use(authMiddleware);
 router.get('/realtime/stream', (req, res) => realtimeService.handleStream(req, res));
 router.get('/trips/:tripId/stream', (req, res) => realtimeService.handleStream(req, res));
 
-// --- Media & Cloudinary Upload ---
-router.post('/upload', uploadImage);
+// --- Media & Cloudinary Upload (Rate-limited) ---
+router.post('/upload', uploadLimiter, uploadImage);
 
 // --- User Profile ---
 router.get('/users/profile', getProfile);
@@ -86,7 +87,7 @@ router.get('/users', getAllUsers);
 router.get('/friends', getFriendsData);
 router.post('/friends', addFriend);
 router.delete('/friends/:friendId', removeFriend);
-router.post('/friends/request', sendFriendRequest);
+router.post('/friends/request', strictActionLimiter, sendFriendRequest);
 router.post('/friends/accept', acceptFriendRequest);
 router.post('/friends/reject', rejectFriendRequest);
 router.post('/friends/cancel', cancelFriendRequest);
@@ -95,7 +96,7 @@ router.post('/friends/invite-trip', inviteFriendToTrip);
 // --- Trips ---
 router.post('/trips', createTrip);
 router.get('/trips', getTrips);
-router.post('/trips/join', joinTrip);
+router.post('/trips/join', strictActionLimiter, joinTrip);
 router.get('/trips/:tripId', getTripById);
 router.put('/trips/:tripId', updateTrip);
 router.delete('/trips/:tripId', deleteTrip);
