@@ -134,7 +134,7 @@ export default function ProfilePage() {
               <div 
                 onClick={() => setAvatarModalOpen(true)}
                 className="cursor-pointer relative"
-                title="Bấm để mở Kho Avatar"
+                title={t('avatarGallery', 'Kho Avatar')}
               >
                 <img
                   src={photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.uid}`}
@@ -143,7 +143,7 @@ export default function ProfilePage() {
                 />
                 <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity text-[10px] font-bold">
                   <Palette className="w-5 h-5 mb-0.5" />
-                  <span>Đổi Avatar</span>
+                  <span>{isEn ? 'Change Avatar' : 'Đổi Avatar'}</span>
                 </div>
               </div>
 
@@ -151,7 +151,7 @@ export default function ProfilePage() {
                 type="button"
                 onClick={() => setAvatarModalOpen(true)}
                 className="absolute -bottom-1 -right-1 p-2 rounded-full bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] hover:bg-black dark:hover:bg-zinc-200 shadow-md transition-all text-xs hover:scale-110 cursor-pointer"
-                title="Kho Avatar"
+                title={t('avatarGallery', 'Kho Avatar')}
               >
                 <Palette className="w-3.5 h-3.5" />
               </button>
@@ -166,7 +166,7 @@ export default function ProfilePage() {
                   className="tactile-btn-dark py-2 px-3.5 text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
                 >
                   <Palette className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Kho Avatar</span>
+                  <span>{t('avatarGallery', 'Kho Avatar')}</span>
                 </button>
 
                 <button
@@ -178,17 +178,17 @@ export default function ProfilePage() {
                     setPhotoURL(`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(uniqueSeed)}`);
                   }}
                   className="tactile-btn-pill py-2 px-3 text-xs flex items-center gap-1.5 font-bold cursor-pointer"
-                  title="Đổi Avatar ngẫu nhiên ngay"
+                  title={isEn ? "Generate random avatar instantly" : "Đổi Avatar ngẫu nhiên ngay"}
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Ngẫu nhiên 🎲</span>
+                  <span>{t('randomAvatar', 'Ngẫu nhiên 🎲')}</span>
                 </button>
               </div>
 
               {/* Quick 1-click Preset avatars */}
               <div className="pt-1">
                 <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider block mb-1.5">
-                  Gợi ý mẫu phổ biến (chọn nhanh 1 chạm):
+                  {t('popularAvatarSuggestions', 'Gợi ý mẫu phổ biến (chọn nhanh 1 chạm):')}
                 </span>
                 <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
                   {['Felix', 'Aneka', 'Alexander', 'Molly', 'Jack', 'Sophie', 'Ninja', 'Mochi'].map((seed) => {
@@ -219,7 +219,7 @@ export default function ProfilePage() {
               </div>
 
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                ✨ Chọn trực tiếp từ <strong>Kho Avatar</strong>, không cần tải ảnh cá nhân lên máy chủ.
+                {t('avatarHint', '✨ Chọn trực tiếp từ Kho Avatar, không cần tải ảnh cá nhân lên máy chủ.')}
               </p>
             </div>
           </div>

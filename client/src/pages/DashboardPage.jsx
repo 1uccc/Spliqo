@@ -23,7 +23,7 @@ import {
 
 export default function DashboardPage() {
   const { currentUser } = useAuth();
-  const { t } = useLanguage();
+  const { t, isEn } = useLanguage();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
@@ -187,14 +187,14 @@ export default function DashboardPage() {
             <Link
               to="/trips"
               className="tactile-tab shrink-0 whitespace-nowrap hover:text-emerald-700 dark:hover:text-emerald-300 group border border-dashed border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-50/50 dark:bg-emerald-950/20"
-              title="Xem các chuyến đi đã chốt sổ trong mục Chuyến đi"
+              title={isEn ? "View completed trips in My Trips" : "Xem các chuyến đi đã chốt sổ trong mục Chuyến đi"}
             >
               <Flag className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span className="whitespace-nowrap shrink-0 text-emerald-800 dark:text-emerald-300 font-semibold">{t('completedTrips', 'Đã chốt sổ')}</span>
               <span className="tactile-badge w-5 h-5 rounded-full bg-emerald-200/80 dark:bg-emerald-900/80 text-emerald-900 dark:text-emerald-200 text-[11px] font-bold flex items-center justify-center shrink-0 leading-none">
                 {completedTripsCount}
               </span>
-              <ArrowRight className="w-3 h-3 text-emerald-600 dark:text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           )}
         </div>
@@ -207,7 +207,7 @@ export default function DashboardPage() {
           value={sortedOngoingTrips.length}
           icon={Compass}
           color="slate"
-          subtitle={completedTripsCount > 0 ? `${completedTripsCount} chuyến đã chốt sổ (xem trong mục Chuyến đi)` : t('yourGroupsAndActivities', 'Các nhóm & hoạt động của bạn')}
+          subtitle={completedTripsCount > 0 ? (isEn ? `${completedTripsCount} completed trip(s) (view in My Trips)` : `${completedTripsCount} chuyến đã chốt sổ (xem trong mục Chuyến đi)`) : t('yourGroupsAndActivities', 'Các nhóm & hoạt động của bạn')}
         />
 
         <StatCard
@@ -274,7 +274,7 @@ export default function DashboardPage() {
           </h3>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
             {completedTripsCount > 0 
-              ? `Bạn có ${completedTripsCount} chuyến đi đã chốt sổ trong mục Chuyến đi. Bấm tạo mới để bắt đầu chuyến đi tiếp theo!`
+              ? (isEn ? `You have ${completedTripsCount} completed trip(s) in My Trips. Create a new trip to start your next journey!` : `Bạn có ${completedTripsCount} chuyến đi đã chốt sổ trong mục Chuyến đi. Bấm tạo mới để bắt đầu chuyến đi tiếp theo!`)
               : t('noTripsInCategoryDesc', 'Bấm tạo chuyến đi mới để bắt đầu thêm hóa đơn và chia tiền tự động với bạn bè!')}
           </p>
           <div className="flex items-center justify-center gap-2 pt-1">
@@ -290,7 +290,7 @@ export default function DashboardPage() {
                 className="tactile-btn-pill cursor-pointer"
               >
                 <Flag className="w-4 h-4 text-emerald-500" />
-                <span>Xem chuyến đã chốt</span>
+                <span>{isEn ? 'View completed' : 'Xem chuyến đã chốt'}</span>
               </Link>
             )}
           </div>
@@ -317,10 +317,10 @@ export default function DashboardPage() {
             </div>
             <div>
               <p className="text-xs font-bold text-zinc-900 dark:text-white">
-                {completedTripsCount} chuyến đi đã chốt sổ thành công
+                {completedTripsCount} {isEn ? 'trip(s) successfully completed' : 'chuyến đi đã chốt sổ thành công'}
               </p>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                Chuyến đi đã chốt sổ được lưu trữ gọn gàng trong mục "Chuyến đi" để giữ Trang tổng quan luôn tập trung vào các chuyến đang diễn ra.
+                {t('completedTripsHint', 'Chuyến đi đã chốt sổ được lưu trữ gọn gàng trong mục "Chuyến đi" để giữ Trang tổng quan luôn tập trung vào các chuyến đang diễn ra.')}
               </p>
             </div>
           </div>
@@ -328,7 +328,7 @@ export default function DashboardPage() {
             to="/trips"
             className="tactile-btn-pill text-xs font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 self-end sm:self-center shrink-0"
           >
-            <span>{t('viewAllTrips', 'Xem tất cả chuyến đi')}</span>
+            <span>{isEn ? 'View all trips' : 'Xem tất cả chuyến đi'}</span>
             <ArrowRight className="w-3.5 h-3.5 ml-1" />
           </Link>
         </div>

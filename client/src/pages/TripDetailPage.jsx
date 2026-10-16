@@ -836,10 +836,10 @@ export default function TripDetailPage() {
                 type="button"
                 onClick={() => setInviteLinkModalOpen(true)}
                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-xs font-bold transition-all border border-blue-200 dark:border-blue-800/50 cursor-pointer shadow-xs active:scale-95"
-                title="Mời bạn bè & khách bằng link hoặc mã QR"
+                title={t('inviteViaLinkTitle', 'Mời bạn bè & khách bằng link hoặc mã QR')}
               >
                 <Share2 className="w-3.5 h-3.5" />
-                <span>Mời bằng link</span>
+                <span>{t('inviteViaLinkBtn', 'Mời bằng link')}</span>
               </button>
 
               {/* Lucky Wheel Quick Trigger */}
@@ -847,10 +847,10 @@ export default function TripDetailPage() {
                 type="button"
                 onClick={() => setLuckyWheelModalOpen(true)}
                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-300 text-xs font-bold transition-all border border-amber-200 dark:border-amber-800/50 cursor-pointer shadow-xs active:scale-95"
-                title="Vòng xoay may mắn - Ai trả chầu này?"
+                title={t('luckyWheelHeaderPrompt', 'Vòng xoay may mắn - Ai trả chầu này?')}
               >
                 <RotateCw className="w-3.5 h-3.5 text-amber-500" />
-                <span>Vòng xoay 🎡</span>
+                <span>{t('luckyWheelBtn', 'Vòng xoay 🎡')}</span>
               </button>
 
               {/* Spliqo Wrapped Quick Trigger (Neo-Retro) */}
@@ -858,10 +858,10 @@ export default function TripDetailPage() {
                 type="button"
                 onClick={() => setTripWrappedModalOpen(true)}
                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-950/60 hover:bg-orange-100 dark:hover:bg-orange-900/60 text-[#ff5400] dark:text-orange-400 text-xs font-black transition-all border border-orange-300 dark:border-orange-800/60 cursor-pointer shadow-xs active:scale-95"
-                title="Spliqo Wrapped - Thẻ ký ức Neo-Retro"
+                title={t('wrappedTitle', 'Spliqo Wrapped - Thẻ ký ức Neo-Retro')}
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#ff5400]" />
-                <span>Wrapped 📊</span>
+                <span>{t('wrappedBtn', 'Wrapped 📊')}</span>
               </button>
             </div>
 
@@ -943,7 +943,7 @@ export default function TripDetailPage() {
               >
                 <span className="whitespace-nowrap shrink-0">{tab.label}</span>
                 {tab.count !== null && (
-                  <span className={`tactile-badge w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center shrink-0 leading-none ${isTabActive ? 'bg-purple-200/80 dark:bg-purple-900/60 text-purple-900 dark:text-purple-200' : 'bg-[#f4f3ec] dark:bg-white/10 text-zinc-600 dark:text-zinc-300'}`}>
+                  <span className={`tactile-badge w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center shrink-0 leading-none ${isTabActive ? 'bg-purple-200/80 dark:bg-purple-900/60 text-purple-900 dark:text-purple-200' : 'bg-[#f4f3ec] dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300'}`}>
                     {tab.count}
                   </span>
                 )}

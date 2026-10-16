@@ -539,13 +539,11 @@ html.dark .tactile-btn-dark:hover {
 }
 
 /* Ensure high contrast dark mode inverted elements stay crisp white */
-html.dark .dark\:bg-white,
-html.dark [class*="dark:bg-white"] {
+html.dark .dark\:bg-white {
   background-color: #ffffff !important;
 }
 
-html.dark .dark\:text-\[\#18181b\],
-html.dark [class*="dark:text-[#18181b]"] {
+html.dark .dark\:text-\[\#18181b\] {
   color: #18181b !important;
 }
 

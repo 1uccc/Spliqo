@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Receipt, Users, Share2, Check, Flag, ArrowRight, Sparkles, Calendar } from 'lucide-react';
 import { formatVND } from '../../services/calculation';
 import { getTripVisual } from '../../utils/tripVisuals';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 // Curated harmonious, gentle pastel color palettes for each trip
 export const PASTEL_TRIP_THEMES = [
@@ -14,7 +15,7 @@ export const PASTEL_TRIP_THEMES = [
     cardBorder: 'border-emerald-200 hover:border-emerald-300 dark:border-emerald-800/50 dark:hover:border-emerald-600/60',
     hoverGlow: 'hover:shadow-emerald-500/10',
     avatarBg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-700/50',
-    chipBg: 'bg-white/85 dark:bg-white/5 border border-emerald-100/90 dark:border-emerald-900/40',
+    chipBg: 'bg-white/85 dark:bg-black/30 border border-emerald-100/90 dark:border-emerald-900/40',
     badgeActive: 'bg-emerald-100/90 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50',
     badgeText: 'text-emerald-800 dark:text-emerald-300',
   },
@@ -26,7 +27,7 @@ export const PASTEL_TRIP_THEMES = [
     cardBorder: 'border-purple-200 hover:border-purple-300 dark:border-purple-800/50 dark:hover:border-purple-600/60',
     hoverGlow: 'hover:shadow-purple-500/10',
     avatarBg: 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-200 border border-purple-200/80 dark:border-purple-700/50',
-    chipBg: 'bg-white/85 dark:bg-white/5 border border-purple-100/90 dark:border-purple-900/40',
+    chipBg: 'bg-white/85 dark:bg-black/30 border border-purple-100/90 dark:border-purple-900/40',
     badgeActive: 'bg-purple-100/90 text-purple-800 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/50',
     badgeText: 'text-purple-800 dark:text-purple-300',
   },
@@ -38,7 +39,7 @@ export const PASTEL_TRIP_THEMES = [
     cardBorder: 'border-orange-200 hover:border-orange-300 dark:border-orange-800/50 dark:hover:border-orange-600/60',
     hoverGlow: 'hover:shadow-orange-500/10',
     avatarBg: 'bg-orange-100 text-orange-800 dark:bg-orange-900/60 dark:text-orange-200 border border-orange-200/80 dark:border-orange-700/50',
-    chipBg: 'bg-white/85 dark:bg-white/5 border border-orange-100/90 dark:border-orange-900/40',
+    chipBg: 'bg-white/85 dark:bg-black/30 border border-orange-100/90 dark:border-orange-900/40',
     badgeActive: 'bg-orange-100/90 text-orange-800 dark:bg-orange-950/70 dark:text-orange-300 border border-orange-200/80 dark:border-orange-800/50',
     badgeText: 'text-orange-800 dark:text-orange-300',
   },
@@ -50,7 +51,7 @@ export const PASTEL_TRIP_THEMES = [
     cardBorder: 'border-sky-200 hover:border-sky-300 dark:border-sky-800/50 dark:hover:border-sky-600/60',
     hoverGlow: 'hover:shadow-sky-500/10',
     avatarBg: 'bg-sky-100 text-sky-800 dark:bg-sky-900/60 dark:text-sky-200 border border-sky-200/80 dark:border-sky-700/50',
-    chipBg: 'bg-white/85 dark:bg-white/5 border border-sky-100/90 dark:border-sky-900/40',
+    chipBg: 'bg-white/85 dark:bg-black/30 border border-sky-100/90 dark:border-sky-900/40',
     badgeActive: 'bg-sky-100/90 text-sky-800 dark:bg-sky-950/70 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800/50',
     badgeText: 'text-sky-800 dark:text-sky-300',
   },
@@ -62,7 +63,7 @@ export const PASTEL_TRIP_THEMES = [
     cardBorder: 'border-pink-200 hover:border-pink-300 dark:border-pink-800/50 dark:hover:border-pink-600/60',
     hoverGlow: 'hover:shadow-pink-500/10',
     avatarBg: 'bg-pink-100 text-pink-800 dark:bg-pink-900/60 dark:text-pink-200 border border-pink-200/80 dark:border-pink-700/50',
-    chipBg: 'bg-white/85 dark:bg-white/5 border border-pink-100/90 dark:border-pink-900/40',
+    chipBg: 'bg-white/85 dark:bg-black/30 border border-pink-100/90 dark:border-pink-900/40',
     badgeActive: 'bg-pink-100/90 text-pink-800 dark:bg-pink-950/70 dark:text-pink-300 border border-pink-200/80 dark:border-pink-800/50',
     badgeText: 'text-pink-800 dark:text-pink-300',
   },
@@ -74,7 +75,7 @@ export const PASTEL_TRIP_THEMES = [
     cardBorder: 'border-amber-200 hover:border-amber-300 dark:border-amber-800/50 dark:hover:border-amber-600/60',
     hoverGlow: 'hover:shadow-amber-500/10',
     avatarBg: 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 border border-amber-200/80 dark:border-amber-700/50',
-    chipBg: 'bg-white/85 dark:bg-white/5 border border-amber-100/90 dark:border-amber-900/40',
+    chipBg: 'bg-white/85 dark:bg-black/30 border border-amber-100/90 dark:border-amber-900/40',
     badgeActive: 'bg-amber-100/90 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/50',
     badgeText: 'text-amber-800 dark:text-amber-300',
   },
@@ -86,7 +87,7 @@ export const PASTEL_TRIP_THEMES = [
     cardBorder: 'border-teal-200 hover:border-teal-300 dark:border-teal-800/50 dark:hover:border-teal-600/60',
     hoverGlow: 'hover:shadow-teal-500/10',
     avatarBg: 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-200 border border-teal-200/80 dark:border-teal-700/50',
-    chipBg: 'bg-white/85 dark:bg-white/5 border border-teal-100/90 dark:border-teal-900/40',
+    chipBg: 'bg-white/85 dark:bg-black/30 border border-teal-100/90 dark:border-teal-900/40',
     badgeActive: 'bg-teal-100/90 text-teal-800 dark:bg-teal-950/70 dark:text-teal-300 border border-teal-200/80 dark:border-teal-800/50',
     badgeText: 'text-teal-800 dark:text-teal-300',
   },
@@ -98,7 +99,7 @@ export const PASTEL_TRIP_THEMES = [
     cardBorder: 'border-indigo-200 hover:border-indigo-300 dark:border-indigo-800/50 dark:hover:border-indigo-600/60',
     hoverGlow: 'hover:shadow-indigo-500/10',
     avatarBg: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-200 border border-indigo-200/80 dark:border-indigo-700/50',
-    chipBg: 'bg-white/85 dark:bg-white/5 border border-indigo-100/90 dark:border-indigo-900/40',
+    chipBg: 'bg-white/85 dark:bg-black/30 border border-indigo-100/90 dark:border-indigo-900/40',
     badgeActive: 'bg-indigo-100/90 text-indigo-800 dark:bg-indigo-950/70 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/50',
     badgeText: 'text-indigo-800 dark:text-indigo-300',
   }
@@ -119,8 +120,10 @@ export function getTripTheme(tripId = '') {
 export default function TripCard({
   trip,
   onShare,
-  t = (key, fallback) => fallback
+  t: tProp
 }) {
+  const { t: tLang } = useLanguage();
+  const t = tProp || tLang;
   const navigate = useNavigate();
   const isCompleted = trip.status === 'COMPLETED';
   const theme = getTripTheme(trip.id || trip.tripCode || '');
@@ -213,7 +216,7 @@ export default function TripCard({
                   onShare(trip);
                 }}
                 className="w-7 h-7 rounded-full flex items-center justify-center bg-white/90 dark:bg-black/30 hover:bg-white dark:hover:bg-white/20 text-zinc-600 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white transition-all border border-black/5 dark:border-white/10 shadow-xs cursor-pointer hover:scale-105 active:scale-95"
-                title="Mời & Chia sẻ mã QR chuyến đi"
+                title={t('shareTripTooltip', 'Mời & Chia sẻ mã QR chuyến đi')}
               >
                 <Share2 className="w-3.5 h-3.5" />
               </button>
@@ -261,7 +264,7 @@ export default function TripCard({
                 e.stopPropagation();
                 navigate(`/trips/${trip.id}`);
               }}
-              className="flex-1 py-2 px-3 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-white/90 dark:bg-white/10 hover:bg-white dark:hover:bg-white/20 text-zinc-800 dark:text-zinc-200 border border-black/5 dark:border-white/10 shadow-xs cursor-pointer group-hover:border-black/15"
+              className="flex-1 py-2 px-3 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-white/90 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-zinc-800 dark:text-zinc-200 border border-black/5 dark:border-white/10 shadow-xs cursor-pointer group-hover:border-black/15"
             >
               <span>{t('viewDetails', 'Xem chi tiết')}</span>
               <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -288,7 +291,7 @@ export default function TripCard({
               e.stopPropagation();
               navigate(`/trips/${trip.id}`);
             }}
-            className="w-full py-2.5 px-4 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-2 bg-white/90 dark:bg-white/10 hover:bg-white dark:hover:bg-white/20 text-zinc-800 dark:text-zinc-200 border border-black/5 dark:border-white/10 shadow-xs cursor-pointer group-hover:border-black/15 hover:shadow-xs"
+            className="w-full py-2.5 px-4 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-2 bg-white/90 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-zinc-800 dark:text-zinc-200 border border-black/5 dark:border-white/10 shadow-xs cursor-pointer group-hover:border-black/15 hover:shadow-xs"
           >
             <span>{t('viewTripDetails', 'Xem chi tiết chuyến đi')}</span>
             <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />

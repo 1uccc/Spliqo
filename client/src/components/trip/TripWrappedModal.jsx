@@ -21,6 +21,7 @@ import {
 import { formatVND } from '../../services/calculation';
 import confetti from 'canvas-confetti';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function TripWrappedModal({
   isOpen,
@@ -30,9 +31,12 @@ export default function TripWrappedModal({
   members = [],
   balances,
   settlements = [],
-  t
+  t: tProp
 }) {
   const { isDark } = useTheme();
+  const { t: tLang, isEn } = useLanguage();
+  const t = tProp || tLang;
+
   const [currentSlide, setCurrentSlide] = useState(0);
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -86,7 +90,24 @@ export default function TripWrappedModal({
 
   // Copy text recap to clipboard with retro style formatting
   const handleCopyRecap = async () => {
-    const text = `┌──────────────────────────────────┐
+    const text = isEn ? `┌──────────────────────────────────┐
+  ★ SPLIQO WRAPPED • TRIP MEMORIES ★
+  TRIP: ${trip.name.toUpperCase()}
+└──────────────────────────────────┘
+● Total Expenses: ${formatVND(totalExpense)}
+● Duration: ${totalDays} days • ${members.length} members • ${expenses.length} bills
+● Average per person: ${formatVND(avgPerPerson)}/person
+
+👑 TOP SPENDER MVP:
+  ${topPayer.displayName} (Paid upfront: ${formatVND(topPayer.totalPaid)} ~ ${topPayerPercent}%)
+
+🥩 MOST EXPENSIVE BILL:
+  "${topExpense ? topExpense.title : 'None'}" - ${topExpense ? formatVND(topExpense.amount) : '0đ'}
+
+⚡ TEAM SPIRIT & FAIRNESS:
+  100% group debts reconciled with zero hassle!
+────────────────────────────────────
+✦ Managed smartly with Spliqo App` : `┌──────────────────────────────────┐
   ★ SPLIQO WRAPPED • KÝ ỨC CHUYẾN ĐI ★
   CHUYẾN: ${trip.name.toUpperCase()}
 └──────────────────────────────────┘
@@ -179,7 +200,7 @@ export default function TripWrappedModal({
       drawBrutalistCard(80, 90, 920, 110, '#ff5400', 8);
       ctx.fillStyle = '#ffffff';
       ctx.font = '900 42px sans-serif';
-      ctx.fillText('★ SPLIQO WRAPPED • RECAP 2026 ★', 120, 162);
+      ctx.fillText(isEn ? '★ SPLIQO WRAPPED • RECAP 2026 ★' : '★ SPLIQO WRAPPED • RECAP 2026 ★', 120, 162);
       ctx.fillStyle = '#18181b';
       ctx.font = 'bold 24px monospace';
       ctx.textAlign = 'right';
@@ -194,17 +215,23 @@ export default function TripWrappedModal({
 
       ctx.fillStyle = textMuted;
       ctx.font = 'bold 28px monospace';
-      ctx.fillText(`KỲ NGHỈ ${totalDays} NGÀY • ${members.length} THÀNH VIÊN • ${expenses.length} HÓA ĐƠN`, 80, 325);
+      ctx.fillText(
+        isEn
+          ? `${totalDays} DAYS EXPLORING • ${members.length} MEMBERS • ${expenses.length} BILLS`
+          : `KỲ NGHỈ ${totalDays} NGÀY • ${members.length} THÀNH VIÊN • ${expenses.length} HÓA ĐƠN`,
+        80,
+        325
+      );
 
       // 6. Giant Main Metric Card (Total Spent)
       drawBrutalistCard(80, 370, 920, 270, cardFill, 14);
       
       // Orange Accent corner tag
       ctx.fillStyle = isDarkPoster ? '#ff5400' : '#18181b';
-      ctx.fillRect(80, 370, 380, 50);
+      ctx.fillRect(80, 370, 420, 50);
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 22px monospace';
-      ctx.fillText('● TỔNG CHI PHÍ CHUYẾN ĐI', 105, 404);
+      ctx.fillText(isEn ? '● TOTAL TRIP EXPENSES' : '● TỔNG CHI PHÍ CHUYẾN ĐI', 105, 404);
 
       ctx.fillStyle = '#ff5400';
       ctx.font = '900 102px monospace';
@@ -212,32 +239,32 @@ export default function TripWrappedModal({
 
       ctx.fillStyle = textMuted;
       ctx.font = 'bold 30px sans-serif';
-      ctx.fillText(`Bình quân mỗi người: ${formatVND(avgPerPerson)}`, 115, 595);
+      ctx.fillText(isEn ? `Average per person: ${formatVND(avgPerPerson)}` : `Bình quân mỗi người: ${formatVND(avgPerPerson)}`, 115, 595);
 
       // 7. Grid of 2 Mini Cards (Duration & Number of Bills)
       drawBrutalistCard(80, 675, 440, 170, yellowCardBg, 10);
       ctx.fillStyle = yellowCardText;
       ctx.font = 'bold 24px monospace';
-      ctx.fillText('✦ THỜI GIAN', 110, 725);
+      ctx.fillText(isEn ? '✦ DURATION' : '✦ THỜI GIAN', 110, 725);
       ctx.font = '900 52px sans-serif';
-      ctx.fillText(`${totalDays} NGÀY`, 110, 795);
+      ctx.fillText(isEn ? `${totalDays} DAYS` : `${totalDays} NGÀY`, 110, 795);
 
       drawBrutalistCard(560, 675, 440, 170, peachCardBg, 10);
       ctx.fillStyle = peachCardText;
       ctx.font = 'bold 24px monospace';
-      ctx.fillText('✦ TỔNG SỐ BILL', 590, 725);
+      ctx.fillText(isEn ? '✦ TOTAL BILLS' : '✦ TỔNG SỐ BILL', 590, 725);
       ctx.font = '900 52px sans-serif';
-      ctx.fillText(`${expenses.length} BILL`, 590, 795);
+      ctx.fillText(isEn ? `${expenses.length} BILLS` : `${expenses.length} BILL`, 590, 795);
 
       // 8. Card 1: Top Payer (👑 Đại gia chuyến đi)
       drawBrutalistCard(80, 885, 920, 260, cardFill, 14);
       
       // Top orange tag
       ctx.fillStyle = '#ff5400';
-      ctx.fillRect(80, 885, 420, 48);
+      ctx.fillRect(80, 885, 440, 48);
       ctx.fillStyle = '#ffffff';
       ctx.font = '900 22px sans-serif';
-      ctx.fillText('👑 ĐẠI GIA GÁNH TEAM TOÀN ĐOÀN', 105, 918);
+      ctx.fillText(isEn ? '👑 TOP SPENDER MVP' : '👑 ĐẠI GIA GÁNH TEAM TOÀN ĐOÀN', 105, 918);
 
       ctx.fillStyle = textPrimary;
       ctx.font = '900 56px sans-serif';
@@ -245,21 +272,21 @@ export default function TripWrappedModal({
 
       ctx.fillStyle = '#ff5400';
       ctx.font = '900 46px monospace';
-      ctx.fillText(`ĐÃ CHI: ${formatVND(topPayer.totalPaid)}`, 115, 1060);
+      ctx.fillText(isEn ? `PAID UPFRONT: ${formatVND(topPayer.totalPaid)}` : `ĐÃ CHI: ${formatVND(topPayer.totalPaid)}`, 115, 1060);
 
       ctx.fillStyle = textMuted;
       ctx.font = 'bold 26px sans-serif';
-      ctx.fillText(`Gánh ${topPayerPercent}% toàn bộ ngân sách chuyến đi.`, 115, 1105);
+      ctx.fillText(isEn ? `Covered ${topPayerPercent}% of total trip budget.` : `Gánh ${topPayerPercent}% toàn bộ ngân sách chuyến đi.`, 115, 1105);
 
       // 9. Card 2: Top Expense (🥩 Món ăn / Bill kỷ lục)
       if (topExpense) {
         drawBrutalistCard(80, 1185, 920, 240, cardFill, 14);
         
         ctx.fillStyle = isDarkPoster ? '#ff5400' : '#18181b';
-        ctx.fillRect(80, 1185, 390, 48);
+        ctx.fillRect(80, 1185, 420, 48);
         ctx.fillStyle = '#ffffff';
         ctx.font = '900 22px sans-serif';
-        ctx.fillText('🥩 KHOẢN CHI KỶ LỤC NHẤT', 105, 1218);
+        ctx.fillText(isEn ? '🥩 MOST EXPENSIVE BILL' : '🥩 KHOẢN CHI KỶ LỤC NHẤT', 105, 1218);
 
         ctx.fillStyle = textPrimary;
         ctx.font = '900 48px sans-serif';
@@ -272,19 +299,19 @@ export default function TripWrappedModal({
 
         ctx.fillStyle = textMuted;
         ctx.font = 'bold 26px sans-serif';
-        ctx.fillText(`Người thanh toán: ${topExpensePayer?.displayName || 'Thành viên'}`, 115, 1395);
+        ctx.fillText(isEn ? `Paid by: ${topExpensePayer?.displayName || 'Member'}` : `Người thanh toán: ${topExpensePayer?.displayName || 'Thành viên'}`, 115, 1395);
       }
 
       // 10. Card 3: 100% Sòng phẳng Stamp & Barcode
       drawBrutalistCard(80, 1465, 920, 220, '#ff5400', 14);
       ctx.fillStyle = '#ffffff';
       ctx.font = '900 36px sans-serif';
-      ctx.fillText('⚡ TINH THẦN SÒNG PHẲNG: 100% HOÀN TẤT', 120, 1530);
+      ctx.fillText(isEn ? '⚡ TEAM SPIRIT: 100% RECONCILED' : '⚡ TINH THẦN SÒNG PHẲNG: 100% HOÀN TẤT', 120, 1530);
       
       ctx.fillStyle = isDarkPoster ? '#ffffff' : '#18181b';
       ctx.font = 'bold 26px sans-serif';
-      ctx.fillText('Mọi khoản nợ được cân bằng đối soát chuẩn từng đồng qua VietQR!', 120, 1585);
-      ctx.fillText(`Thành viên thanh toán nhanh như chớp: ${fastestSettler?.displayName || 'Cả nhóm'}`, 120, 1630);
+      ctx.fillText(isEn ? 'All debts balanced & settled cleanly via VietQR!' : 'Mọi khoản nợ được cân bằng đối soát chuẩn từng đồng qua VietQR!', 120, 1585);
+      ctx.fillText(isEn ? `Lightning-fast settler: ${fastestSettler?.displayName || 'Everyone'}` : `Thành viên thanh toán nhanh như chớp: ${fastestSettler?.displayName || 'Cả nhóm'}`, 120, 1630);
 
       // 11. Bottom Ticket Barcode & Footer
       ctx.fillStyle = textPrimary;
@@ -423,10 +450,10 @@ export default function TripWrappedModal({
               type="button"
               onClick={handleCopyRecap}
               className="px-3 py-1.5 rounded-xl border-2 border-[#18181b] dark:border-zinc-700 bg-white dark:bg-[#252530] text-[#18181b] dark:text-white font-bold text-xs flex items-center gap-1.5 shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
-              title="Sao chép tóm tắt định dạng Retro"
+              title={isEn ? "Copy retro recap text" : "Sao chép tóm tắt định dạng Retro"}
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? 'Đã copy!' : 'Copy recap'}</span>
+              <span>{copied ? (isEn ? 'Copied!' : 'Đã copy!') : (isEn ? 'Copy recap' : 'Copy recap')}</span>
             </button>
 
             <button
@@ -434,10 +461,10 @@ export default function TripWrappedModal({
               onClick={handleDownloadImage}
               disabled={exporting}
               className="px-3.5 py-1.5 rounded-xl border-2 border-[#18181b] dark:border-zinc-700 bg-[#ff5400] hover:bg-[#ea580c] text-white font-black text-xs flex items-center gap-1.5 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
-              title="Tải ảnh Story Neo-Retro cực nét"
+              title={isEn ? "Download HD Neo-Retro Story Image" : "Tải ảnh Story Neo-Retro cực nét"}
             >
               <Download className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>{exporting ? 'Đang tạo...' : 'Lưu ảnh Story'}</span>
+              <span>{exporting ? (isEn ? 'Generating...' : 'Đang tạo...') : (isEn ? 'Save Story' : 'Lưu ảnh Story')}</span>
             </button>
           </div>
         </div>
@@ -488,21 +515,21 @@ export default function TripWrappedModal({
                   {trip.name}
                 </h2>
                 <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 font-mono">
-                  {totalDays} NGÀY KHÁM PHÁ • {members.length} THÀNH VIÊN
+                  {totalDays} {isEn ? 'DAYS OF EXPLORING' : 'NGÀY KHÁM PHÁ'} • {members.length} {isEn ? 'MEMBERS' : 'THÀNH VIÊN'}
                 </p>
               </div>
 
               {/* Big Brutalist Number Card */}
               <div className="p-5 rounded-2xl bg-white dark:bg-[#252532] border-2 border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000] space-y-1.5">
                 <span className="text-[11px] font-mono font-black uppercase text-zinc-500 dark:text-zinc-400 tracking-wider">
-                  TỔNG CHI PHÍ TOÀN BỘ CHUYẾN ĐI
+                  {isEn ? 'TOTAL TRIP EXPENSES' : 'TỔNG CHI PHÍ TOÀN BỘ CHUYẾN ĐI'}
                 </span>
                 <div className="text-3xl sm:text-4xl font-black text-[#ff5400] font-mono tracking-tight">
                   {formatVND(totalExpense)}
                 </div>
                 <div className="pt-2 border-t-2 border-dashed border-[#18181b]/20 dark:border-white/15 flex items-center justify-between text-xs font-bold">
-                  <span className="text-zinc-600 dark:text-zinc-400">Định mức bình quân:</span>
-                  <span className="font-mono text-[#18181b] dark:text-white font-black">{formatVND(avgPerPerson)}/người</span>
+                  <span className="text-zinc-600 dark:text-zinc-400">{isEn ? 'Average quota:' : 'Định mức bình quân:'}</span>
+                  <span className="font-mono text-[#18181b] dark:text-white font-black">{formatVND(avgPerPerson)}/{isEn ? 'person' : 'người'}</span>
                 </div>
               </div>
 
@@ -511,20 +538,20 @@ export default function TripWrappedModal({
                 <div className="p-3 rounded-xl bg-[#fef08a] dark:bg-[#2d2919] border-2 border-[#18181b] dark:border-amber-500/40 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000]">
                   <div className="flex items-center gap-1.5 text-[10px] font-mono font-black text-[#18181b] dark:text-amber-300 mb-1">
                     <Receipt className="w-3.5 h-3.5" />
-                    <span>HÓA ĐƠN</span>
+                    <span>{isEn ? 'BILLS' : 'HÓA ĐƠN'}</span>
                   </div>
                   <div className="text-lg font-black text-[#18181b] dark:text-amber-100">
-                    {expenses.length} KHOẢN CHI
+                    {expenses.length} {isEn ? 'EXPENSES' : 'KHOẢN CHI'}
                   </div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-[#fed7aa] dark:bg-[#2e2118] border-2 border-[#18181b] dark:border-orange-500/40 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000]">
                   <div className="flex items-center gap-1.5 text-[10px] font-mono font-black text-[#18181b] dark:text-orange-300 mb-1">
                     <Calendar className="w-3.5 h-3.5" />
-                    <span>HÀNH TRÌNH</span>
+                    <span>{isEn ? 'JOURNEY' : 'HÀNH TRÌNH'}</span>
                   </div>
                   <div className="text-lg font-black text-[#18181b] dark:text-orange-100">
-                    {totalDays} NGÀY ĐỒNG HÀNH
+                    {totalDays} {isEn ? 'DAYS TOGETHER' : 'NGÀY ĐỒNG HÀNH'}
                   </div>
                 </div>
               </div>
@@ -536,7 +563,7 @@ export default function TripWrappedModal({
             <div className="space-y-5 animate-fade-in my-auto text-center pt-2">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#ff5400] text-white border-2 border-[#18181b] dark:border-black shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] text-xs font-black uppercase tracking-wider">
                 <Crown className="w-4 h-4 stroke-[2.5]" />
-                <span>CHỦ TỊCH GÁNH TEAM 👑</span>
+                <span>{isEn ? 'TOP SPENDER MVP 👑' : 'CHỦ TỊCH GÁNH TEAM 👑'}</span>
               </div>
 
               <div className="relative inline-block mx-auto">
@@ -557,19 +584,19 @@ export default function TripWrappedModal({
                   {topPayer.displayName}
                 </h3>
                 <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 font-mono">
-                  NGƯỜI CHỊU CHI BẠO TAY NHẤT CHUYẾN ĐI
+                  {isEn ? 'MOST GENEROUS SPENDER OF THE TRIP' : 'NGƯỜI CHỊU CHI BẠO TAY NHẤT CHUYẾN ĐI'}
                 </p>
               </div>
 
               <div className="p-4 rounded-2xl bg-white dark:bg-[#252532] border-2 border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000] text-left space-y-1">
                 <div className="text-[10px] font-mono font-black uppercase text-zinc-500 dark:text-zinc-400">
-                  SỐ TIỀN ĐÃ ỨNG TRƯỚC:
+                  {isEn ? 'TOTAL PAID UPFRONT:' : 'SỐ TIỀN ĐÃ ỨNG TRƯỚC:'}
                 </div>
                 <div className="text-2xl sm:text-3xl font-black text-[#ff5400] font-mono">
                   {formatVND(topPayer.totalPaid)}
                 </div>
                 <p className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 pt-1 border-t border-dashed border-[#18181b]/20 dark:border-white/15">
-                  Chiếm tới <strong className="text-[#18181b] dark:text-white">{topPayerPercent}%</strong> toàn bộ chi phí cả đoàn.
+                  {isEn ? 'Represents' : 'Chiếm tới'} <strong className="text-[#18181b] dark:text-white">{topPayerPercent}%</strong> {isEn ? 'of total trip expenses.' : 'toàn bộ chi phí cả đoàn.'}
                 </p>
               </div>
             </div>
@@ -580,14 +607,14 @@ export default function TripWrappedModal({
             <div className="space-y-5 animate-fade-in my-auto pt-2">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] text-xs font-black uppercase tracking-wider">
                 <UtensilsCrossed className="w-4 h-4 text-[#ff5400] stroke-[2.5]" />
-                <span>KHOẢN CHI ĐẮT ĐỎ NHẤT 🥩</span>
+                <span>{isEn ? 'MOST EXPENSIVE BILL 🥩' : 'KHOẢN CHI ĐẮT ĐỎ NHẤT 🥩'}</span>
               </div>
 
               {topExpense ? (
                 <div className="space-y-4">
                   <div className="p-5 rounded-2xl bg-white dark:bg-[#252532] border-2 border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000] space-y-2">
                     <span className="text-[10px] font-mono font-black uppercase text-zinc-500 dark:text-zinc-400">
-                      BILL KỶ LỤC CỦA CHUYẾN ĐI
+                      {isEn ? 'RECORD BILL OF THE TRIP' : 'BILL KỶ LỤC CỦA CHUYẾN ĐI'}
                     </span>
                     <h3 className="text-xl sm:text-2xl font-black text-[#18181b] dark:text-white uppercase">
                       "{topExpense.title}"
@@ -599,22 +626,22 @@ export default function TripWrappedModal({
 
                   <div className="p-3.5 rounded-xl bg-[#fef08a] dark:bg-[#2d2919] border-2 border-[#18181b] dark:border-amber-500/40 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000] text-xs space-y-1 font-bold">
                     <div className="flex items-center justify-between text-[#18181b] dark:text-amber-100">
-                      <span>Người chi trả:</span>
-                      <strong className="font-black">{topExpensePayer?.displayName || 'Thành viên'}</strong>
+                      <span>{isEn ? 'Paid by:' : 'Người chi trả:'}</span>
+                      <strong className="font-black">{topExpensePayer?.displayName || (isEn ? 'Member' : 'Thành viên')}</strong>
                     </div>
                     <div className="flex items-center justify-between text-zinc-700 dark:text-amber-200/80">
-                      <span>Ngày ghi nhận:</span>
-                      <span className="font-mono">{topExpense.date || 'Trong chuyến đi'}</span>
+                      <span>{isEn ? 'Date logged:' : 'Ngày ghi nhận:'}</span>
+                      <span className="font-mono">{topExpense.date || (isEn ? 'During trip' : 'Trong chuyến đi')}</span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-700 dark:text-amber-200/80">
-                      <span>Số người chia bill:</span>
-                      <span>{topExpense.participants?.length || members.length} thành viên</span>
+                      <span>{isEn ? 'Split between:' : 'Số người chia bill:'}</span>
+                      <span>{topExpense.participants?.length || members.length} {isEn ? 'members' : 'thành viên'}</span>
                     </div>
                   </div>
                 </div>
               ) : (
                 <div className="p-8 text-center bg-white dark:bg-[#252532] rounded-2xl border-2 border-[#18181b] dark:border-zinc-700 font-bold text-xs text-zinc-500 dark:text-zinc-400">
-                  Chưa có khoản chi nào được ghi nhận trong chuyến đi này.
+                  {isEn ? 'No expenses recorded in this trip yet.' : 'Chưa có khoản chi nào được ghi nhận trong chuyến đi này.'}
                 </div>
               )}
             </div>
@@ -625,7 +652,7 @@ export default function TripWrappedModal({
             <div className="space-y-5 animate-fade-in my-auto text-center pt-2">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#ff5400] text-white border-2 border-[#18181b] dark:border-black shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] text-xs font-black uppercase tracking-wider">
                 <Zap className="w-4 h-4 stroke-[2.5]" />
-                <span>SÒNG PHẲNG THẦN TỐC ⚡</span>
+                <span>{isEn ? 'LIGHTNING-FAST SETTLEMENT ⚡' : 'SÒNG PHẲNG THẦN TỐC ⚡'}</span>
               </div>
 
               <div className="space-y-1">
@@ -633,23 +660,23 @@ export default function TripWrappedModal({
                   <Sparkles className="w-8 h-8 stroke-[2.5]" />
                 </div>
                 <h3 className="text-xl sm:text-2xl font-black text-[#18181b] dark:text-white uppercase tracking-tight">
-                  CHƠI ĐẸP • CHIA ĐỀU • TRỌN TÌNH BẠN
+                  {isEn ? 'PLAY FAIR • SPLIT EVEN • BEST MATES' : 'CHƠI ĐẸP • CHIA ĐỀU • TRỌN TÌNH BẠN'}
                 </h3>
                 <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 font-mono">
-                  100% CÔNG NỢ ĐÃ TẤT TOÁN MINH BẠCH
+                  {isEn ? '100% RECONCILED TRANSPARENTLY' : '100% CÔNG NỢ ĐÃ TẤT TOÁN MINH BẠCH'}
                 </p>
               </div>
 
               <div className="p-4 rounded-2xl bg-white dark:bg-[#252532] border-2 border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000] text-left space-y-2">
                 <div className="flex items-center justify-between text-xs font-black text-[#18181b] dark:text-white">
-                  <span>TIẾN ĐỘ ĐỐI SOÁT:</span>
-                  <span className="text-[#ff5400] font-mono">100% HOÀN TẤT</span>
+                  <span>{isEn ? 'RECONCILIATION PROGRESS:' : 'TIẾN ĐỘ ĐỐI SOÁT:'}</span>
+                  <span className="text-[#ff5400] font-mono">{isEn ? '100% COMPLETE' : '100% HOÀN TẤT'}</span>
                 </div>
                 <div className="w-full bg-[#edebe4] dark:bg-[#1a1a24] h-3 rounded-md border border-[#18181b] dark:border-zinc-600 overflow-hidden">
                   <div className="bg-[#ff5400] h-full w-full" />
                 </div>
                 <p className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 pt-1 border-t border-dashed border-[#18181b]/20 dark:border-white/15">
-                  ⚡ Thành viên thanh toán thần tốc: <strong className="text-[#18181b] dark:text-white font-black">{fastestSettler?.displayName || 'Cả nhóm'}</strong>!
+                  ⚡ {isEn ? 'Fastest payer:' : 'Thành viên thanh toán thần tốc:'} <strong className="text-[#18181b] dark:text-white font-black">{fastestSettler?.displayName || (isEn ? 'Whole crew' : 'Cả nhóm')}</strong>!
                 </p>
               </div>
             </div>
@@ -675,27 +702,27 @@ export default function TripWrappedModal({
               {/* Ticket Breakdown Card */}
               <div className="p-4 rounded-2xl bg-white dark:bg-[#252532] border-2 border-[#18181b] dark:border-zinc-700 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000] space-y-2 text-xs">
                 <div className="flex items-center justify-between pb-1.5 border-b border-dashed border-[#18181b]/20 dark:border-white/15 font-bold">
-                  <span className="text-zinc-600 dark:text-zinc-400">Tổng chi:</span>
+                  <span className="text-zinc-600 dark:text-zinc-400">{isEn ? 'Total spent:' : 'Tổng chi:'}</span>
                   <strong className="text-[#ff5400] font-mono font-black text-sm">
                     {formatVND(totalExpense)}
                   </strong>
                 </div>
 
                 <div className="flex items-center justify-between font-bold">
-                  <span className="text-zinc-600 dark:text-zinc-400">👑 Chi bạo nhất:</span>
+                  <span className="text-zinc-600 dark:text-zinc-400">{isEn ? '👑 Top spender:' : '👑 Chi bạo nhất:'}</span>
                   <strong className="text-[#18181b] dark:text-white font-black">{topPayer.displayName} ({formatVND(topPayer.totalPaid)})</strong>
                 </div>
 
                 <div className="flex items-center justify-between font-bold">
-                  <span className="text-zinc-600 dark:text-zinc-400">🥩 Bill đắt nhất:</span>
+                  <span className="text-zinc-600 dark:text-zinc-400">{isEn ? '🥩 Biggest bill:' : '🥩 Bill đắt nhất:'}</span>
                   <strong className="text-[#18181b] dark:text-white font-black truncate max-w-[140px]">
-                    {topExpense ? `${topExpense.title}` : 'Chưa có'}
+                    {topExpense ? `${topExpense.title}` : (isEn ? 'None' : 'Chưa có')}
                   </strong>
                 </div>
 
                 <div className="flex items-center justify-between font-bold">
-                  <span className="text-zinc-600 dark:text-zinc-400">⚡ Đối soát:</span>
-                  <strong className="text-emerald-600 dark:text-emerald-400 font-black">100% Sòng phẳng</strong>
+                  <span className="text-zinc-600 dark:text-zinc-400">{isEn ? '⚡ Settlement:' : '⚡ Đối soát:'}</span>
+                  <strong className="text-emerald-600 dark:text-emerald-400 font-black">{isEn ? '100% Fair & Settled' : '100% Sòng phẳng'}</strong>
                 </div>
               </div>
 
@@ -708,7 +735,7 @@ export default function TripWrappedModal({
                   className="w-full py-3 rounded-2xl border-2 border-[#18181b] dark:border-zinc-700 bg-[#ff5400] hover:bg-[#ea580c] text-white font-black text-xs flex items-center justify-center gap-2 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
                 >
                   <Download className="w-4 h-4 stroke-[2.5]" />
-                  <span>{exporting ? 'Đang xuất ảnh...' : 'Lưu ảnh Story Neo-Retro (PNG)'}</span>
+                  <span>{exporting ? (isEn ? 'Exporting...' : 'Đang xuất ảnh...') : (isEn ? 'Save Neo-Retro Story (PNG)' : 'Lưu ảnh Story Neo-Retro (PNG)')}</span>
                 </button>
 
                 <button
@@ -717,7 +744,7 @@ export default function TripWrappedModal({
                   className="w-full py-2.5 rounded-2xl border-2 border-[#18181b] dark:border-zinc-700 bg-white hover:bg-zinc-50 dark:bg-[#252532] dark:hover:bg-[#2c2c3b] text-[#18181b] dark:text-white font-black text-xs flex items-center justify-center gap-2 shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copied ? 'Đã copy vào bộ nhớ tạm!' : 'Copy văn bản định dạng Retro'}</span>
+                  <span>{copied ? (isEn ? 'Copied to clipboard!' : 'Đã copy vào bộ nhớ tạm!') : (isEn ? 'Copy Retro text recap' : 'Copy văn bản định dạng Retro')}</span>
                 </button>
               </div>
             </div>
@@ -732,11 +759,11 @@ export default function TripWrappedModal({
             >
               {currentSlide < totalSlides - 1 ? (
                 <>
-                  <span>TIẾP THEO</span>
+                  <span>{isEn ? 'NEXT' : 'TIẾP THEO'}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </>
               ) : (
-                'KẾT THÚC ★'
+                isEn ? 'FINISH ★' : 'KẾT THÚC ★'
               )}
             </span>
           </div>
@@ -752,7 +779,7 @@ export default function TripWrappedModal({
         title={
           <div className="flex items-center gap-2">
             <span className="font-extrabold text-[#18181b] dark:text-white">
-              Lưu ảnh Wrapped 📸
+              {isEn ? 'Save Wrapped Photo 📸' : 'Lưu ảnh Wrapped 📸'}
             </span>
           </div>
         }
@@ -764,7 +791,7 @@ export default function TripWrappedModal({
               onClick={() => setPreviewImage(null)}
               className="tactile-btn-pill px-4 py-2 text-xs font-bold cursor-pointer"
             >
-              Đóng
+              {isEn ? 'Close' : 'Đóng'}
             </button>
             {navigator.share && (
               <button
@@ -794,7 +821,7 @@ export default function TripWrappedModal({
                 className="tactile-btn-dark px-4 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <Download className="w-4 h-4" />
-                <span>Chia sẻ / Lưu ảnh</span>
+                <span>{isEn ? 'Share / Save Photo' : 'Chia sẻ / Lưu ảnh'}</span>
               </button>
             )}
           </div>
@@ -804,10 +831,12 @@ export default function TripWrappedModal({
           <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 text-xs text-amber-900 dark:text-amber-200">
             <p className="font-bold flex items-center gap-1.5 text-xs text-amber-800 dark:text-amber-300">
               <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-              Hướng dẫn lưu ảnh trên iPhone:
+              {isEn ? 'How to save photo on iPhone:' : 'Hướng dẫn lưu ảnh trên iPhone:'}
             </p>
             <p className="mt-1 text-[11px] leading-relaxed text-amber-950 dark:text-amber-100">
-              Nhấn giữ vào ảnh bên dưới trong <strong>1 giây</strong>, sau đó chọn <strong>"Lưu vào Ảnh" (Save to Photos)</strong> để tải về máy.
+              {isEn 
+                ? <>Press and hold the image below for <strong>1 second</strong>, then select <strong>"Save to Photos"</strong> to download.</>
+                : <>Nhấn giữ vào ảnh bên dưới trong <strong>1 giây</strong>, sau đó chọn <strong>"Lưu vào Ảnh" (Save to Photos)</strong> để tải về máy.</>}
             </p>
           </div>
 

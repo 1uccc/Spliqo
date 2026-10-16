@@ -13,6 +13,7 @@ import {
   Info
 } from 'lucide-react';
 import { formatVND } from '../../services/calculation';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function TripBudgetGauge({
   trip,
@@ -20,8 +21,10 @@ export default function TripBudgetGauge({
   members = [],
   balances,
   onSaveBudget,
-  t
+  t: propT
 }) {
+  const { t: contextT, isEn } = useLanguage();
+  const t = propT || contextT;
   const [modalOpen, setModalOpen] = useState(false);
   const [budgetType, setBudgetType] = useState(trip?.budget?.type || 'total');
   const [budgetAmount, setBudgetAmount] = useState(trip?.budget?.amount ? String(trip.budget.amount) : '');
@@ -118,7 +121,9 @@ export default function TripBudgetGauge({
     barColor: 'from-emerald-500 to-teal-400',
     iconColor: 'text-emerald-500',
     headline: t('budgetSafe', 'Chi tiêu đang rất an toàn'),
-    desc: `Đã chi ${percentUsed}% ngân sách. Còn lại ${formatVND(remaining)} cho ${totalDays - elapsedDays + 1} ngày tới.`
+    desc: isEn 
+      ? `Spent ${percentUsed}% of budget. Remaining ${formatVND(remaining)} for the next ${totalDays - elapsedDays + 1} days.`
+      : `Đã chi ${percentUsed}% ngân sách. Còn lại ${formatVND(remaining)} cho ${totalDays - elapsedDays + 1} ngày tới.`
   };
 
   if (isOverBudget) {
@@ -127,7 +132,9 @@ export default function TripBudgetGauge({
       barColor: 'from-rose-500 to-pink-600',
       iconColor: 'text-rose-500',
       headline: t('budgetExceeded', 'Báo động: Đã vượt ngân sách dự kiến!'),
-      desc: `Nhóm đã vung tay quá trán thêm ${formatVND(Math.abs(remaining))}. Cần cân đối lại các khoản chi sắp tới!`
+      desc: isEn
+        ? `Group has exceeded budget by ${formatVND(Math.abs(remaining))}. Time to balance upcoming spending!`
+        : `Nhóm đã vung tay quá trán thêm ${formatVND(Math.abs(remaining))}. Cần cân đối lại các khoản chi sắp tới!`
     };
   } else if (percentUsed >= 85 || (projectedTotal > effectiveBudget && percentUsed >= 60)) {
     statusTheme = {
@@ -135,7 +142,9 @@ export default function TripBudgetGauge({
       barColor: 'from-amber-500 to-orange-500',
       iconColor: 'text-amber-500',
       headline: t('budgetWarning', 'Cảnh báo: Tốc độ chi tiêu đang ở mức cao'),
-      desc: `Đã chạm ngưỡng ${percentUsed}% ngân sách. Dự kiến cuối chuyến đi sẽ vượt khoảng ${formatVND(burnRateExcess)}.`
+      desc: isEn
+        ? `Reached ${percentUsed}% of budget limit. Projected to exceed by ~${formatVND(burnRateExcess)}.`
+        : `Đã chạm ngưỡng ${percentUsed}% ngân sách. Dự kiến cuối chuyến đi sẽ vượt khoảng ${formatVND(burnRateExcess)}.`
     };
   } else if (percentUsed >= 60) {
     statusTheme = {
@@ -143,7 +152,9 @@ export default function TripBudgetGauge({
       barColor: 'from-blue-500 to-cyan-400',
       iconColor: 'text-blue-500',
       headline: t('budgetModerate', 'Đang sử dụng hơn nửa ngân sách'),
-      desc: `Nhóm đã tiêu ${percentUsed}%. Hạn mức an toàn còn lại trung bình: ${formatVND(Math.max(0, Math.round(remaining / Math.max(1, totalDays - elapsedDays + 1))))}/ngày.`
+      desc: isEn
+        ? `Group spent ${percentUsed}%. Safe remaining daily quota: ${formatVND(Math.max(0, Math.round(remaining / Math.max(1, totalDays - elapsedDays + 1))))}/day.`
+        : `Nhóm đã tiêu ${percentUsed}%. Hạn mức an toàn còn lại trung bình: ${formatVND(Math.max(0, Math.round(remaining / Math.max(1, totalDays - elapsedDays + 1))))}/ngày.`
     };
   }
 
@@ -182,8 +193,8 @@ export default function TripBudgetGauge({
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                 {hasBudget 
                   ? (currentType === 'per_person' 
-                      ? `${formatVND(rawAmount)} / người × ${memberCount} người` 
-                      : 'Hạn mức trọn gói cả chuyến đi')
+                      ? `${formatVND(rawAmount)} / ${isEn ? 'person' : 'người'} × ${memberCount} ${isEn ? 'members' : 'người'}` 
+                      : t('totalTripBudget', 'Hạn mức trọn gói cả chuyến đi'))
                   : t('noBudgetNotice', 'Chưa thiết lập hạn mức chi tiêu dự kiến')}
               </p>
             </div>
@@ -210,8 +221,8 @@ export default function TripBudgetGauge({
                 </span>
                 <span className={isOverBudget ? 'text-rose-600 dark:text-rose-400 font-extrabold' : 'text-zinc-500 dark:text-zinc-400'}>
                   {isOverBudget 
-                    ? `Vượt ${formatVND(Math.abs(remaining))}` 
-                    : `Còn ${formatVND(remaining)}`}
+                    ? `${t('overBudgetBy', 'Vượt')} ${formatVND(Math.abs(remaining))}` 
+                    : `${t('remainingBudget', 'Còn')} ${formatVND(remaining)}`}
                 </span>
               </div>
 
@@ -230,8 +241,8 @@ export default function TripBudgetGauge({
 
               <div className="flex items-center justify-between text-[10px] text-zinc-400 px-0.5 font-medium">
                 <span>0đ</span>
-                <span>An toàn (70%)</span>
-                <span>Hạn mức (100%)</span>
+                <span>{t('safeMark', 'An toàn (70%)')}</span>
+                <span>{t('budgetLimitMark', 'Hạn mức (100%)')}</span>
               </div>
             </div>
 
@@ -262,13 +273,13 @@ export default function TripBudgetGauge({
               <div className="p-3 rounded-2xl bg-[#faf9f6] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2a2a36]">
                 <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-semibold mb-1">
                   <Calendar className="w-3 h-3" />
-                  <span>Định mức/ngày</span>
+                  <span>{t('dailyTarget', 'Định mức/ngày')}</span>
                 </div>
                 <div className="text-xs sm:text-sm font-extrabold text-[#18181b] dark:text-white truncate">
                   {formatVND(dailyTarget)}
                 </div>
                 <div className="text-[10px] text-zinc-500 mt-0.5">
-                  Tổng {totalDays} ngày đi
+                  {isEn ? `Total ${totalDays} days` : `Tổng ${totalDays} ngày đi`}
                 </div>
               </div>
 
@@ -276,13 +287,13 @@ export default function TripBudgetGauge({
               <div className="p-3 rounded-2xl bg-[#faf9f6] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2a2a36]">
                 <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-semibold mb-1">
                   <TrendingUp className="w-3 h-3" />
-                  <span>Thực tế tiêu/ngày</span>
+                  <span>{t('actualDailySpent', 'Thực tế tiêu/ngày')}</span>
                 </div>
                 <div className={`text-xs sm:text-sm font-extrabold truncate ${dailySpentAvg > dailyTarget ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                   {formatVND(dailySpentAvg)}
                 </div>
                 <div className="text-[10px] text-zinc-500 mt-0.5">
-                  Ngày {elapsedDays}/{totalDays}
+                  {isEn ? `Day ${elapsedDays}/${totalDays}` : `Ngày ${elapsedDays}/${totalDays}`}
                 </div>
               </div>
 
@@ -290,13 +301,13 @@ export default function TripBudgetGauge({
               <div className="p-3 rounded-2xl bg-[#faf9f6] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2a2a36]">
                 <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-semibold mb-1">
                   <Flame className="w-3 h-3 text-orange-500" />
-                  <span>Đã chi hôm nay</span>
+                  <span>{t('spentToday', 'Đã chi hôm nay')}</span>
                 </div>
                 <div className="text-xs sm:text-sm font-extrabold text-[#18181b] dark:text-white truncate">
                   {formatVND(todaySpent)}
                 </div>
                 <div className="text-[10px] text-zinc-500 mt-0.5 truncate">
-                  {todayPercentOfDaily > 0 ? `${todayPercentOfDaily}% chỉ tiêu ngày` : 'Chưa có bill hôm nay'}
+                  {todayPercentOfDaily > 0 ? (isEn ? `${todayPercentOfDaily}% daily quota` : `${todayPercentOfDaily}% chỉ tiêu ngày`) : t('noBillToday', 'Chưa có bill hôm nay')}
                 </div>
               </div>
 
@@ -304,13 +315,13 @@ export default function TripBudgetGauge({
               <div className="p-3 rounded-2xl bg-[#faf9f6] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2a2a36]">
                 <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-semibold mb-1">
                   <Sparkles className="w-3 h-3 text-purple-500" />
-                  <span>Dự báo tổng kết</span>
+                  <span>{t('projectedTotal', 'Dự báo tổng kết')}</span>
                 </div>
                 <div className={`text-xs sm:text-sm font-extrabold truncate ${projectedTotal > effectiveBudget ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                   ~{formatVND(projectedTotal)}
                 </div>
                 <div className="text-[10px] text-zinc-500 mt-0.5 truncate">
-                  {projectedTotal > effectiveBudget ? 'Nguy cơ vượt hạn mức' : 'Nằm trong kế hoạch'}
+                  {projectedTotal > effectiveBudget ? t('riskOverBudget', 'Nguy cơ vượt hạn mức') : t('onTrackBudget', 'Nằm trong kế hoạch')}
                 </div>
               </div>
             </div>
@@ -319,7 +330,7 @@ export default function TripBudgetGauge({
           /* Empty state prompt to set budget */
           <div className="p-4 rounded-2xl bg-[#faf9f6] dark:bg-[#1a1a22] border border-dashed border-[#dedbd0] dark:border-[#2e2e38] text-center space-y-2">
             <p className="text-xs text-zinc-600 dark:text-zinc-300">
-              💡 Đặt hạn mức chi tiêu để Spliqo tự động theo dõi tiến độ, cảnh báo vung tay quá trán và dự báo chi phí mỗi ngày cho nhóm!
+              {t('budgetEmptyPrompt', '💡 Đặt hạn mức chi tiêu để Spliqo tự động theo dõi tiến độ, cảnh báo vung tay quá trán và dự báo chi phí mỗi ngày cho nhóm!')}
             </p>
             <button
               type="button"
@@ -327,7 +338,7 @@ export default function TripBudgetGauge({
               className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Thiết lập hạn mức ngay</span>
+              <span>{t('setupBudgetNow', 'Thiết lập hạn mức ngay')}</span>
             </button>
           </div>
         )}
@@ -348,7 +359,7 @@ export default function TripBudgetGauge({
                 disabled={saving}
                 className="text-xs text-rose-600 hover:text-rose-700 font-bold px-2 py-1 cursor-pointer"
               >
-                Xóa hạn mức
+                {t('removeBudget', 'Xóa hạn mức')}
               </button>
             ) : <div />}
 
@@ -359,7 +370,7 @@ export default function TripBudgetGauge({
                 disabled={saving}
                 className="tactile-btn-pill text-xs px-4 py-2 cursor-pointer"
               >
-                Hủy
+                {t('cancel', 'Hủy')}
               </button>
               <button
                 type="button"
@@ -367,7 +378,7 @@ export default function TripBudgetGauge({
                 disabled={saving}
                 className="tactile-btn-dark text-xs px-5 py-2 font-bold cursor-pointer"
               >
-                {saving ? 'Đang lưu...' : 'Lưu hạn mức'}
+                {saving ? t('savingBudget', 'Đang lưu...') : t('saveBudget', 'Lưu hạn mức')}
               </button>
             </div>
           </div>
@@ -377,7 +388,7 @@ export default function TripBudgetGauge({
           {/* Budget Type Toggle */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
-              Cách tính hạn mức
+              {t('budgetCalculationType', 'Cách tính hạn mức')}
             </label>
             <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-[#f4f3ec] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2e2e38]">
               <button
@@ -389,7 +400,7 @@ export default function TripBudgetGauge({
                     : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-white'
                 }`}
               >
-                Trọn gói cả nhóm
+                {t('groupTotalBudget', 'Trọn gói cả nhóm')}
               </button>
               <button
                 type="button"
@@ -400,7 +411,7 @@ export default function TripBudgetGauge({
                     : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-white'
                 }`}
               >
-                Theo đầu người
+                {t('perPersonBudgetType', 'Theo đầu người')}
               </button>
             </div>
           </div>
@@ -408,7 +419,7 @@ export default function TripBudgetGauge({
           {/* Amount Input */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
-              {budgetType === 'per_person' ? 'Số tiền dự kiến mỗi người (VND)' : 'Tổng số tiền dự kiến cả chuyến (VND)'}
+              {budgetType === 'per_person' ? t('budgetAmountLabelPerPerson', 'Số tiền dự kiến mỗi người (VND)') : t('budgetAmountLabelTotal', 'Tổng số tiền dự kiến cả chuyến (VND)')}
             </label>
             <div className="relative">
               <input
@@ -417,7 +428,7 @@ export default function TripBudgetGauge({
                 step="any"
                 value={budgetAmount}
                 onChange={(e) => setBudgetAmount(e.target.value)}
-                placeholder={budgetType === 'per_person' ? 'Ví dụ: 3000000' : 'Ví dụ: 15000000'}
+                placeholder={budgetType === 'per_person' ? (isEn ? 'e.g. 3000000' : 'Ví dụ: 3000000') : (isEn ? 'e.g. 15000000' : 'Ví dụ: 15000000')}
                 className="w-full px-4 py-3 rounded-2xl bg-[#faf9f6] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2e2e38] text-sm font-bold text-[#18181b] dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400">
@@ -429,7 +440,7 @@ export default function TripBudgetGauge({
                 = {formatVND(budgetAmount)}
                 {budgetType === 'per_person' && (
                   <span className="text-zinc-500 dark:text-zinc-400 ml-1">
-                    (Cả nhóm {memberCount} người: {formatVND(Number(budgetAmount) * memberCount)})
+                    ({isEn ? `Entire group ${memberCount} members:` : `Cả nhóm ${memberCount} người:`} {formatVND(Number(budgetAmount) * memberCount)})
                   </span>
                 )}
               </p>
@@ -438,7 +449,7 @@ export default function TripBudgetGauge({
 
           {/* Quick Preset Buttons */}
           <div className="space-y-1.5">
-            <span className="text-[11px] font-semibold text-zinc-500">Gợi ý nhanh:</span>
+            <span className="text-[11px] font-semibold text-zinc-500">{t('quickPresets', 'Gợi ý nhanh:')}</span>
             <div className="flex flex-wrap gap-1.5">
               {(budgetType === 'per_person' 
                 ? [1000000, 2000000, 3000000, 5000000, 10000000]
@@ -459,7 +470,7 @@ export default function TripBudgetGauge({
           <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 text-[11px] text-amber-800 dark:text-amber-200 flex items-start gap-2">
             <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <span>
-              Hạn mức này chỉ dùng để nhóm cùng theo dõi và đưa ra cảnh báo khi chi tiêu quá tay, không ảnh hưởng đến thuật toán cân đối công nợ thực tế.
+              {t('budgetAdviceNotice', 'Hạn mức này chỉ dùng để nhóm cùng theo dõi và đưa ra cảnh báo khi chi tiêu quá tay, không ảnh hưởng đến thuật toán cân đối công nợ thực tế.')}
             </span>
           </div>
         </form>

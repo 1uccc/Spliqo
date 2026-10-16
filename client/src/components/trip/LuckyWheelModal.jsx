@@ -14,6 +14,7 @@ import {
   Flame
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 // Harmonious Spliqo Fintech & Tactile Palette (Amber, Emerald, Indigo, Teal, Violet, Sunset)
 const SPLIQO_WHEEL_PALETTE = [
@@ -34,13 +35,16 @@ export default function LuckyWheelModal({
   onClose,
   members = [],
   onPickWinnerForExpense,
-  t
+  t: tProp
 }) {
+  const { t: tLang, isEn } = useLanguage();
+  const t = tProp || tLang;
+
   const canvasRef = useRef(null);
   const [spinning, setSpinning] = useState(false);
   const [winner, setWinner] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [gameMode, setGameMode] = useState('payer'); // 'payer' (Ai bao), 'advance' (Ai ứng trước), 'lucky_free' (Ai được bao)
+  const [gameMode, setGameMode] = useState('payer'); // 'payer', 'advance', 'lucky_free'
 
   const rotationRef = useRef(0);
   const animFrameRef = useRef(null);
@@ -143,7 +147,7 @@ export default function LuckyWheelModal({
       ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
       ctx.shadowBlur = 3;
 
-      const name = member.displayName || `Thành viên ${i + 1}`;
+      const name = member.displayName || (isEn ? `Member ${i + 1}` : `Thành viên ${i + 1}`);
       const truncated = name.length > 13 ? name.substring(0, 11) + '..' : name;
       ctx.fillText(truncated, radius - 24, 4.5);
       ctx.restore();
@@ -264,19 +268,19 @@ export default function LuckyWheelModal({
 
   const modeDescriptions = {
     payer: {
-      title: '👑 Ai bao trọn?',
-      desc: 'Người được quay trúng sẽ là đại gia thanh toán toàn bộ cho cả nhóm.',
-      banner: 'Đại gia chầu này đã lộ diện!'
+      title: t('modePayerTitle', '👑 Ai bao trọn?'),
+      desc: t('modePayerDesc', 'Người được quay trúng sẽ là đại gia thanh toán toàn bộ cho cả nhóm.'),
+      banner: t('modePayerBanner', 'Đại gia chầu này đã lộ diện!')
     },
     advance: {
-      title: '💳 Ai ứng trước?',
-      desc: 'Người này quẹt thẻ/chuyển khoản trả trước, sau đó chia bill đều.',
-      banner: 'Thủ quỹ lâm thời được chọn!'
+      title: t('modeAdvanceTitle', '💳 Ai ứng trước?'),
+      desc: t('modeAdvanceDesc', 'Người này quẹt thẻ/chuyển khoản trả trước, sau đó chia bill đều.'),
+      banner: t('modeAdvanceBanner', 'Thủ quỹ lâm thời được chọn!')
     },
     lucky_free: {
-      title: '🎁 Ai được khao 0đ?',
-      desc: 'Cả nhóm chia tiền, riêng bạn này may mắn được khao miễn phí.',
-      banner: 'Số đỏ hôm nay: Được cả nhóm bao trọn 0đ!'
+      title: t('modeLuckyFreeTitle', '🎁 Ai được khao 0đ?'),
+      desc: t('modeLuckyFreeDesc', 'Cả nhóm chia tiền, riêng bạn này may mắn được khao miễn phí.'),
+      banner: t('modeLuckyFreeBanner', 'Số đỏ hôm nay: Được cả nhóm bao trọn 0đ!')
     }
   };
 
@@ -290,10 +294,10 @@ export default function LuckyWheelModal({
             <RotateCw className="w-3.5 h-3.5 stroke-[2.4]" />
           </div>
           <span className="font-extrabold text-[#18181b] dark:text-white">
-            Vòng Xoay May Mắn
+            {t('luckyWheelTitle', 'Vòng Xoay May Mắn')}
           </span>
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
-            🎡 Game
+            🎡 {t('gameTag', 'Game')}
           </span>
         </div>
       }
@@ -304,7 +308,7 @@ export default function LuckyWheelModal({
             type="button"
             onClick={() => setSoundEnabled(!soundEnabled)}
             className="p-2 rounded-xl text-zinc-500 hover:text-zinc-800 dark:hover:text-white hover:bg-[#f4f3ec] dark:hover:bg-[#252530] transition-colors cursor-pointer"
-            title={soundEnabled ? 'Tắt âm thanh' : 'Bật âm thanh'}
+            title={soundEnabled ? t('soundOff', 'Tắt âm thanh') : t('soundOn', 'Bật âm thanh')}
           >
             {soundEnabled ? <Volume2 className="w-4 h-4 text-amber-500 stroke-[2.2]" /> : <VolumeX className="w-4 h-4 text-zinc-400 stroke-[2.2]" />}
           </button>
@@ -324,7 +328,7 @@ export default function LuckyWheelModal({
                 onClick={handleUseWinner}
                 className="tactile-btn-dark text-xs px-4 py-2 flex items-center gap-1.5 font-bold cursor-pointer shadow-md"
               >
-                <span>Tạo khoản chi với {winner.displayName}</span>
+                <span>{t('createExpenseWithWinner', 'Tạo khoản chi với {name}').replace('{name}', winner.displayName)}</span>
                 <ArrowRight className="w-3.5 h-3.5 stroke-[2.2]" />
               </button>
             )}
@@ -336,9 +340,9 @@ export default function LuckyWheelModal({
         {/* Bento Mode Selector (Matching Spliqo tactile tabs) */}
         <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-[#f4f3ec] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2e2e38]">
           {[
-            { id: 'payer', label: 'Ai bao trọn', icon: Crown },
-            { id: 'advance', label: 'Ai ứng trước', icon: CreditCard },
-            { id: 'lucky_free', label: 'Ai được khao', icon: Gift }
+            { id: 'payer', label: t('modePayerLabel', 'Ai bao trọn'), icon: Crown },
+            { id: 'advance', label: t('modeAdvanceLabel', 'Ai ứng trước'), icon: CreditCard },
+            { id: 'lucky_free', label: t('modeLuckyFreeLabel', 'Ai được khao'), icon: Gift }
           ].map((mode) => {
             const Icon = mode.icon;
             const active = gameMode === mode.id;
@@ -400,7 +404,7 @@ export default function LuckyWheelModal({
             }`}
           >
             <RotateCw className={`w-4 h-4 ${spinning ? 'animate-spin' : ''}`} />
-            <span>{spinning ? 'Đang quay...' : 'QUAY NGAY'}</span>
+            <span>{spinning ? t('spinning', 'Đang quay...') : t('spinNow', 'QUAY NGAY')}</span>
           </button>
         </div>
 
@@ -423,7 +427,7 @@ export default function LuckyWheelModal({
                   {winner.displayName}
                 </div>
                 <div className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
-                  {gameMode === 'payer' ? 'Hôm nay được làm đại gia khao nhóm!' : gameMode === 'advance' ? 'Được chọn quẹt thẻ thanh toán trước!' : 'Được cả nhóm bao trọn 0đ!'}
+                  {gameMode === 'payer' ? t('winnerPayerNotice', 'Hôm nay được làm đại gia khao nhóm!') : gameMode === 'advance' ? t('winnerAdvanceNotice', 'Được chọn quẹt thẻ thanh toán trước!') : t('winnerLuckyNotice', 'Được cả nhóm bao trọn 0đ!')}
                 </div>
               </div>
             </div>
@@ -432,7 +436,7 @@ export default function LuckyWheelModal({
 
         {members.length < 2 && (
           <p className="text-xs text-rose-500 text-center font-medium">
-            Chuyến đi cần ít nhất 2 thành viên để bắt đầu vòng xoay.
+            {t('needAtLeastTwoMembers', 'Chuyến đi cần ít nhất 2 thành viên để bắt đầu vòng xoay.')}
           </p>
         )}
       </div>

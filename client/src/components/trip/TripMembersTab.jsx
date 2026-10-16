@@ -93,7 +93,7 @@ export default function TripMembersTab({
                         className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${
                           isMemberCreator
                             ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
-                            : 'bg-[#f4f3ec] dark:bg-white/10 text-zinc-600 dark:text-zinc-300'
+                            : 'bg-[#f4f3ec] dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-[#e6e4dc] dark:border-zinc-700/60'
                         }`}
                       >
                         {isMemberCreator ? t('creator', 'Người tạo') : t('memberRole', 'Thành viên')}

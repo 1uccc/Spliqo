@@ -22,8 +22,9 @@ import {
   FileText
 } from 'lucide-react';
 import { formatVND } from '../../services/calculation';
+import { useLanguage } from '../../contexts/LanguageContext';
 
-function formatRelativeTime(dateString) {
+function formatRelativeTime(dateString, isEn = false) {
   if (!dateString) return '';
   const date = new Date(dateString);
   const now = new Date();
@@ -33,12 +34,12 @@ function formatRelativeTime(dateString) {
   const diffHours = Math.floor(diffMin / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffSec < 60) return 'Vừa xong';
-  if (diffMin < 60) return `${diffMin} phút trước`;
-  if (diffHours < 24) return `${diffHours} giờ trước`;
-  if (diffDays === 1) return 'Hôm qua';
-  if (diffDays < 7) return `${diffDays} ngày trước`;
-  return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  if (diffSec < 60) return isEn ? 'Just now' : 'Vừa xong';
+  if (diffMin < 60) return isEn ? `${diffMin} min ago` : `${diffMin} phút trước`;
+  if (diffHours < 24) return isEn ? `${diffHours} hr ago` : `${diffHours} giờ trước`;
+  if (diffDays === 1) return isEn ? 'Yesterday' : 'Hôm qua';
+  if (diffDays < 7) return isEn ? `${diffDays} days ago` : `${diffDays} ngày trước`;
+  return date.toLocaleDateString(isEn ? 'en-US' : 'vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 export default function TripHistoryModal({
@@ -49,6 +50,7 @@ export default function TripHistoryModal({
   onRefresh,
   tripName = ''
 }) {
+  const { t, isEn } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('ALL'); // ALL | CREATE | UPDATE | DELETE | MEMBER | SETTLEMENT
 
@@ -97,7 +99,7 @@ export default function TripHistoryModal({
           color: 'text-emerald-600 dark:text-emerald-400',
           bg: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/40',
           dot: 'bg-emerald-500',
-          label: 'Thêm khoản chi'
+          label: t('historyCreate', 'Thêm khoản chi')
         };
       case 'EXPENSE_UPDATED':
       case 'UPDATE':
@@ -106,7 +108,7 @@ export default function TripHistoryModal({
           color: 'text-amber-600 dark:text-amber-400',
           bg: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/40',
           dot: 'bg-amber-500',
-          label: 'Chỉnh sửa'
+          label: t('historyUpdate', 'Chỉnh sửa')
         };
       case 'EXPENSE_DELETED':
       case 'DELETE':
@@ -115,7 +117,7 @@ export default function TripHistoryModal({
           color: 'text-rose-600 dark:text-rose-400',
           bg: 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/40',
           dot: 'bg-rose-500',
-          label: 'Xóa khoản chi'
+          label: t('historyDelete', 'Xóa khoản chi')
         };
       case 'MEMBER_JOINED':
         return {
@@ -123,7 +125,7 @@ export default function TripHistoryModal({
           color: 'text-blue-600 dark:text-blue-400',
           bg: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/40',
           dot: 'bg-blue-500',
-          label: 'Thành viên mới'
+          label: isEn ? 'New member' : 'Thành viên mới'
         };
       case 'MEMBER_REMOVED':
         return {
@@ -131,7 +133,7 @@ export default function TripHistoryModal({
           color: 'text-rose-600 dark:text-rose-400',
           bg: 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/40',
           dot: 'bg-rose-500',
-          label: 'Xóa thành viên'
+          label: isEn ? 'Removed member' : 'Xóa thành viên'
         };
       case 'SETTLEMENT_PAID':
         return {
@@ -139,7 +141,7 @@ export default function TripHistoryModal({
           color: 'text-indigo-600 dark:text-indigo-400',
           bg: 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800/40',
           dot: 'bg-indigo-500',
-          label: 'Chuyển khoản'
+          label: isEn ? 'Transfer sent' : 'Chuyển khoản'
         };
       case 'SETTLEMENT_CONFIRMED':
         return {
@@ -147,7 +149,7 @@ export default function TripHistoryModal({
           color: 'text-emerald-600 dark:text-emerald-400',
           bg: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/40',
           dot: 'bg-emerald-500',
-          label: 'Đã nhận tiền'
+          label: isEn ? 'Payment received' : 'Đã nhận tiền'
         };
       case 'TRIP_COMPLETED':
         return {
@@ -155,7 +157,7 @@ export default function TripHistoryModal({
           color: 'text-purple-600 dark:text-purple-400',
           bg: 'bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800/40',
           dot: 'bg-purple-500',
-          label: 'Chốt sổ chuyến đi'
+          label: isEn ? 'Trip completed' : 'Chốt sổ chuyến đi'
         };
       default:
         return {
@@ -163,7 +165,7 @@ export default function TripHistoryModal({
           color: 'text-zinc-600 dark:text-zinc-400',
           bg: 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800',
           dot: 'bg-zinc-400',
-          label: 'Hoạt động'
+          label: isEn ? 'Activity' : 'Hoạt động'
         };
     }
   };
@@ -180,10 +182,10 @@ export default function TripHistoryModal({
           </div>
           <div>
             <h3 className="text-sm sm:text-base font-extrabold text-[#18181b] dark:text-white leading-tight">
-              Lịch sử chỉnh sửa chuyến đi
+              {t('tripEditHistoryTitle', 'Lịch sử chỉnh sửa chuyến đi')}
             </h3>
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
-              Nhật ký kiểm toán minh bạch ghi lại toàn bộ thay đổi
+              {t('tripEditHistorySubtitle', 'Nhật ký kiểm toán minh bạch ghi lại toàn bộ thay đổi')}
             </p>
           </div>
         </div>
@@ -191,7 +193,11 @@ export default function TripHistoryModal({
       footer={
         <div className="flex items-center justify-between w-full">
           <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-            Hiển thị <strong className="text-zinc-800 dark:text-zinc-200">{filteredActivities.length}</strong> / {activities.length} bản ghi
+            {isEn ? (
+              <>Showing <strong className="text-zinc-800 dark:text-zinc-200">{filteredActivities.length}</strong> / {activities.length} records</>
+            ) : (
+              <>Hiển thị <strong className="text-zinc-800 dark:text-zinc-200">{filteredActivities.length}</strong> / {activities.length} bản ghi</>
+            )}
           </span>
 
           <button
@@ -199,7 +205,7 @@ export default function TripHistoryModal({
             onClick={onClose}
             className="tactile-btn-pill px-5 py-2 text-xs font-bold cursor-pointer"
           >
-            Đóng
+            {t('close', 'Đóng')}
           </button>
         </div>
       }
@@ -213,7 +219,7 @@ export default function TripHistoryModal({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm theo tên khoản chi, người sửa, nội dung..."
+              placeholder={t('searchHistoryPlaceholder', 'Tìm theo tên khoản chi, người sửa, nội dung...')}
               className="w-full pl-9 pr-8 py-2 rounded-xl bg-[#edebe4]/70 dark:bg-[#202028] border border-[#dedbd0] dark:border-[#30303c] text-xs sm:text-sm text-[#18181b] dark:text-white placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-purple-500/30"
             />
             {searchQuery && (
@@ -233,7 +239,7 @@ export default function TripHistoryModal({
               onClick={onRefresh}
               disabled={loading}
               className="p-2 rounded-xl bg-[#edebe4]/70 dark:bg-[#202028] border border-[#dedbd0] dark:border-[#30303c] text-zinc-600 dark:text-zinc-300 hover:bg-[#e4e1d7] dark:hover:bg-[#272732] transition-colors cursor-pointer shrink-0"
-              title="Làm mới lịch sử"
+              title={t('refreshHistoryTooltip', 'Làm mới lịch sử')}
             >
               <RotateCw className={`w-4 h-4 ${loading ? 'animate-spin text-purple-500' : ''}`} />
             </button>
@@ -243,12 +249,12 @@ export default function TripHistoryModal({
         {/* Filter Tags */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 text-xs select-none">
           {[
-            { id: 'ALL', label: 'Tất cả', count: counts.all },
-            { id: 'CREATE', label: 'Thêm chi phí', count: counts.create },
-            { id: 'UPDATE', label: 'Chỉnh sửa', count: counts.update },
-            { id: 'DELETE', label: 'Đã xóa', count: counts.delete },
-            { id: 'MEMBER', label: 'Thành viên', count: counts.member },
-            { id: 'SETTLEMENT', label: 'Quyết toán', count: counts.settlement },
+            { id: 'ALL', label: t('all', 'Tất cả'), count: counts.all },
+            { id: 'CREATE', label: t('historyCreate', 'Thêm chi phí'), count: counts.create },
+            { id: 'UPDATE', label: t('historyUpdate', 'Chỉnh sửa'), count: counts.update },
+            { id: 'DELETE', label: t('historyDelete', 'Đã xóa'), count: counts.delete },
+            { id: 'MEMBER', label: t('historyMember', 'Thành viên'), count: counts.member },
+            { id: 'SETTLEMENT', label: t('historySettlement', 'Quyết toán'), count: counts.settlement },
           ].map((f) => {
             const isActive = activeFilter === f.id;
             return (
@@ -279,18 +285,22 @@ export default function TripHistoryModal({
         {loading && activities.length === 0 ? (
           <div className="py-12 flex flex-col items-center justify-center space-y-3">
             <div className="w-8 h-8 border-3 border-zinc-200 dark:border-zinc-800 border-t-purple-600 rounded-full animate-spin" />
-            <span className="text-xs text-zinc-400 font-medium">Đang tải lịch sử chỉnh sửa...</span>
+            <span className="text-xs text-zinc-400 font-medium">
+              {isEn ? 'Loading edit history...' : 'Đang tải lịch sử chỉnh sửa...'}
+            </span>
           </div>
         ) : filteredActivities.length === 0 ? (
           <div className="p-8 text-center rounded-2xl bg-[#edebe4]/40 dark:bg-[#1a1a22] border border-dashed border-[#dedbd0] dark:border-[#2e2e38] my-4">
             <History className="w-10 h-10 text-zinc-300 dark:text-zinc-600 mx-auto mb-2 stroke-[1.5]" />
             <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
-              {searchQuery ? 'Không tìm thấy hoạt động nào phù hợp' : 'Chưa có lịch sử chỉnh sửa nào'}
+              {searchQuery 
+                ? (isEn ? 'No matching activities found' : 'Không tìm thấy hoạt động nào phù hợp') 
+                : t('noHistoryActivities', 'Chưa có lịch sử chỉnh sửa nào')}
             </p>
             <p className="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">
               {searchQuery
-                ? 'Hãy thử thay đổi từ khóa tìm kiếm hoặc bấm nút Tất cả.'
-                : 'Mọi thao tác thêm chi phí, cập nhật số tiền, xóa khoản chi hoặc quyết toán sẽ được lưu lại tại đây.'}
+                ? (isEn ? 'Try changing your search keyword or click the All tab.' : 'Hãy thử thay đổi từ khóa tìm kiếm hoặc bấm nút Tất cả.')
+                : t('noHistoryDesc', 'Mọi thao tác thêm chi phí, cập nhật số tiền, xóa khoản chi hoặc quyết toán sẽ được lưu lại tại đây.')}
             </p>
           </div>
         ) : (
@@ -337,7 +347,7 @@ export default function TripHistoryModal({
                           </div>
                         )}
                         <span className="text-xs font-bold text-[#18181b] dark:text-white">
-                          {item.authorName || 'Thành viên'}
+                          {item.authorName || (isEn ? 'Member' : 'Thành viên')}
                         </span>
 
                         {/* Action Badge */}
@@ -351,10 +361,10 @@ export default function TripHistoryModal({
                       {/* Timestamp */}
                       <span
                         className="text-[11px] text-zinc-400 font-medium flex items-center gap-1 shrink-0"
-                        title={item.timestamp ? new Date(item.timestamp).toLocaleString('vi-VN') : ''}
+                        title={item.timestamp ? new Date(item.timestamp).toLocaleString(isEn ? 'en-US' : 'vi-VN') : ''}
                       >
                         <Clock className="w-3 h-3" />
-                        {formatRelativeTime(item.timestamp)}
+                        {formatRelativeTime(item.timestamp, isEn)}
                       </span>
                     </div>
 
@@ -374,13 +384,13 @@ export default function TripHistoryModal({
                     {isDelete && (
                       <div className="mt-2.5 p-2.5 rounded-xl bg-rose-100/70 dark:bg-rose-950/40 border border-rose-300/60 dark:border-rose-900/50 text-[11px] text-rose-800 dark:text-rose-300 flex items-center justify-between gap-3">
                         <div>
-                          <p className="font-bold">Khoản chi đã bị xóa</p>
+                          <p className="font-bold">{isEn ? 'Expense deleted' : 'Khoản chi đã bị xóa'}</p>
                           <p className="opacity-80">
-                            Số tiền: <strong>{formatVND(item.amount || 0)}</strong> {item.paidByName ? `• Người trả: ${item.paidByName}` : ''}
+                            {isEn ? 'Amount:' : 'Số tiền:'} <strong>{formatVND(item.amount || 0)}</strong> {item.paidByName ? `• ${isEn ? 'Paid by:' : 'Người trả:'} ${item.paidByName}` : ''}
                           </p>
                         </div>
                         <span className="px-2 py-1 rounded-md bg-rose-200 dark:bg-rose-900/60 font-mono font-black text-[10px]">
-                          ĐÃ XÓA
+                          {isEn ? 'DELETED' : 'ĐÃ XÓA'}
                         </span>
                       </div>
                     )}
@@ -393,12 +403,12 @@ export default function TripHistoryModal({
                         </span>
                         {item.paidByName && (
                           <span className="text-zinc-500 dark:text-zinc-400">
-                            Người trả: <strong>{item.paidByName}</strong>
+                            {isEn ? 'Paid by:' : 'Người trả:'} <strong>{item.paidByName}</strong>
                           </span>
                         )}
                         {item.participantCount > 0 && (
                           <span className="text-zinc-400 dark:text-zinc-500">
-                            • Chia cho {item.participantCount} người
+                            • {isEn ? `Split between ${item.participantCount} members` : `Chia cho ${item.participantCount} người`}
                           </span>
                         )}
                       </div>
@@ -408,7 +418,7 @@ export default function TripHistoryModal({
                     {isUpdate && Array.isArray(item.diffs) && item.diffs.length > 0 && (
                       <div className="mt-2.5 space-y-1.5 pt-2 border-t border-[#dedbd0]/60 dark:border-[#2e2e38]">
                         <p className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                          Chi tiết các thay đổi:
+                          {isEn ? 'Change breakdown:' : 'Chi tiết các thay đổi:'}
                         </p>
                         <div className="grid grid-cols-1 gap-1.5 text-[11px]">
                           {item.diffs.map((d, dIdx) => (

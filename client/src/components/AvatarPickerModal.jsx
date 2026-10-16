@@ -6,6 +6,7 @@ import {
   RefreshCw, 
   Palette 
 } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const AVATAR_COLLECTIONS = {
   all: [
@@ -44,6 +45,7 @@ const RANDOM_SEEDS = [
 ];
 
 export default function AvatarPickerModal({ isOpen, onClose, currentPhotoURL, onSelectAvatar }) {
+  const { t, isEn } = useLanguage();
   const [activeTab, setActiveTab] = useState('all');
   const [customSeed, setCustomSeed] = useState('');
   const [selectedSeed, setSelectedSeed] = useState(() => {
@@ -99,10 +101,10 @@ export default function AvatarPickerModal({ isOpen, onClose, currentPhotoURL, on
           </div>
           <div>
             <h3 className="text-sm font-bold text-zinc-900 dark:text-white leading-tight">
-              Kho Avatar
+              {t('avatarGallery', 'Kho Avatar')}
             </h3>
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-normal leading-tight">
-              Chọn avatar hoạt hình độc đáo, không cần tải ảnh cá nhân
+              {t('avatarModalSubtitle', 'Chọn avatar hoạt hình độc đáo, không cần tải ảnh cá nhân')}
             </p>
           </div>
         </div>
@@ -111,7 +113,7 @@ export default function AvatarPickerModal({ isOpen, onClose, currentPhotoURL, on
       footer={
         <div className="flex items-center justify-between w-full gap-2">
           <div className="flex items-center gap-1.5 min-w-0 text-[11px] text-zinc-500 dark:text-zinc-400">
-            <span className="shrink-0 hidden xs:inline">Đang chọn:</span>
+            <span className="shrink-0 hidden xs:inline">{t('selectedAvatarLabel', 'Đang chọn:')}</span>
             <span className="font-bold text-amber-600 dark:text-amber-400 font-mono truncate max-w-[120px] sm:max-w-[200px]">
               "{selectedSeed}"
             </span>
@@ -122,7 +124,7 @@ export default function AvatarPickerModal({ isOpen, onClose, currentPhotoURL, on
               onClick={onClose}
               className="px-4 py-2 rounded-full border border-[#dedbd0] dark:border-[#32323e] text-zinc-600 dark:text-zinc-300 font-bold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all cursor-pointer text-xs"
             >
-              Hủy bỏ
+              {t('cancel', 'Hủy bỏ')}
             </button>
             <button
               type="button"
@@ -130,7 +132,7 @@ export default function AvatarPickerModal({ isOpen, onClose, currentPhotoURL, on
               className="tactile-btn-dark py-2 px-5 text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
             >
               <Check className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Áp dụng</span>
+              <span>{t('apply', 'Áp dụng')}</span>
             </button>
           </div>
         </div>
@@ -157,7 +159,7 @@ export default function AvatarPickerModal({ isOpen, onClose, currentPhotoURL, on
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div>
                 <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider block">
-                  Avatar đang chọn
+                  {t('selectedAvatarLabel', 'Avatar đang chọn')}
                 </span>
                 <span className="font-mono text-xs sm:text-sm font-extrabold text-zinc-900 dark:text-white truncate block max-w-[200px]">
                   "{selectedSeed}"
@@ -167,10 +169,10 @@ export default function AvatarPickerModal({ isOpen, onClose, currentPhotoURL, on
                 type="button"
                 onClick={handleRandomize}
                 className="tactile-btn-pill py-1.5 px-3 text-[11px] flex items-center gap-1 font-bold text-amber-700 dark:text-amber-400 cursor-pointer"
-                title="Tạo ngẫu nhiên một avatar mới"
+                title={isEn ? "Generate random avatar" : "Tạo ngẫu nhiên một avatar mới"}
               >
                 <RefreshCw className="w-3 h-3" />
-                <span>Ngẫu nhiên 🎲</span>
+                <span>{t('randomAvatar', 'Ngẫu nhiên 🎲')}</span>
               </button>
             </div>
 
@@ -180,14 +182,14 @@ export default function AvatarPickerModal({ isOpen, onClose, currentPhotoURL, on
                 type="text"
                 value={customSeed}
                 onChange={(e) => setCustomSeed(e.target.value)}
-                placeholder="Gõ tên/biệt danh để tự tạo..."
+                placeholder={t('customAvatarPlaceholder', 'Gõ tên/biệt danh để tự tạo...')}
                 className="flex-1 px-3 py-1.5 rounded-xl bg-white dark:bg-[#18181f] border border-[#dedbd0] dark:border-[#2e2e38] text-xs text-zinc-800 dark:text-zinc-200 outline-none focus:border-amber-500 transition-colors font-medium placeholder:text-zinc-400"
               />
               <button
                 type="submit"
                 className="px-3.5 py-1.5 rounded-xl bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] text-[11px] font-bold shadow-xs hover:opacity-90 shrink-0 cursor-pointer"
               >
-                Tạo
+                {t('create', 'Tạo')}
               </button>
             </form>
           </div>
@@ -196,11 +198,11 @@ export default function AvatarPickerModal({ isOpen, onClose, currentPhotoURL, on
         {/* Category Tabs */}
         <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#edebe4]/60 dark:bg-[#212129] border border-[#dedbd0] dark:border-[#2e2e38] overflow-x-auto">
           {[
-            { id: 'all', label: 'Tất cả' },
-            { id: 'male', label: 'Nam' },
-            { id: 'female', label: 'Nữ' },
-            { id: 'cool', label: 'Cá tính' },
-            { id: 'cute', label: 'Ngộ nghĩnh' }
+            { id: 'all', label: t('all', 'Tất cả') },
+            { id: 'male', label: t('male', 'Nam') },
+            { id: 'female', label: t('female', 'Nữ') },
+            { id: 'cool', label: t('cool', 'Cá tính') },
+            { id: 'cute', label: t('cute', 'Ngộ nghĩnh') }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -233,7 +235,7 @@ export default function AvatarPickerModal({ isOpen, onClose, currentPhotoURL, on
                   onSelectAvatar(getDicebearUrl(seed));
                   onClose();
                 }}
-                title={`Chọn ${seed} (Nhấp đúp để chọn ngay)`}
+                title={isEn ? `Select ${seed} (Double click to apply)` : `Chọn ${seed} (Nhấp đúp để chọn ngay)`}
                 className={`group relative p-2 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer ${
                   isSelected
                     ? 'bg-amber-100 dark:bg-amber-950/70 ring-2 ring-amber-500 shadow-sm scale-105'

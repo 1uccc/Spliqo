@@ -41,19 +41,19 @@ export default function TripOverviewTab({
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-extrabold text-[#18181b] dark:text-white">
-                  Vòng xoay may mắn 🎡
+                  {t('luckyWheelCardTitle', 'Vòng xoay may mắn 🎡')}
                 </span>
                 <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
-                  Game
+                  {t('gameTag', 'Game')}
                 </span>
               </div>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                Ai trả chầu cafe, trà sữa hôm nay? Quay ngay!
+                {t('luckyWheelCardDesc', 'Ai trả chầu cafe, trà sữa hôm nay? Quay ngay!')}
               </p>
             </div>
           </div>
           <span className="text-xs font-bold text-amber-600 dark:text-amber-400 shrink-0 relative z-10 group-hover:translate-x-0.5 transition-transform">
-            Chơi →
+            {t('playBtn', 'Chơi →')}
           </span>
         </div>
 
@@ -70,19 +70,19 @@ export default function TripOverviewTab({
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-black text-[#18181b] dark:text-white uppercase tracking-tight">
-                  Spliqo Wrapped 📊
+                  {t('wrappedCardTitle', 'Spliqo Wrapped 📊')}
                 </span>
                 <span className="text-[10px] font-black px-1.5 py-0.2 rounded-md bg-[#ff5400] text-white">
                   NEO-RETRO
                 </span>
               </div>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                Ký ức tài chính, đại gia chi bạo & thẻ Story
+                {t('wrappedCardDesc', 'Ký ức tài chính, đại gia chi bạo & thẻ Story')}
               </p>
             </div>
           </div>
           <span className="text-xs font-black text-[#ff5400] shrink-0 relative z-10 group-hover:translate-x-0.5 transition-transform">
-            Xem →
+            {t('viewBtn', 'Xem →')}
           </span>
         </div>
       </div>
@@ -191,10 +191,10 @@ export default function TripOverviewTab({
                             ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-300/30 dark:border-emerald-500/30'
                             : isDebtor
                             ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-300/30 dark:border-rose-500/30'
-                            : 'bg-[#f4f3ec] dark:bg-white/10 text-slate-600 dark:text-zinc-300 border border-[#e6e4dc] dark:border-white/10'
+                            : 'bg-[#f4f3ec] dark:bg-zinc-800/80 text-slate-600 dark:text-zinc-300 border border-[#e6e4dc] dark:border-zinc-700/60'
                         }`}
                       >
-                        {isCreditor ? `+${formatVND(m.balance)}` : isDebtor ? `-${formatVND(Math.abs(m.balance))}` : '0đ (Cân bằng)'}
+                        {isCreditor ? `+${formatVND(m.balance)}` : isDebtor ? `-${formatVND(Math.abs(m.balance))}` : `0đ (${t('balancedShort', 'Cân bằng')})`}
                       </span>
                     </td>
                   </tr>

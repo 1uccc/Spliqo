@@ -3,10 +3,12 @@ import { createPortal } from 'react-dom';
 import { Trash2, AlertTriangle, Info, X } from 'lucide-react';
 
 import { lockBodyScroll, unlockBodyScroll } from '../utils/scrollLock';
+import { useLanguage } from './LanguageContext';
 
 const ConfirmContext = createContext(null);
 
 export function ConfirmProvider({ children }) {
+  const { isEn } = useLanguage();
   const [config, setConfig] = useState({
     isOpen: false,
     title: '',
@@ -22,17 +24,24 @@ export function ConfirmProvider({ children }) {
   const confirm = useCallback((options = {}) => {
     return new Promise((resolve) => {
       resolverRef.current = resolve;
+      const defaultTitle = isEn ? 'Confirm Action' : 'Xác nhận thao tác';
+      const defaultMessage = isEn ? 'Are you sure you want to proceed with this action?' : 'Bạn có chắc chắn muốn thực hiện thao tác này?';
+      const defaultConfirm = options.type === 'danger' || options.type === undefined 
+        ? (isEn ? 'Confirm Delete' : 'Xác nhận xóa') 
+        : (isEn ? 'Confirm' : 'Xác nhận');
+      const defaultCancel = isEn ? 'Cancel' : 'Hủy bỏ';
+
       setConfig({
         isOpen: true,
-        title: options.title || 'Xác nhận thao tác',
-        message: options.message || 'Bạn có chắc chắn muốn thực hiện thao tác này?',
-        confirmText: options.confirmText || (options.type === 'danger' || options.type === undefined ? 'Xác nhận xóa' : 'Xác nhận'),
-        cancelText: options.cancelText || 'Hủy bỏ',
+        title: options.title || defaultTitle,
+        message: options.message || defaultMessage,
+        confirmText: options.confirmText || defaultConfirm,
+        cancelText: options.cancelText || defaultCancel,
         type: options.type || 'danger',
         icon: options.icon || null,
       });
     });
-  }, []);
+  }, [isEn]);
 
   const handleConfirm = useCallback(() => {
     resolverRef.current?.(true);

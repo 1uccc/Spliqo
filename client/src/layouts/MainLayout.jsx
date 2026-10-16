@@ -37,19 +37,19 @@ import {
   WifiOff
 } from 'lucide-react';
 
-function formatTimeAgo(isoString) {
+function formatTimeAgo(isoString, isEn = false) {
   if (!isoString) return '';
   const now = new Date();
   const date = new Date(isoString);
   const diffSec = Math.floor((now - date) / 1000);
-  if (diffSec < 60) return 'Vừa xong';
+  if (diffSec < 60) return isEn ? 'Just now' : 'Vừa xong';
   const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return `${diffMin} phút trước`;
+  if (diffMin < 60) return isEn ? `${diffMin} min ago` : `${diffMin} phút trước`;
   const diffHours = Math.floor(diffMin / 60);
-  if (diffHours < 24) return `${diffHours} giờ trước`;
+  if (diffHours < 24) return isEn ? `${diffHours} hr ago` : `${diffHours} giờ trước`;
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays} ngày trước`;
-  return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+  if (diffDays < 7) return isEn ? `${diffDays} days ago` : `${diffDays} ngày trước`;
+  return date.toLocaleDateString(isEn ? 'en-US' : 'vi-VN', { day: '2-digit', month: '2-digit' });
 }
 
 function getNotificationIcon(type) {
@@ -98,7 +98,7 @@ function getNotificationIcon(type) {
 export default function MainLayout({ onOpenAddExpense }) {
   const { currentUser, logout } = useAuth();
   const { isDark, setDarkMode } = useTheme();
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage, t, isEn } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications();
@@ -378,7 +378,7 @@ export default function MainLayout({ onOpenAddExpense }) {
                             <span>{t('notifications', 'Thông báo')}</span>
                             {unreadCount > 0 && (
                               <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                                {unreadCount} mới
+                                {unreadCount} {t('newBadge', 'mới')}
                               </span>
                             )}
                           </div>
@@ -391,10 +391,10 @@ export default function MainLayout({ onOpenAddExpense }) {
                             type="button"
                             onClick={markAllAsRead}
                             className="text-[11px] font-semibold text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white flex items-center gap-1 px-2 py-1 rounded-full hover:bg-[#edebe4] dark:hover:bg-[#252530] transition-colors cursor-pointer"
-                            title="Đánh dấu tất cả đã đọc"
+                            title={t('markAllAsReadTooltip', 'Đánh dấu tất cả đã đọc')}
                           >
                             <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
-                            <span className="hidden sm:inline">Đã đọc tất cả</span>
+                            <span className="hidden sm:inline">{t('markAllAsRead', 'Đã đọc tất cả')}</span>
                           </button>
                         )}
                         <button
@@ -418,7 +418,7 @@ export default function MainLayout({ onOpenAddExpense }) {
                             : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
                         }`}
                       >
-                        Tất cả ({notifications.length})
+                        {t('allTab', 'Tất cả')} ({notifications.length})
                       </button>
                       <button
                         type="button"
@@ -429,7 +429,7 @@ export default function MainLayout({ onOpenAddExpense }) {
                             : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
                         }`}
                       >
-                        Chưa đọc ({unreadCount})
+                        {t('unreadTab', 'Chưa đọc')} ({unreadCount})
                       </button>
                     </div>
 
@@ -441,10 +441,10 @@ export default function MainLayout({ onOpenAddExpense }) {
                             <BellOff className="w-5 h-5" />
                           </div>
                           <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
-                            {notifTab === 'UNREAD' ? 'Không có thông báo chưa đọc nào' : 'Bạn chưa có thông báo nào'}
+                            {notifTab === 'UNREAD' ? t('noUnreadNotifications', 'Không có thông báo chưa đọc nào') : t('noNotificationsYet', 'Bạn chưa có thông báo nào')}
                           </p>
                           <p className="text-[11px] text-zinc-400 max-w-[220px] mx-auto">
-                            Khi có chi tiêu mới, mời chuyến đi hoặc cập nhật thanh toán, thông báo sẽ hiển thị tại đây.
+                            {t('notificationsEmptyDesc', 'Khi có chi tiêu mới, mời chuyến đi hoặc cập nhật thanh toán, thông báo sẽ hiển thị tại đây.')}
                           </p>
                         </div>
                       ) : (
@@ -496,7 +496,7 @@ export default function MainLayout({ onOpenAddExpense }) {
                                   {n.message}
                                 </p>
                                 <span className="text-[10px] font-medium text-zinc-400 mt-1 block">
-                                  {formatTimeAgo(n.createdAt)}
+                                  {formatTimeAgo(n.createdAt, isEn)}
                                 </span>
                               </div>
 
@@ -512,7 +512,7 @@ export default function MainLayout({ onOpenAddExpense }) {
                                     deleteNotification(n.id);
                                   }}
                                   className="opacity-0 group-hover:opacity-100 p-1 text-zinc-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer"
-                                  title="Xóa thông báo này"
+                                  title={isEn ? 'Delete notification' : 'Xóa thông báo này'}
                                 >
                                   <Trash2 className="w-3 h-3" />
                                 </button>
@@ -530,20 +530,20 @@ export default function MainLayout({ onOpenAddExpense }) {
                           type="button"
                           onClick={async () => {
                             const ok = await confirm({
-                              title: 'Xóa tất cả thông báo?',
-                              message: 'Toàn bộ thông báo sẽ bị xóa vĩnh viễn khỏi tài khoản của bạn.',
-                              confirmText: 'Xác nhận xóa hết',
-                              cancelText: 'Hủy bỏ',
+                              title: t('clearAllConfirmTitle', 'Xóa tất cả thông báo?'),
+                              message: t('clearAllConfirmMessage', 'Toàn bộ thông báo sẽ bị xóa vĩnh viễn khỏi tài khoản của bạn.'),
+                              confirmText: t('confirmClearAll', 'Xác nhận xóa hết'),
+                              cancelText: t('cancel', 'Hủy bỏ'),
                               type: 'danger'
                             });
                             if (ok) clearAll();
                           }}
                           className="text-zinc-400 hover:text-rose-600 font-semibold transition-colors cursor-pointer py-1"
                         >
-                          Xóa tất cả thông báo
+                          {t('clearAllNotifications', 'Xóa tất cả thông báo')}
                         </button>
                         <span className="text-zinc-400 font-medium">
-                          {notifications.length} thông báo
+                          {notifications.length} {t('notificationCount', 'thông báo')}
                         </span>
                       </div>
                     )}
