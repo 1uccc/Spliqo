@@ -139,16 +139,21 @@ export default function ExpenseFormModal({
                   key={c.code}
                   type="button"
                   onClick={() => {
+                    if (c.code === expCurrency) return;
                     setExpCurrency(c.code);
+                    const currentVnd = Number(expAmount) || (Number(expOriginalAmount) * (Number(expExchangeRate) || 1)) || 0;
                     if (c.code === 'VND') {
                       setExpExchangeRate(1);
-                      if (expOriginalAmount) {
-                        setExpAmount(expOriginalAmount);
-                      }
+                      const finalVnd = currentVnd > 0 ? String(Math.round(currentVnd)) : '';
+                      setExpAmount(finalVnd);
+                      setExpOriginalAmount(finalVnd);
                     } else {
-                      setExpExchangeRate(c.defaultRate);
-                      if (expOriginalAmount) {
-                        setExpAmount(Math.round(Number(expOriginalAmount) * c.defaultRate));
+                      const rate = c.defaultRate || 1;
+                      setExpExchangeRate(rate);
+                      if (currentVnd > 0) {
+                        const foreignVal = Math.round((currentVnd / rate) * 100) / 100;
+                        setExpOriginalAmount(String(foreignVal));
+                        setExpAmount(String(Math.round(foreignVal * rate)));
                       }
                     }
                   }}
@@ -176,7 +181,7 @@ export default function ExpenseFormModal({
               <input
                 type="number"
                 required
-                step={expCurrency === 'VND' ? '1000' : 'any'}
+                step="any"
                 min={expCurrency === 'VND' ? '1' : '0.01'}
                 placeholder="0"
                 value={expCurrency === 'VND' ? expAmount : expOriginalAmount}
@@ -197,6 +202,53 @@ export default function ExpenseFormModal({
                 {getCurrencyInfo(expCurrency).symbol}
               </span>
             </div>
+
+            {/* Live formatted VND helper text */}
+            {expCurrency === 'VND' && Number(expAmount) > 0 && (
+              <div className="mt-1 flex items-center justify-between text-[11px] px-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                <span>Quy đổi:</span>
+                <span>= {formatVND(expAmount)}</span>
+              </div>
+            )}
+
+            {/* Quick VND shortcuts (+10k, +50k, +100k, +200k, +500k, Xóa) */}
+            {expCurrency === 'VND' && (
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                {[
+                  { label: '+10k', val: 10000 },
+                  { label: '+50k', val: 50000 },
+                  { label: '+100k', val: 100000 },
+                  { label: '+200k', val: 200000 },
+                  { label: '+500k', val: 500000 },
+                ].map((chip) => (
+                  <button
+                    key={chip.label}
+                    type="button"
+                    onClick={() => {
+                      const current = Number(expAmount) || 0;
+                      const next = current + chip.val;
+                      setExpAmount(String(next));
+                      setExpOriginalAmount(String(next));
+                    }}
+                    className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[#f4f3ec] dark:bg-[#252532] text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-[#323242] transition-colors border border-[#e6e4dc] dark:border-[#32323e] cursor-pointer"
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+                {Number(expAmount) > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setExpAmount('');
+                      setExpOriginalAmount('');
+                    }}
+                    className="px-1.5 py-0.5 rounded-lg text-[10px] font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                  >
+                    {t('clear', 'Xóa')}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           <div>
@@ -317,7 +369,19 @@ export default function ExpenseFormModal({
 
             <button
               type="button"
-              onClick={() => setExpSplitType('custom')}
+              onClick={() => {
+                setExpSplitType('custom');
+                if ((!expIndividualAmounts || Object.keys(expIndividualAmounts).length === 0) && expParticipants.length > 0 && Number(expAmount) > 0) {
+                  const num = Math.round(Number(expAmount) || 0);
+                  const base = Math.floor(num / expParticipants.length);
+                  const rem = num % expParticipants.length;
+                  const initial = {};
+                  expParticipants.forEach((pid, idx) => {
+                    initial[pid] = base + (idx < rem ? 1 : 0);
+                  });
+                  setExpIndividualAmounts(initial);
+                }
+              }}
               className={`py-2 px-3 rounded-full text-xs font-bold border transition-all cursor-pointer ${
                 expSplitType === 'custom'
                   ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] border-[#18181b] dark:border-white shadow-xs'
@@ -339,7 +403,27 @@ export default function ExpenseFormModal({
           ) : (
             <div className="space-y-2 p-3 rounded-2xl bg-[#f4f3ec] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2e2e38]">
               <div className="flex items-center justify-between text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2">
-                <span>{t('enterCustomIndividualAmounts', 'Nhập số tiền riêng cho từng người:')}</span>
+                <div className="flex items-center gap-2">
+                  <span>{t('enterCustomIndividualAmounts', 'Số tiền từng người:')}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const num = Math.round(Number(expAmount) || 0);
+                      if (num > 0 && expParticipants.length > 0) {
+                        const base = Math.floor(num / expParticipants.length);
+                        const rem = num % expParticipants.length;
+                        const initial = {};
+                        expParticipants.forEach((pid, idx) => {
+                          initial[pid] = base + (idx < rem ? 1 : 0);
+                        });
+                        setExpIndividualAmounts(initial);
+                      }
+                    }}
+                    className="text-[10px] font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white underline cursor-pointer"
+                  >
+                    (Chia đều lại)
+                  </button>
+                </div>
                 <span
                   className={
                     liveShares?.remaining === 0
@@ -364,6 +448,8 @@ export default function ExpenseFormModal({
                       <input
                         type="number"
                         placeholder="0"
+                        min="0"
+                        step="any"
                         value={expIndividualAmounts[userId] || ''}
                         onChange={(e) => {
                           const val = e.target.value;

@@ -6,6 +6,8 @@ import { useToast } from '../contexts/ToastContext';
 import api from '../services/api';
 import StatCard from '../components/StatCard';
 import Modal from '../components/Modal';
+import TripCard from '../components/trip/TripCard';
+import InviteTripModal from '../components/InviteTripModal';
 import { formatVND } from '../services/calculation';
 import { 
   Plus, 
@@ -13,13 +15,10 @@ import {
   Compass, 
   TrendingDown, 
   TrendingUp, 
-  Users, 
-  Receipt, 
-  Check, 
   Loader2, 
   Sparkles,
-  Info,
-  Flag
+  Flag,
+  ArrowRight
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -31,14 +30,15 @@ export default function DashboardPage() {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ totalTrips: 0, youOwe: 0, youWillReceive: 0 });
-  const [activeTab, setActiveTab] = useState('ALL'); // ALL | ACTIVE | SETTLEMENT
+  const [activeTab, setActiveTab] = useState('ALL'); // ALL | SETTLEMENT
 
   // Modals state
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [joinModalOpen, setJoinModalOpen] = useState(false);
+  const [selectedTripForInvite, setSelectedTripForInvite] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Create Trip form - lazy initial state to preserve function purity
+  // Create Trip form
   const [tripName, setTripName] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState(() => new Date().toISOString().split('T')[0]);
@@ -50,7 +50,7 @@ export default function DashboardPage() {
   const fetchTripsAndStats = useCallback(async () => {
     try {
       setLoading(true);
-      // Optimized 2-request aggregation: Replaces N+1 loop with dedicated backend overview endpoint
+      // Optimized 2-request aggregation
       const [tripsData, overview] = await Promise.all([
         api.get('/trips'),
         api.get('/settlements/overview').catch(() => null)
@@ -133,44 +133,44 @@ export default function DashboardPage() {
     }
   };
 
-  // Filter trips based on active tactile tab
-  const filteredTrips = trips.filter(t => {
-    if (activeTab === 'ACTIVE') return t.status !== 'COMPLETED' && t.status !== 'ARCHIVED';
-    if (activeTab === 'SETTLEMENT') return t.status !== 'ARCHIVED';
-    return true;
+  // Requirement: Completed trips are HIDDEN from Dashboard, only ongoing trips are shown
+  const ongoingTrips = trips.filter(t => t.status !== 'COMPLETED' && t.status !== 'ARCHIVED');
+  const completedTripsCount = trips.filter(t => t.status === 'COMPLETED').length;
+
+  // Requirement: Prioritize ongoing trips by newest first
+  const sortedOngoingTrips = [...ongoingTrips].sort((a, b) => {
+    const dateA = new Date(a.startDate || a.createdAt || 0).getTime();
+    const dateB = new Date(b.startDate || b.createdAt || 0).getTime();
+    if (dateB !== dateA) return dateB - dateA;
+    return (b.id || '').localeCompare(a.id || '');
+  });
+
+  const filteredTrips = sortedOngoingTrips.filter(t => {
+    if (activeTab === 'SETTLEMENT') {
+      return (t.totalExpense || 0) > 0 || (t.expenseCount || 0) > 0;
+    }
+    return true; // 'ALL'
   });
 
   return (
     <div className="space-y-6 animate-fade-in text-[#18181b]">
       
-      {/* 1. Segmented Tactile Tab Bar (Exact match to reference design!) */}
+      {/* 1. Segmented Tactile Tab Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1">
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 w-full md:w-auto max-w-full shrink-0 flex-nowrap">
-          {/* Tab 1: All trips */}
+          {/* Tab 1: Ongoing trips */}
           <button
             onClick={() => setActiveTab('ALL')}
             className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'ALL' ? 'active-purple' : ''}`}
           >
-            <Compass className="w-4 h-4 text-zinc-500 shrink-0" />
-            <span className="whitespace-nowrap shrink-0">{t('allTrips', 'Tất cả chuyến đi')}</span>
-            <span className="tactile-badge w-5 h-5 rounded-full bg-white/80 dark:bg-white/15 text-[11px] font-bold flex items-center justify-center border border-black/5 dark:border-white/10 shrink-0 leading-none dark:text-white">
-              {trips.length}
-            </span>
-          </button>
-
-          {/* Tab 2: Active */}
-          <button
-            onClick={() => setActiveTab('ACTIVE')}
-            className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'ACTIVE' ? 'active-purple' : ''}`}
-          >
             <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
-            <span className="whitespace-nowrap shrink-0">{t('active', 'Đang diễn ra')}</span>
+            <span className="whitespace-nowrap shrink-0">{t('activeTrips', 'Đang diễn ra')}</span>
             <span className="tactile-badge w-5 h-5 rounded-full bg-white/80 dark:bg-white/15 text-[11px] font-bold flex items-center justify-center border border-black/5 dark:border-white/10 shrink-0 leading-none dark:text-white">
-              {trips.filter(t => t.status !== 'COMPLETED' && t.status !== 'ARCHIVED').length}
+              {sortedOngoingTrips.length}
             </span>
           </button>
 
-          {/* Tab 3: Need settlement */}
+          {/* Tab 2: Need settlement */}
           <button
             onClick={() => setActiveTab('SETTLEMENT')}
             className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'SETTLEMENT' ? 'active-purple' : ''}`}
@@ -178,20 +178,36 @@ export default function DashboardPage() {
             <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span>
             <span className="whitespace-nowrap shrink-0">{t('needSettlement', 'Chờ quyết toán')}</span>
             <span className="tactile-badge w-5 h-5 rounded-full bg-purple-200/80 dark:bg-purple-800/80 text-purple-900 dark:text-purple-100 text-[11px] font-bold flex items-center justify-center shrink-0 leading-none">
-              {trips.filter(t => t.status !== 'COMPLETED').length}
+              {sortedOngoingTrips.filter(t => (t.totalExpense || 0) > 0 || (t.expenseCount || 0) > 0).length}
             </span>
           </button>
+
+          {/* Link to Completed Trips in MyTrips */}
+          {completedTripsCount > 0 && (
+            <Link
+              to="/trips"
+              className="tactile-tab shrink-0 whitespace-nowrap hover:text-emerald-700 dark:hover:text-emerald-300 group border border-dashed border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-50/50 dark:bg-emerald-950/20"
+              title="Xem các chuyến đi đã chốt sổ trong mục Chuyến đi"
+            >
+              <Flag className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="whitespace-nowrap shrink-0 text-emerald-800 dark:text-emerald-300 font-semibold">{t('completedTrips', 'Đã chốt sổ')}</span>
+              <span className="tactile-badge w-5 h-5 rounded-full bg-emerald-200/80 dark:bg-emerald-900/80 text-emerald-900 dark:text-emerald-200 text-[11px] font-bold flex items-center justify-center shrink-0 leading-none">
+                {completedTripsCount}
+              </span>
+              <ArrowRight className="w-3 h-3 text-emerald-600 dark:text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          )}
         </div>
       </div>
 
       {/* 2. Top Stats Overview (Tactile Bento Cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
-          title={t('totalTrips', 'Tổng chuyến đi')}
-          value={stats.totalTrips}
+          title={t('activeTripsTitle', 'Chuyến đi hoạt động')}
+          value={sortedOngoingTrips.length}
           icon={Compass}
           color="slate"
-          subtitle={t('yourGroupsAndActivities', 'Các nhóm & hoạt động của bạn')}
+          subtitle={completedTripsCount > 0 ? `${completedTripsCount} chuyến đã chốt sổ (xem trong mục Chuyến đi)` : t('yourGroupsAndActivities', 'Các nhóm & hoạt động của bạn')}
         />
 
         <StatCard
@@ -215,17 +231,17 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-[#18181b] dark:text-white">
-            {t('activeTripsTitle', 'Cần bạn chú ý')}
+            {t('activeTripsSectionTitle', 'Chuyến đi đang diễn ra')}
           </h2>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-            {t('activeTripsSubtitle', 'Danh sách các chuyến đi và khoản chi tiêu nhóm đang được theo dõi trực tiếp')}
+            {t('activeTripsSubtitle', 'Chạm vào bất kỳ chuyến đi nào để xem chi tiết chi phí và danh sách thành viên')}
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setCreateModalOpen(true)}
-            className="tactile-btn-dark"
+            className="tactile-btn-dark cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>{t('createTrip', 'Tạo chuyến đi')}</span>
@@ -233,7 +249,7 @@ export default function DashboardPage() {
 
           <button
             onClick={() => setJoinModalOpen(true)}
-            className="tactile-btn-pill border border-[#e6e4dc] dark:border-[#32323e] dark:bg-[#24242d] dark:text-white dark:hover:bg-[#2e2e38]"
+            className="tactile-btn-pill border border-[#e6e4dc] dark:border-[#32323e] dark:bg-[#24242d] dark:text-white dark:hover:bg-[#2e2e38] cursor-pointer"
           >
             <LogIn className="w-4 h-4" />
             <span>{t('joinTrip', 'Nhập mã')}</span>
@@ -241,7 +257,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 4. Bento Cards Grid (3 Columns matching reference design) */}
+      {/* 4. Bento Cards Grid with distinct pastel themes */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {[1, 2, 3, 4, 5, 6].map((n) => (
@@ -253,109 +269,68 @@ export default function DashboardPage() {
           <div className="w-12 h-12 rounded-full bg-[#f4f3ec] dark:bg-[#252530] text-zinc-600 dark:text-zinc-400 mx-auto flex items-center justify-center">
             <Compass className="w-6 h-6" />
           </div>
-          <h3 className="font-bold text-[#18181b] dark:text-white text-base">{t('noTripsInCategory', 'Chưa có chuyến đi nào trong mục này')}</h3>
+          <h3 className="font-bold text-[#18181b] dark:text-white text-base">
+            {t('noActiveTripsTitle', 'Không có chuyến đi đang diễn ra')}
+          </h3>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
-            {t('noTripsInCategoryDesc', 'Bấm tạo chuyến đi mới để bắt đầu thêm hóa đơn và chia tiền tự động với bạn bè!')}
+            {completedTripsCount > 0 
+              ? `Bạn có ${completedTripsCount} chuyến đi đã chốt sổ trong mục Chuyến đi. Bấm tạo mới để bắt đầu chuyến đi tiếp theo!`
+              : t('noTripsInCategoryDesc', 'Bấm tạo chuyến đi mới để bắt đầu thêm hóa đơn và chia tiền tự động với bạn bè!')}
           </p>
-          <button
-            onClick={() => setCreateModalOpen(true)}
-            className="tactile-btn-dark mt-2"
-          >
-            <Plus className="w-4 h-4" /> {t('createTripNow', 'Tạo chuyến đi ngay')}
-          </button>
+          <div className="flex items-center justify-center gap-2 pt-1">
+            <button
+              onClick={() => setCreateModalOpen(true)}
+              className="tactile-btn-dark cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> {t('createTripNow', 'Tạo chuyến đi ngay')}
+            </button>
+            {completedTripsCount > 0 && (
+              <Link
+                to="/trips"
+                className="tactile-btn-pill cursor-pointer"
+              >
+                <Flag className="w-4 h-4 text-emerald-500" />
+                <span>Xem chuyến đã chốt</span>
+              </Link>
+            )}
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredTrips.slice(0, 6).map((trip) => {
-            const isCompleted = trip.status === 'COMPLETED';
-            return (
-              <div
-                key={trip.id}
-                className="tactile-card p-5 flex flex-col justify-between"
-              >
-                <div>
-                  {/* Card Header: Brand / Avatar + Priority/Status Badge */}
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-full bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] flex items-center justify-center font-black text-xs shadow-xs">
-                        {trip.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold text-[#18181b] dark:text-white line-clamp-1">
-                          {trip.name}
-                        </span>
-                        <span className="text-[10px] font-mono text-zinc-400 dark:text-zinc-400">
-                          #{trip.tripCode}
-                        </span>
-                      </div>
-                    </div>
+          {filteredTrips.slice(0, 6).map((trip) => (
+            <TripCard
+              key={trip.id}
+              trip={trip}
+              onShare={setSelectedTripForInvite}
+              t={t}
+            />
+          ))}
+        </div>
+      )}
 
-                    {/* Status Badge */}
-                    <span
-                      className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
-                        isCompleted
-                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border dark:border-emerald-800/40'
-                          : 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 dark:border dark:border-purple-800/40'
-                      }`}
-                    >
-                      <Flag className="w-3 h-3" />
-                      {isCompleted ? t('completed', 'Đã chốt sổ') : t('needSettlement', 'Cần quyết toán')}
-                    </span>
-                  </div>
-
-                  {/* 2 Side-by-side Micro-Cards (Exact match to reference!) */}
-                  <div className="grid grid-cols-2 gap-2 my-3">
-                    <div className="tactile-chip p-2.5">
-                      <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 dark:text-zinc-400 mb-1">
-                        <Receipt className="w-3.5 h-3.5 text-zinc-400" />
-                        <span>{t('totalExpense', 'Tổng chi')}</span>
-                      </div>
-                      <div className="text-xs font-extrabold text-[#18181b] dark:text-white truncate">
-                        {formatVND(trip.totalExpense || 0)}
-                      </div>
-                    </div>
-
-                    <div className="tactile-chip p-2.5">
-                      <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 dark:text-zinc-400 mb-1">
-                        <Users className="w-3.5 h-3.5 text-zinc-400" />
-                        <span>{t('membersCount', 'Thành viên')}</span>
-                      </div>
-                      <div className="text-xs font-extrabold text-[#18181b] dark:text-white truncate">
-                        {trip.memberCount || 1} {t('membersUnit', 'người')} • {trip.expenseCount || 0} {t('expensesUnit', 'chi')}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Trip Title & Description */}
-                  <h3 className="font-bold text-sm text-[#18181b] dark:text-white line-clamp-1 mt-1">
-                    {trip.name}
-                  </h3>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2 min-h-[32px]">
-                    {trip.description || 'Chuyến đi cùng bạn bè, chia sẻ chi phí ăn uống và du lịch sòng phẳng.'}
-                  </p>
-                </div>
-
-                {/* Card Footer: Dual Pill Action Buttons (View details & Mark resolved) */}
-                <div className="mt-4 pt-3 border-t border-[#e6e4dc] dark:border-[#2e2e38] flex items-center justify-between gap-2">
-                  <Link
-                    to={`/trips/${trip.id}`}
-                    className="tactile-btn-pill flex-1 justify-center text-xs"
-                  >
-                    <Info className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
-                    <span>{t('viewDetails', 'Xem chi tiết')}</span>
-                  </Link>
-
-                  <Link
-                    to={`/trips/${trip.id}?tab=settlement`}
-                    className="tactile-btn-dark flex-1 justify-center text-xs"
-                  >
-                    <Check className="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600" />
-                    <span>{t('settleNow', 'Quyết toán')}</span>
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
+      {/* 5. Helpful Banner for Completed Trips */}
+      {completedTripsCount > 0 && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-3xl bg-white/70 dark:bg-[#1a1a20]/70 border border-[#e6e4dc] dark:border-[#2e2e38] shadow-2xs">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-2xl bg-emerald-100/80 dark:bg-emerald-950/70 border border-emerald-200/80 dark:border-emerald-800/60 flex items-center justify-center shrink-0">
+              <Flag className="w-4 h-4 text-emerald-700 dark:text-emerald-300" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-zinc-900 dark:text-white">
+                {completedTripsCount} chuyến đi đã chốt sổ thành công
+              </p>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                Chuyến đi đã chốt sổ được lưu trữ gọn gàng trong mục "Chuyến đi" để giữ Dashboard luôn tập trung vào các chuyến đang diễn ra.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/trips"
+            className="tactile-btn-pill text-xs font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 self-end sm:self-center shrink-0"
+          >
+            <span>{t('viewAllTrips', 'Xem tất cả chuyến đi')}</span>
+            <ArrowRight className="w-3.5 h-3.5 ml-1" />
+          </Link>
         </div>
       )}
 
@@ -481,6 +456,13 @@ export default function DashboardPage() {
           </p>
         </form>
       </Modal>
+
+      {/* Modal: Invite / Share Trip QR & Link */}
+      <InviteTripModal
+        isOpen={!!selectedTripForInvite}
+        onClose={() => setSelectedTripForInvite(null)}
+        trip={selectedTripForInvite}
+      />
     </div>
   );
 }

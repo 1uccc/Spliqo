@@ -31,8 +31,6 @@ import {
   Flame,
   Info,
   Globe,
-  Activity,
-  RefreshCw,
   Download,
   WifiOff
 } from 'lucide-react';
@@ -114,13 +112,6 @@ export default function MainLayout({ onOpenAddExpense }) {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [pendingQueueCount, setPendingQueueCount] = useState(0);
 
-  // Server Status & Ping Monitor
-  const [serverState, setServerState] = useState('checking'); // 'online' | 'waking' | 'offline' | 'checking'
-  const [latency, setLatency] = useState(null);
-  const [isChecking, setIsChecking] = useState(false);
-  const [lastChecked, setLastChecked] = useState(null);
-  const [serverStatusOpen, setServerStatusOpen] = useState(false);
-
   useEffect(() => {
     const handleBeforeInstall = (e) => {
       e.preventDefault();
@@ -166,45 +157,6 @@ export default function MainLayout({ onOpenAddExpense }) {
     }
     setDeferredPrompt(null);
   };
-
-  const checkServerHealth = useCallback(async () => {
-    setIsChecking(prevChecking => {
-      if (prevChecking) return true;
-      return true;
-    });
-
-    // If server does not reply in 2s, Render free-tier is sleeping and spinning up
-    const wakingTimer = setTimeout(() => {
-      setServerState('waking');
-    }, 2000);
-
-    const start = performance.now();
-    try {
-      await api.get('/health', { timeout: 45000 });
-      clearTimeout(wakingTimer);
-      const elapsed = Math.round(performance.now() - start);
-      setLatency(elapsed);
-      setServerState('online');
-      setLastChecked(new Date());
-    } catch {
-      clearTimeout(wakingTimer);
-      const elapsed = Math.round(performance.now() - start);
-      setLatency(elapsed);
-      setServerState('offline');
-      setLastChecked(new Date());
-    } finally {
-      setIsChecking(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    checkServerHealth();
-    // Heartbeat every 45s keeps Render free tier awake while tab is active!
-    const interval = setInterval(() => {
-      checkServerHealth();
-    }, 45000);
-    return () => clearInterval(interval);
-  }, [checkServerHealth]);
 
   const filteredNotifs = notifTab === 'UNREAD' 
     ? notifications.filter(n => !n.read) 
@@ -348,169 +300,14 @@ export default function MainLayout({ onOpenAddExpense }) {
               </h1>
             </div>
 
-            {/* Right Tools: Server Status + (?) + (🔔) + User Profile Pill */}
+            {/* Right Tools: (?) + (🔔) + User Profile Pill */}
             <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-
-              {/* Server Status Indicator (Online / Waking / Sleep) */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setServerStatusOpen(!serverStatusOpen);
-                    setHelpOpen(false);
-                    setNotificationsOpen(false);
-                    setUserDropdownOpen(false);
-                  }}
-                  className="h-9 sm:h-10 px-2.5 sm:px-3 rounded-full bg-white dark:bg-[#24242b] hover:bg-zinc-50 dark:hover:bg-[#2e2e38] text-zinc-700 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white border border-[#dedbd0]/70 dark:border-[#32323c] flex items-center gap-1.5 sm:gap-2 shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer text-xs font-semibold"
-                  title={
-                    serverState === 'online'
-                      ? `Server Online (${latency ? latency + 'ms' : 'hoạt động tốt'})`
-                      : serverState === 'waking'
-                      ? 'Server đang thức dậy từ chế độ tạm nghỉ...'
-                      : serverState === 'offline'
-                      ? 'Mất kết nối tới Server'
-                      : 'Đang kiểm tra kết nối Server...'
-                  }
-                >
-                  {/* Status Indicator Dot with Radar Pulse */}
-                  <span className="relative flex h-2.5 w-2.5 shrink-0">
-                    {serverState === 'online' && (
-                      <>
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                      </>
-                    )}
-                    {serverState === 'waking' && (
-                      <>
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
-                      </>
-                    )}
-                    {serverState === 'offline' && (
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
-                    )}
-                    {serverState === 'checking' && (
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-zinc-400 animate-pulse"></span>
-                    )}
-                  </span>
-
-                  {/* Text Badge */}
-                  <span className="hidden sm:inline font-bold text-[11px] sm:text-xs">
-                    {serverState === 'online' && 'Online'}
-                    {serverState === 'waking' && 'Đang thức...'}
-                    {serverState === 'offline' && 'Offline'}
-                    {serverState === 'checking' && 'Kiểm tra...'}
-                  </span>
-
-                  {/* Latency on larger desktop */}
-                  {serverState === 'online' && latency && (
-                    <span className="hidden lg:inline text-[10px] text-zinc-400 font-normal">
-                      {latency}ms
-                    </span>
-                  )}
-                </button>
-
-                {/* Popover Card */}
-                {serverStatusOpen && (
-                  <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-[#18181f] rounded-3xl p-4 border border-[#dedbd0] dark:border-[#32323e] shadow-2xl z-50 text-xs animate-fade-in text-[#18181b] dark:text-zinc-100">
-                    {/* Header */}
-                    <div className="flex items-center justify-between pb-3 border-b border-[#e6e4dc] dark:border-[#2e2e38]">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] flex items-center justify-center shadow-xs">
-                          <Activity className="w-3.5 h-3.5" />
-                        </div>
-                        <div>
-                          <div className="font-bold text-sm text-[#18181b] dark:text-white">
-                            Trạng thái Máy chủ
-                          </div>
-                          <div className="text-[10px] text-zinc-400">
-                            Spliqo Cloud API Service
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* State Badge */}
-                      <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
-                        serverState === 'online'
-                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40'
-                          : serverState === 'waking'
-                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40'
-                          : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40'
-                      }`}>
-                        {serverState === 'online' && '🟢 Hoạt động'}
-                        {serverState === 'waking' && '🟡 Đang thức dậy'}
-                        {serverState === 'offline' && '🔴 Mất kết nối'}
-                        {serverState === 'checking' && '⚪ Đang đo...'}
-                      </span>
-                    </div>
-
-                    {/* Stats List */}
-                    <div className="py-3 space-y-2 text-[11px]">
-                      <div className="flex items-center justify-between">
-                        <span className="text-zinc-500 dark:text-zinc-400">Môi trường:</span>
-                        <span className="font-semibold text-zinc-900 dark:text-white">
-                          {import.meta.env.PROD ? 'Render Cloud' : 'Máy chủ cục bộ'}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-zinc-500 dark:text-zinc-400">Tốc độ phản hồi:</span>
-                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                          {latency ? `${latency} ms` : '--'}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-zinc-500 dark:text-zinc-400">Lần kiểm tra cuối:</span>
-                        <span className="text-zinc-700 dark:text-zinc-300">
-                          {lastChecked ? lastChecked.toLocaleTimeString() : 'Vừa xong'}
-                        </span>
-                      </div>
-
-                      {serverState === 'waking' && (
-                        <div className="p-2.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 text-amber-800 dark:text-amber-300 text-[11px] leading-relaxed">
-                          ⏳ <strong>Máy chủ đang thức giấc:</strong> Render Free Tier sẽ tự động ngủ sau 15 phút không có lượt truy cập. Khi bật lại sẽ mất khoảng 30–40 giây để khởi động xong. Vui lòng đợi trong giây lát!
-                        </div>
-                      )}
-
-                      {serverState === 'online' && (
-                        <div className="p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 text-emerald-800 dark:text-emerald-300 text-[11px] leading-relaxed">
-                          ✨ <strong>Máy chủ sẵn sàng:</strong> Toàn bộ dữ liệu chi tiêu, bạn bè và thanh toán VietQR đang được đồng bộ thời gian thực mượt mà.
-                        </div>
-                      )}
-
-                      {serverState === 'offline' && (
-                        <div className="p-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/50 text-rose-800 dark:text-rose-300 text-[11px] leading-relaxed">
-                          ⚠️ <strong>Chưa thể kết nối:</strong> Không thể kết nối tới máy chủ API. Vui lòng kiểm tra lại kết nối mạng hoặc thử bấm kiểm tra lại.
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Action button */}
-                    <div className="pt-2 border-t border-[#e6e4dc] dark:border-[#2e2e38] flex items-center justify-between">
-                      <span className="text-[10px] text-zinc-400">
-                        Tự động ping giữ thức
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => checkServerHealth()}
-                        disabled={isChecking}
-                        className="tactile-btn-pill text-[11px] font-bold px-3 py-1 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                      >
-                        <RefreshCw className={`w-3 h-3 ${isChecking ? 'animate-spin' : ''}`} />
-                        <span>{isChecking ? 'Đang ping...' : 'Kiểm tra ngay'}</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
 
               {/* Help (?) Circle Button - Hidden on mobile, visible on desktop */}
               <div className="hidden md:block relative">
                 <button
                   onClick={() => {
                     setHelpOpen(!helpOpen);
-                    setServerStatusOpen(false);
                     setNotificationsOpen(false);
                     setUserDropdownOpen(false);
                   }}

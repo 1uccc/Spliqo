@@ -414,7 +414,7 @@ export default function TripBudgetGauge({
               <input
                 type="number"
                 min="0"
-                step="10000"
+                step="any"
                 value={budgetAmount}
                 onChange={(e) => setBudgetAmount(e.target.value)}
                 placeholder={budgetType === 'per_person' ? 'Ví dụ: 3000000' : 'Ví dụ: 15000000'}

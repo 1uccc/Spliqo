@@ -4,18 +4,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import api from '../services/api';
-import { formatVND } from '../services/calculation';
 import {
   Compass,
   Search,
-  Users,
-  Receipt,
-  Plus,
-  Flag,
-  Info,
-  Check,
-  Share2
+  Plus
 } from 'lucide-react';
+import TripCard from '../components/trip/TripCard';
 import InviteTripModal from '../components/InviteTripModal';
 
 export default function MyTripsPage() {
@@ -45,6 +39,7 @@ export default function MyTripsPage() {
     fetchTrips();
   }, [fetchTrips, currentUser?.uid]);
 
+  // Filter based on status filter tabs and search query
   const filteredTrips = trips.filter((trip) => {
     const matchStatus =
       statusFilter === 'ALL' ||
@@ -57,6 +52,23 @@ export default function MyTripsPage() {
       trip.tripCode?.toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchStatus && matchQuery;
+  });
+
+  // Requirement: Prioritize ongoing trips at the top of the list!
+  const sortedTrips = [...filteredTrips].sort((a, b) => {
+    const aActive = a.status !== 'COMPLETED' && a.status !== 'ARCHIVED';
+    const bActive = b.status !== 'COMPLETED' && b.status !== 'ARCHIVED';
+
+    // 1. Ongoing trips first
+    if (aActive && !bActive) return -1;
+    if (!aActive && bActive) return 1;
+
+    // 2. Newest first within same status
+    const timeA = new Date(a.startDate || a.createdAt || 0).getTime();
+    const timeB = new Date(b.startDate || b.createdAt || 0).getTime();
+    if (timeB !== timeA) return timeB - timeA;
+
+    return (b.id || '').localeCompare(a.id || '');
   });
 
   const filterTabs = [
@@ -88,14 +100,14 @@ export default function MyTripsPage() {
             <span>{t('myTrips', 'Chuyến đi của tôi')}</span>
           </h2>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-            {t('myTripsSubtitle', 'Lịch sử toàn bộ các chuyến đi, hoạt động nhóm và sự kiện chia sẻ chi tiêu của bạn')}
+            {t('myTripsSubtitle', 'Chuyến đi đang diễn ra luôn được xếp ưu tiên đầu danh sách. Nhấn vào bất kỳ chuyến đi nào để xem chi tiết.')}
           </p>
         </div>
 
         <div className="flex items-center gap-2.5 self-start sm:self-center">
           <Link
             to="/dashboard"
-            className="tactile-btn-dark"
+            className="tactile-btn-dark cursor-pointer"
           >
             <Plus className="w-4 h-4" /> {t('createTrip', 'Tạo chuyến đi mới')}
           </Link>
@@ -128,7 +140,7 @@ export default function MyTripsPage() {
             placeholder={t('searchPlaceholder', 'Tìm theo tên, mã trip...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 rounded-full bg-white dark:bg-[#1f1f26] border border-[#e6e4dc] dark:border-[#2e2e38] text-xs text-[#18181b] dark:text-zinc-100 outline-none focus:border-zinc-900 transition-colors"
+            className="w-full pl-9 pr-3 py-1.5 rounded-full bg-white dark:bg-[#1f1f26] border border-[#e6e4dc] dark:border-[#2e2e38] text-xs text-[#18181b] dark:text-zinc-100 outline-none focus:border-zinc-900 transition-colors shadow-2xs"
           />
         </div>
       </div>
@@ -141,7 +153,7 @@ export default function MyTripsPage() {
               <div key={n} className="h-64 bg-white dark:bg-[#1f1f26] rounded-3xl border border-[#e6e4dc] dark:border-[#2e2e38] animate-pulse p-5" />
             ))}
           </div>
-        ) : filteredTrips.length === 0 ? (
+        ) : sortedTrips.length === 0 ? (
           <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#1a1a20] border border-[#e6e4dc] dark:border-[#2e2e38] shadow-xs space-y-3">
             <div className="w-12 h-12 rounded-full bg-[#f4f3ec] dark:bg-[#252530] text-zinc-500 mx-auto flex items-center justify-center">
               <Compass className="w-6 h-6" />
@@ -155,114 +167,19 @@ export default function MyTripsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredTrips.map((trip) => {
-              const isCompleted = trip.status === 'COMPLETED';
-              return (
-                <div
-                  key={trip.id}
-                  className="tactile-card p-5 flex flex-col justify-between"
-                >
-                  <div>
-                    {/* Card Header: Avatar + Status Badge */}
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-full bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] flex items-center justify-center font-bold text-xs shadow-xs">
-                          {trip.name?.charAt(0)?.toUpperCase() || 'T'}
-                        </div>
-                        <div>
-                          <span className="text-xs font-bold text-[#18181b] dark:text-zinc-100 line-clamp-1">
-                            {trip.name}
-                          </span>
-                          <span className="text-[10px] font-mono text-zinc-400">
-                            #{trip.tripCode}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
-                            isCompleted
-                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-                              : 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300'
-                          }`}
-                        >
-                          <Flag className="w-3 h-3" />
-                          {isCompleted ? t('completed', 'Đã chốt sổ') : t('active', 'Đang diễn ra')}
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setSelectedTripForInvite(trip);
-                          }}
-                          className="w-7 h-7 rounded-full flex items-center justify-center bg-[#f4f3ec] dark:bg-[#252530] hover:bg-amber-100 dark:hover:bg-amber-950/60 text-zinc-600 hover:text-amber-700 dark:text-zinc-300 dark:hover:text-amber-300 transition-all border border-[#dedbd0] dark:border-[#32323e] shadow-xs cursor-pointer"
-                          title="Mời bạn bè & khách bằng link hoặc mã QR"
-                        >
-                          <Share2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* 2 Micro-boxes */}
-                    <div className="grid grid-cols-2 gap-2 my-3">
-                      <div className="tactile-chip p-2.5">
-                        <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 dark:text-zinc-400 mb-1">
-                          <Receipt className="w-3.5 h-3.5 text-zinc-400" />
-                          <span>{t('totalExpense', 'Tổng chi')}</span>
-                        </div>
-                        <div className="text-xs font-extrabold text-[#18181b] dark:text-zinc-100 truncate">
-                          {formatVND(trip.totalExpense || 0)}
-                        </div>
-                      </div>
-
-                      <div className="tactile-chip p-2.5">
-                        <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 dark:text-zinc-400 mb-1">
-                          <Users className="w-3.5 h-3.5 text-zinc-400" />
-                          <span>{t('members', 'Thành viên')}</span>
-                        </div>
-                        <div className="text-xs font-extrabold text-[#18181b] dark:text-zinc-100 truncate">
-                          {trip.memberCount || 1} {t('memberShort', 'người')} • {trip.expenseCount || 0} {t('expenseShort', 'chi')}
-                        </div>
-                      </div>
-                    </div>
-
-                    <h3 className="font-bold text-sm text-[#18181b] dark:text-zinc-100 line-clamp-1 mt-1">
-                      {trip.name}
-                    </h3>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2 min-h-[32px]">
-                      {trip.description || t('defaultTripDesc', 'Chuyến đi cùng bạn bè, chia sẻ chi phí ăn uống và du lịch sòng phẳng.')}
-                    </p>
-                  </div>
-
-                  {/* Footer Buttons */}
-                  <div className="mt-4 pt-3 border-t border-[#e6e4dc] dark:border-[#2e2e38] flex items-center justify-between gap-2">
-                    <Link
-                      to={`/trips/${trip.id}`}
-                      className="tactile-btn-pill flex-1 justify-center text-xs"
-                    >
-                      <Info className="w-3.5 h-3.5 text-zinc-500" />
-                      <span>{t('viewDetails', 'Xem chi tiết')}</span>
-                    </Link>
-
-                    <Link
-                      to={`/trips/${trip.id}?tab=settlement`}
-                      className="tactile-btn-dark flex-1 justify-center text-xs"
-                    >
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>{t('settlement', 'Quyết toán')}</span>
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
+            {sortedTrips.map((trip) => (
+              <TripCard
+                key={trip.id}
+                trip={trip}
+                onShare={setSelectedTripForInvite}
+                t={t}
+              />
+            ))}
           </div>
         )}
       </div>
 
-      {/* Modal: Mời bằng link & QR */}
+      {/* Modal: Mời bạn bè bằng link & QR */}
       <InviteTripModal
         isOpen={!!selectedTripForInvite}
         onClose={() => setSelectedTripForInvite(null)}

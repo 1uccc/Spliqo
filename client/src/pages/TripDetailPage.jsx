@@ -592,20 +592,37 @@ export default function TripDetailPage() {
       mode === 'payer' 
         ? 'Chầu ăn uống / Cafe (Bao trọn) 👑' 
         : mode === 'lucky_free' 
-        ? 'Chầu ăn uống (Được khao) 🎁' 
+        ? 'Chầu ăn uống (Được khao 0đ) 🎁' 
         : 'Chầu cafe / trà sữa 🧋'
     );
     setExpAmount('');
     setExpCurrency('VND');
     setExpOriginalAmount('');
     setExpExchangeRate(1);
-    setExpPaidBy(winnerId);
-    setExpParticipants(members.map(m => m.userId || m.uid || m.id));
+
+    if (mode === 'lucky_free') {
+      // Winner is treated for free (0đ): participants are other members
+      const otherMembers = members.filter(m => (m.userId || m.uid || m.id) !== winnerId);
+      const otherIds = otherMembers.map(m => m.userId || m.uid || m.id);
+      setExpParticipants(otherIds.length > 0 ? otherIds : [winnerId]);
+      const myId = currentUser?.uid || currentUser?.userId || currentUser?.id;
+      const payerId = myId && myId !== winnerId ? myId : (otherIds[0] || winnerId);
+      setExpPaidBy(payerId);
+    } else if (mode === 'payer') {
+      // Winner pays 100% (bao trọn)
+      setExpPaidBy(winnerId);
+      setExpParticipants([winnerId]);
+    } else {
+      // Advance (Ứng trước): Winner pays, all members split equally
+      setExpPaidBy(winnerId);
+      setExpParticipants(members.map(m => m.userId || m.uid || m.id));
+    }
+
     setExpSplitType('equal');
     setExpIndividualAmounts({});
     setExpBillImageUrl('');
     setExpDate(new Date().toISOString().split('T')[0]);
-    setExpNote(`Quay từ Vòng xoay may mắn 🎲: ${winnerMember.displayName} được chọn!`);
+    setExpNote(`Quay từ Vòng xoay may mắn 🎲: ${winnerMember.displayName} được chọn (${mode === 'lucky_free' ? 'Được khao 0đ' : mode === 'payer' ? 'Bao trọn chầu' : 'Ứng tiền trước'})!`);
     setLuckyWheelModalOpen(false);
     setAddExpenseModalOpen(true);
   };

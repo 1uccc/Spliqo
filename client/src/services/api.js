@@ -13,6 +13,9 @@ const api = axios.create({
   },
 });
 
+let pendingCount = 0;
+let wakingTimer = null;
+
 // Interceptor to attach token and active user ID
 api.interceptors.request.use(
   (config) => {
@@ -27,14 +30,39 @@ api.interceptors.request.use(
       config.headers['x-user-id'] = activeUserId;
     }
 
+    pendingCount++;
+    if (pendingCount === 1 && typeof window !== 'undefined' && navigator.onLine) {
+      wakingTimer = setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('spliqo:server-waking'));
+      }, 2000);
+    }
+
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    pendingCount = Math.max(0, pendingCount - 1);
+    return Promise.reject(error);
+  }
 );
 
 api.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    pendingCount = Math.max(0, pendingCount - 1);
+    if (pendingCount === 0 && wakingTimer) {
+      clearTimeout(wakingTimer);
+      wakingTimer = null;
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('spliqo:server-ready'));
+      }
+    }
+    return response.data;
+  },
   (error) => {
+    pendingCount = Math.max(0, pendingCount - 1);
+    if (pendingCount === 0 && wakingTimer) {
+      clearTimeout(wakingTimer);
+      wakingTimer = null;
+    }
     const message = error.response?.data?.error || error.message || 'Lỗi mạng hoặc máy chủ không phản hồi';
     return Promise.reject(new Error(message));
   }

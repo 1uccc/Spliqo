@@ -6,6 +6,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import MainLayout from './layouts/MainLayout';
+import ServerWakeBanner from './components/common/ServerWakeBanner';
 
 // Lazy load pages for efficient mobile code splitting
 const AuthPage = lazy(() => import('./pages/AuthPage'));
@@ -84,6 +85,7 @@ export default function App() {
           <AuthProvider>
             <ToastProvider>
               <NotificationProvider>
+                <ServerWakeBanner />
                 <AppRoutes />
               </NotificationProvider>
             </ToastProvider>
