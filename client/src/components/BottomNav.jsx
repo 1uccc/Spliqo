@@ -68,7 +68,7 @@ export default function BottomNav() {
           }`}
         >
           <Home className="w-4 h-4 shrink-0 mb-0.5" />
-          <span className="truncate max-w-full text-center leading-tight">{t('dashboardShort', 'Dashboard')}</span>
+          <span className="truncate max-w-full text-center leading-tight">{t('dashboardShort', 'Tổng quan')}</span>
         </Link>
 
         {/* 2. Chuyến đi */}

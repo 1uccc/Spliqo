@@ -51,7 +51,21 @@ export async function removeMember(req, res) {
       });
     }
 
+    const targetUser = dbService.getUser(targetUserId);
     const updatedMembers = dbService.removeMemberFromTrip(tripId, targetUserId);
+
+    dbService.addTripActivity(tripId, {
+      id: `act_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      type: 'MEMBER_REMOVED',
+      action: 'REMOVE',
+      targetUserId,
+      targetUserName: targetUser?.displayName || 'Thành viên',
+      authorId: currentUserId,
+      authorName: req.user?.displayName || 'Thành viên',
+      authorPhotoURL: req.user?.photoURL || '',
+      timestamp: new Date().toISOString(),
+      description: `Đã xóa thành viên "${targetUser?.displayName || 'Thành viên'}" khỏi chuyến đi`
+    });
 
     try {
       realtimeService.broadcastToTrip(tripId, 'MEMBER_UPDATED', {

@@ -320,7 +320,7 @@ export default function DashboardPage() {
                 {completedTripsCount} chuyến đi đã chốt sổ thành công
               </p>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                Chuyến đi đã chốt sổ được lưu trữ gọn gàng trong mục "Chuyến đi" để giữ Dashboard luôn tập trung vào các chuyến đang diễn ra.
+                Chuyến đi đã chốt sổ được lưu trữ gọn gàng trong mục "Chuyến đi" để giữ Trang tổng quan luôn tập trung vào các chuyến đang diễn ra.
               </p>
             </div>
           </div>

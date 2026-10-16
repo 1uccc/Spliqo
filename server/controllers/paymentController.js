@@ -34,6 +34,24 @@ export async function markAsPaid(req, res) {
       note: note || '',
     });
 
+    const payerName = req.user.displayName || 'Một thành viên';
+    const recipientUser = dbService.getUser(existing?.toUserId || toUserId);
+    const recipientName = recipientUser?.displayName || 'Người nhận';
+    const formattedAmount = (Math.round(Number(amount || existing?.amount) || 0)).toLocaleString('vi-VN') + 'đ';
+
+    dbService.addTripActivity(tripId, {
+      id: `act_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      type: 'SETTLEMENT_PAID',
+      action: 'SETTLE_PAY',
+      settlementId,
+      amount: updated.amount,
+      authorId: currentUserId,
+      authorName: payerName,
+      authorPhotoURL: req.user.photoURL || '',
+      timestamp: updated.paidAt,
+      description: `${payerName} đã đánh dấu chuyển khoản ${formattedAmount} cho ${recipientName}`
+    });
+
     // Notify the recipient about the payment awaiting confirmation
     const targetRecipientId = existing?.toUserId || toUserId;
     if (targetRecipientId && targetRecipientId !== currentUserId) {
@@ -104,6 +122,24 @@ export async function confirmPayment(req, res) {
     if (!updated) {
       return res.status(404).json({ error: 'Không tìm thấy khoản thanh toán để xác nhận.' });
     }
+
+    const payerUser = dbService.getUser(updated.fromUserId);
+    const payerName = payerUser?.displayName || 'Người chuyển';
+    const receiverName = req.user.displayName || 'Người nhận';
+    const formattedAmount = (Math.round(Number(updated.amount) || 0)).toLocaleString('vi-VN') + 'đ';
+
+    dbService.addTripActivity(tripId, {
+      id: `act_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      type: 'SETTLEMENT_CONFIRMED',
+      action: 'SETTLE_CONFIRM',
+      settlementId,
+      amount: updated.amount,
+      authorId: currentUserId,
+      authorName: receiverName,
+      authorPhotoURL: req.user.photoURL || '',
+      timestamp: new Date().toISOString(),
+      description: `${receiverName} đã xác nhận nhận đủ ${formattedAmount} từ ${payerName}`
+    });
 
     // Notify the payer that payment was confirmed
     const payerId = updated.fromUserId;

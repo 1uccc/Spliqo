@@ -743,5 +743,17 @@ html.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* Server Wake Banner Safe Area Positioning for Mobile (iOS Notch / Dynamic Island) & Desktop */
+.server-wake-banner-pos {
+  top: max(calc(env(safe-area-inset-top, 0px) + 12px), 54px);
+}
+
+@media (min-width: 640px) {
+  .server-wake-banner-pos {
+    top: 20px;
+  }
+}
+
+
 
 

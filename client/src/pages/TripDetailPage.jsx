@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import api from '../services/api';
 import { formatVND, calculateLiveShares } from '../services/calculation';
@@ -22,6 +23,7 @@ import InviteFriendsModal from '../components/trip/InviteFriendsModal';
 import SmartNudgeModal from '../components/SmartNudgeModal';
 import LuckyWheelModal from '../components/trip/LuckyWheelModal';
 import TripWrappedModal from '../components/trip/TripWrappedModal';
+import TripHistoryModal from '../components/trip/TripHistoryModal';
 import confetti from 'canvas-confetti';
 import { getTripVisual } from '../utils/tripVisuals';
 import { 
@@ -38,13 +40,15 @@ import {
   Share2,
   AlertCircle,
   WifiOff,
-  RotateCw
+  RotateCw,
+  History
 } from 'lucide-react';
 
 export default function TripDetailPage() {
   const { tripId } = useParams();
   const { currentUser } = useAuth();
   const { showToast } = useToast();
+  const confirm = useConfirm();
   const { t } = useLanguage();
 
   const [trip, setTrip] = useState(null);
@@ -56,23 +60,34 @@ export default function TripDetailPage() {
   const [isOfflineMode, setIsOfflineMode] = useState(!navigator.onLine);
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const validTabs = ['overview', 'expenses', 'members', 'settlement'];
+  const validTabs = ['overview', 'expenses', 'members', 'settlement', 'history'];
   const tabFromUrl = searchParams.get('tab');
 
   // Active Tab: overview | expenses | members | settlement (sync with URL ?tab=...)
   const [activeTab, setActiveTab] = useState(() => {
-    return tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : 'overview';
+    return tabFromUrl && validTabs.includes(tabFromUrl) && tabFromUrl !== 'history' ? tabFromUrl : 'overview';
   });
+
+  // Trip History Modal State
+  const [tripHistoryModalOpen, setTripHistoryModalOpen] = useState(() => tabFromUrl === 'history');
+  const [activities, setActivities] = useState([]);
+  const [loadingActivities, setLoadingActivities] = useState(false);
 
   // Sync activeTab whenever ?tab= query parameter in URL changes
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && validTabs.includes(tabParam)) {
+    if (tabParam === 'history') {
+      setTripHistoryModalOpen(true);
+    } else if (tabParam && validTabs.includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
 
   const handleTabChange = (newTab) => {
+    if (newTab === 'history') {
+      setTripHistoryModalOpen(true);
+      return;
+    }
     setActiveTab(newTab);
     setSearchParams((prev) => {
       const nextParams = new URLSearchParams(prev);
@@ -160,6 +175,14 @@ export default function TripDetailPage() {
       const settleData = await api.get(`/trips/${tripId}/settlements`);
       setSettlements(settleData.settlements || []);
 
+      // Load edit and audit activities
+      try {
+        const actData = await api.get(`/trips/${tripId}/activities`);
+        setActivities(actData?.activities || []);
+      } catch (actErr) {
+        console.warn('[loadTripData] Activities notice:', actErr.message);
+      }
+
       // If all settlements confirmed, trigger confetti once
       if (settleData.allSettled && settleData.settlements?.length > 0) {
         confetti({
@@ -196,6 +219,21 @@ export default function TripDetailPage() {
       setLoading(false);
     }
   }, [tripId, showToast]);
+
+  const fetchTripActivities = useCallback(async () => {
+    if (!tripId) return;
+    try {
+      setLoadingActivities(true);
+      const res = await api.get(`/trips/${tripId}/activities`);
+      if (res?.activities) {
+        setActivities(res.activities);
+      }
+    } catch (err) {
+      console.warn('[fetchTripActivities] Error:', err);
+    } finally {
+      setLoadingActivities(false);
+    }
+  }, [tripId]);
 
   useEffect(() => {
     loadTripData();
@@ -520,7 +558,15 @@ export default function TripDetailPage() {
 
   // Delete Expense
   const handleDeleteExpense = async (expenseId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa khoản chi này?')) return;
+    const isConfirmed = await confirm({
+      title: 'Xóa khoản chi này?',
+      message: 'Bạn có chắc chắn muốn xóa khoản chi này? Khoản tiền này sẽ được trừ ra và tính toán lại công nợ của cả nhóm.',
+      confirmText: 'Xác nhận xóa',
+      cancelText: 'Giữ lại',
+      type: 'danger'
+    });
+    if (!isConfirmed) return;
+
     try {
       await api.delete(`/trips/${tripId}/expenses/${expenseId}`);
       showToast('Đã xóa khoản chi thành công', 'success');
@@ -533,7 +579,15 @@ export default function TripDetailPage() {
 
   // Remove member
   const handleRemoveMember = async (member) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa thành viên ${member.displayName}?`)) return;
+    const isConfirmed = await confirm({
+      title: 'Xóa thành viên?',
+      message: `Bạn có chắc muốn xóa thành viên "${member.displayName}" khỏi chuyến đi?`,
+      confirmText: 'Xóa thành viên',
+      cancelText: 'Hủy bỏ',
+      type: 'danger'
+    });
+    if (!isConfirmed) return;
+
     try {
       const targetId = member.userId || member.uid || member.id;
       await api.delete(`/trips/${tripId}/members/${targetId}`);
@@ -877,9 +931,10 @@ export default function TripDetailPage() {
             { id: 'overview', label: t('overview', 'Tổng quan'), count: null, icon: DollarSign },
             { id: 'expenses', label: t('expenses', 'Khoản chi'), count: expenses.length, icon: Receipt },
             { id: 'members', label: t('members', 'Thành viên'), count: members.length, icon: Users },
-            { id: 'settlement', label: t('settlementVietQR', 'Quyết toán VietQR'), count: settlements.length, icon: Sparkles },
+            { id: 'settlement', label: t('settlementVietQR', 'Quyết toán công nợ'), count: settlements.length, icon: Sparkles },
+            { id: 'history', label: t('editHistory', 'Lịch sử chỉnh sửa'), count: activities.length, icon: History },
           ].map((tab) => {
-            const isTabActive = activeTab === tab.id;
+            const isTabActive = tab.id === 'history' ? tripHistoryModalOpen : activeTab === tab.id;
             return (
               <button
                 key={tab.id}
@@ -1125,6 +1180,16 @@ export default function TripDetailPage() {
         balances={balances}
         settlements={settlements}
         t={t}
+      />
+
+      {/* MODAL: TRIP AUDIT & EDIT HISTORY */}
+      <TripHistoryModal
+        isOpen={tripHistoryModalOpen}
+        onClose={() => setTripHistoryModalOpen(false)}
+        activities={activities}
+        loading={loadingActivities}
+        onRefresh={fetchTripActivities}
+        tripName={trip?.name || ''}
       />
     </div>
   );

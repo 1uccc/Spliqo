@@ -168,7 +168,7 @@ export default function JoinTripPage() {
     <div className="min-h-screen w-full bg-[#f4f3ec] dark:bg-[#0f0f12] text-[#18181b] dark:text-[#f4f4f5] flex flex-col items-center justify-center p-4 relative select-none transition-colors">
       
       {/* Top Right: Language Selector (VI / EN) */}
-      <div className="fixed top-4 right-4 z-30 flex items-center p-0.5 rounded-full bg-white dark:bg-[#24242b] border border-[#dedbd0] dark:border-[#32323c] text-xs shadow-xs">
+      <div className="fixed top-[max(1rem,env(safe-area-inset-top))] right-4 z-30 flex items-center p-0.5 rounded-full bg-white dark:bg-[#24242b] border border-[#dedbd0] dark:border-[#32323c] text-xs shadow-xs">
         <button
           type="button"
           onClick={() => setLanguage('vi')}

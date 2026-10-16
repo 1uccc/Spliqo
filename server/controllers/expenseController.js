@@ -149,6 +149,25 @@ export async function addExpense(req, res) {
 
     dbService.addExpense(tripId, newExpense);
 
+    dbService.addTripActivity(tripId, {
+      id: `act_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      type: 'EXPENSE_CREATED',
+      action: 'CREATE',
+      expenseId: newExpense.id,
+      title: title.trim(),
+      amount: numAmount,
+      currency: newExpense.currency || 'VND',
+      paidBy: newExpense.paidBy,
+      paidByName: payerName,
+      splitType: newExpense.splitType,
+      participantCount: participants.length,
+      authorId: currentUserId,
+      authorName: creatorName,
+      authorPhotoURL: creatorUser?.photoURL || '',
+      timestamp: newExpense.createdAt,
+      description: `Đã thêm khoản chi "${title.trim()}" (${new Intl.NumberFormat('vi-VN').format(numAmount)}đ)`
+    });
+
     // Notify other trip members about the new expense
     try {
       const otherMembers = members.filter(m => m.userId !== currentUserId);
@@ -600,6 +619,22 @@ export async function updateExpense(req, res) {
       history: updatedHistory
     });
 
+    dbService.addTripActivity(tripId, {
+      id: historyEntry.id,
+      type: 'EXPENSE_UPDATED',
+      action: 'UPDATE',
+      expenseId: updated.id,
+      title: updated.title,
+      amount: updated.amount,
+      authorId: currentUserId,
+      authorName: updaterUser?.displayName || req.user.displayName || 'Thành viên',
+      authorPhotoURL: updaterUser?.photoURL || '',
+      timestamp: historyEntry.timestamp,
+      description: historyEntry.description,
+      changes,
+      diffs
+    });
+
     // Notify other members about the expense modification
     try {
       const members = dbService.getTripMembers(tripId);
@@ -657,9 +692,23 @@ export async function deleteExpense(req, res) {
       return res.status(404).json({ error: 'Không tìm thấy khoản chi.' });
     }
 
-    if (trip.createdBy !== currentUserId && existing.createdBy !== currentUserId && existing.paidBy !== currentUserId) {
-      return res.status(403).json({ error: 'Bạn không có quyền xóa khoản chi này.' });
-    }
+    const payerUser = dbService.getUser(existing.paidBy);
+    dbService.addTripActivity(tripId, {
+      id: `act_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      type: 'EXPENSE_DELETED',
+      action: 'DELETE',
+      expenseId: existing.id,
+      title: existing.title,
+      amount: existing.amount,
+      currency: existing.currency || 'VND',
+      paidBy: existing.paidBy,
+      paidByName: payerUser?.displayName || 'Thành viên',
+      authorId: currentUserId,
+      authorName: req.user?.displayName || 'Thành viên',
+      authorPhotoURL: req.user?.photoURL || '',
+      timestamp: new Date().toISOString(),
+      description: `Đã xóa khoản chi "${existing.title}" (${new Intl.NumberFormat('vi-VN').format(existing.amount)}đ)`
+    });
 
     dbService.deleteExpense(tripId, expenseId);
 

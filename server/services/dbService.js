@@ -23,7 +23,8 @@ const DEFAULT_DATA = {
   settlements: {},
   friends: {},
   friendRequests: [],
-  notifications: {}
+  notifications: {},
+  activities: {}
 };
 
 class DBService {
@@ -252,6 +253,7 @@ class DBService {
         if (!parsed.friends) parsed.friends = {};
         if (!parsed.friendRequests) parsed.friendRequests = [];
         if (!parsed.notifications) parsed.notifications = {};
+        if (!parsed.activities) parsed.activities = {};
         return parsed;
       }
     } catch (e) {
@@ -365,6 +367,9 @@ class DBService {
     if (!this.data.settlements[trip.id]) {
       this.data.settlements[trip.id] = [];
     }
+    if (!this.data.activities[trip.id]) {
+      this.data.activities[trip.id] = [];
+    }
     this.saveData();
     this.syncToFirestore('trips', trip.id, trip);
     return trip;
@@ -386,11 +391,13 @@ class DBService {
     delete this.data.tripMembers[tripId];
     delete this.data.expenses[tripId];
     delete this.data.settlements[tripId];
+    delete this.data.activities[tripId];
     this.saveData();
     this.syncToFirestore('trips', tripId, null, true);
     this.syncToFirestore('tripMembers', tripId, null, true);
     this.syncToFirestore('expenses', tripId, null, true);
     this.syncToFirestore('settlements', tripId, null, true);
+    this.syncToFirestore('activities', tripId, null, true);
     return true;
   }
 
@@ -512,6 +519,31 @@ class DBService {
       return item;
     }
     return null;
+  }
+
+  // --- Activities / Edit & Audit History ---
+  getTripActivities(tripId) {
+    if (!this.data.activities) this.data.activities = {};
+    return this.data.activities[tripId] || [];
+  }
+
+  addTripActivity(tripId, activity) {
+    if (!this.data.activities) this.data.activities = {};
+    if (!this.data.activities[tripId]) {
+      this.data.activities[tripId] = [];
+    }
+    const item = {
+      id: activity.id || `act_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      timestamp: activity.timestamp || new Date().toISOString(),
+      ...activity
+    };
+    this.data.activities[tripId].unshift(item);
+    if (this.data.activities[tripId].length > 500) {
+      this.data.activities[tripId] = this.data.activities[tripId].slice(0, 500);
+    }
+    this.saveData();
+    this.syncToFirestore('activities', tripId, { activities: this.data.activities[tripId] });
+    return item;
   }
 
   // --- Friends & Social ---

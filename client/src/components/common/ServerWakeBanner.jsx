@@ -141,7 +141,7 @@ export default function ServerWakeBanner() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed top-3 left-3 right-3 sm:top-5 sm:left-1/2 sm:-translate-x-1/2 sm:w-[480px] z-[9999] pointer-events-auto transition-all animate-fade-in"
+      className="fixed server-wake-banner-pos left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-[480px] z-[9999] pointer-events-auto transition-all animate-fade-in"
     >
       <div
         className={`rounded-2xl p-3.5 sm:p-4 shadow-2xl border backdrop-blur-xl transition-all duration-300 ${

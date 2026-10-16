@@ -3,8 +3,8 @@ import React, { createContext, useContext, useState } from 'react';
 export const translations = {
   vi: {
     // Navigation & Layout
-    dashboard: 'Dashboard',
-    dashboardShort: 'Trang chủ',
+    dashboard: 'Trang tổng quan',
+    dashboardShort: 'Tổng quan',
     myTrips: 'Chuyến đi của tôi',
     tripsShort: 'Chuyến đi',
     settlement: 'Quyết toán công nợ',
@@ -18,8 +18,11 @@ export const translations = {
     language: 'Ngôn ngữ',
     vietnamese: 'Tiếng Việt',
     english: 'English',
+    theme: 'Giao diện',
     darkMode: 'Giao diện Tối',
     lightMode: 'Giao diện Sáng',
+    lightShort: 'Sáng',
+    darkShort: 'Tối',
     quickTestUser: 'Đổi test:',
 
     // Auth & Accounts
@@ -46,6 +49,7 @@ export const translations = {
     addExpense: 'Thêm khoản chi mới',
     editExpense: 'Chỉnh sửa khoản chi',
     deleteExpense: 'Xóa khoản chi',
+    editHistory: 'Lịch sử chỉnh sửa',
     cancel: 'Hủy',
     save: 'Lưu thay đổi',
     saveExpense: 'Lưu khoản chi',
@@ -286,7 +290,7 @@ export const translations = {
     joiningTripProgress: 'Đang tham gia chuyến đi...',
     autoJoiningProgress: 'Đang tự động thêm bạn vào chuyến đi...',
     invalidTripCodeTitle: 'Không tìm thấy chuyến đi',
-    goToDashboard: 'Về trang chủ Spliqo',
+    goToDashboard: 'Về trang tổng quan Spliqo',
     switchAccountPrompt: 'Đổi tài khoản đăng nhập khác',
     loggedInAs: 'Đang đăng nhập:',
     authJoinBanner: 'Đăng nhập hoặc đăng ký để tiếp tục tham gia chuyến đi',
@@ -308,8 +312,11 @@ export const translations = {
     language: 'Language',
     vietnamese: 'Tiếng Việt (Vietnamese)',
     english: 'English (US)',
+    theme: 'Theme',
     darkMode: 'Dark Mode',
     lightMode: 'Light Mode',
+    lightShort: 'Light',
+    darkShort: 'Dark',
     quickTestUser: 'Switch User:',
 
     // Auth & Accounts
@@ -336,6 +343,7 @@ export const translations = {
     addExpense: 'Add New Expense',
     editExpense: 'Edit Expense',
     deleteExpense: 'Delete Expense',
+    editHistory: 'Edit History',
     cancel: 'Cancel',
     save: 'Save Changes',
     saveExpense: 'Save Expense',

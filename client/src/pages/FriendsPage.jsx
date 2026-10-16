@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import api from '../services/api';
 import Modal from '../components/Modal';
@@ -25,6 +26,7 @@ import {
 
 export default function FriendsPage() {
   const { showToast } = useToast();
+  const confirm = useConfirm();
   const { t, language } = useLanguage();
 
   const [friends, setFriends] = useState([]);
@@ -112,9 +114,15 @@ export default function FriendsPage() {
 
   // 5. Hủy kết bạn
   const handleRemoveFriend = async (friendId, friendName) => {
-    if (!window.confirm(`Bạn có chắc muốn hủy kết bạn với ${friendName}?`)) {
-      return;
-    }
+    const isConfirmed = await confirm({
+      title: 'Hủy kết bạn?',
+      message: `Bạn có chắc muốn hủy kết bạn với "${friendName}"? Bạn có thể gửi lại lời mời kết bạn sau.`,
+      confirmText: 'Hủy kết bạn',
+      cancelText: 'Giữ lại',
+      type: 'danger'
+    });
+    if (!isConfirmed) return;
+
     try {
       const res = await api.delete(`/friends/${friendId}`);
       showToast(res.message || 'Đã hủy kết bạn', 'info');

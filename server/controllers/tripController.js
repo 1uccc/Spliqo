@@ -262,6 +262,17 @@ export async function joinTrip(req, res) {
 
     dbService.addMemberToTrip(trip.id, userId, 'Member');
 
+    dbService.addTripActivity(trip.id, {
+      id: `act_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      type: 'MEMBER_JOINED',
+      action: 'JOIN',
+      authorId: userId,
+      authorName: req.user.displayName || 'Thành viên mới',
+      authorPhotoURL: req.user.photoURL || '',
+      timestamp: new Date().toISOString(),
+      description: `"${req.user.displayName || 'Thành viên mới'}" đã tham gia chuyến đi`
+    });
+
     try {
       if (trip.createdBy && trip.createdBy !== userId) {
         dbService.addNotification(trip.createdBy, {
@@ -362,6 +373,17 @@ export async function completeTrip(req, res) {
     }
 
     const updated = dbService.updateTrip(tripId, { status: 'COMPLETED' });
+
+    dbService.addTripActivity(tripId, {
+      id: `act_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      type: 'TRIP_COMPLETED',
+      action: 'COMPLETE',
+      authorId: userId,
+      authorName: req.user?.displayName || 'Trưởng nhóm',
+      authorPhotoURL: req.user?.photoURL || '',
+      timestamp: new Date().toISOString(),
+      description: 'Chuyến đi đã được chốt sổ thành công. Toàn bộ công nợ đã được tất toán!'
+    });
 
     try {
       realtimeService.broadcastToTrip(tripId, 'TRIP_UPDATED', {

@@ -19,7 +19,7 @@ export default function Navbar() {
   const location = useLocation();
 
   const navLinks = [
-    { name: 'Dashboard', path: '/dashboard', icon: Layers },
+    { name: 'Trang tổng quan', path: '/dashboard', icon: Layers },
     { name: 'Chuyến đi của tôi', path: '/trips', icon: Compass },
     { name: 'Hồ sơ & Tài khoản', path: '/profile', icon: User },
   ];

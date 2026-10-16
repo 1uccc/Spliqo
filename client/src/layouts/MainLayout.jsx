@@ -5,6 +5,7 @@ import { sanitizeDisplayName } from '../utils/userUtils';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useConfirm } from '../contexts/ConfirmContext';
 import BottomNav from '../components/BottomNav';
 import api from '../services/api';
 import { offlineSyncService } from '../services/offlineSyncService';
@@ -100,6 +101,7 @@ export default function MainLayout({ onOpenAddExpense }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications();
+  const confirm = useConfirm();
 
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -168,7 +170,7 @@ export default function MainLayout({ onOpenAddExpense }) {
     if (location.pathname.startsWith('/settlements')) return t('settlement', 'Quyết toán công nợ');
     if (location.pathname.startsWith('/friends')) return t('friends', 'Bạn bè & Kết nối');
     if (location.pathname.startsWith('/profile')) return t('profile', 'Hồ sơ & Tài khoản');
-    return t('dashboard', 'Dashboard');
+    return t('dashboard', 'Trang tổng quan');
   };
 
   const isActive = (path) => {
@@ -185,7 +187,7 @@ export default function MainLayout({ onOpenAddExpense }) {
         <Link 
           to="/dashboard"
           className="w-11 h-11 bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] rounded-full flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all group"
-          title="Spliqo Dashboard"
+          title={t('dashboard', 'Trang tổng quan')}
         >
           <Flame className="w-5 h-5 text-amber-400 fill-amber-400 group-hover:scale-110 transition-transform" />
         </Link>
@@ -200,7 +202,7 @@ export default function MainLayout({ onOpenAddExpense }) {
                 ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-md dark:shadow-white/10 scale-105'
                 : 'bg-white dark:bg-[#23232c] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:scale-105 shadow-xs border border-transparent dark:border-[#30303c]'
             }`}
-            title="Dashboard"
+            title={t('dashboard', 'Trang tổng quan')}
           >
             <Home className="w-4 h-4 stroke-[2.2]" />
           </Link>
@@ -520,7 +522,16 @@ export default function MainLayout({ onOpenAddExpense }) {
                       <div className="pt-2 border-t border-[#e6e4dc] dark:border-[#2e2e38] flex items-center justify-between shrink-0 text-[11px]">
                         <button
                           type="button"
-                          onClick={clearAll}
+                          onClick={async () => {
+                            const ok = await confirm({
+                              title: 'Xóa tất cả thông báo?',
+                              message: 'Toàn bộ thông báo sẽ bị xóa vĩnh viễn khỏi tài khoản của bạn.',
+                              confirmText: 'Xác nhận xóa hết',
+                              cancelText: 'Hủy bỏ',
+                              type: 'danger'
+                            });
+                            if (ok) clearAll();
+                          }}
                           className="text-zinc-400 hover:text-rose-600 font-semibold transition-colors cursor-pointer py-1"
                         >
                           Xóa tất cả thông báo
@@ -601,19 +612,47 @@ export default function MainLayout({ onOpenAddExpense }) {
                         </div>
                       </div>
 
-                      {/* Dark Mode Toggle for Mobile / Menu */}
-                      <button
-                        onClick={() => setDarkMode(!isDark)}
-                        className="w-full flex items-center justify-between text-xs text-zinc-700 dark:text-zinc-300 font-semibold py-2 px-3 rounded-2xl hover:bg-[#edebe4]/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                      >
+                      {/* Theme Toggle (Giao diện Sáng / Tối) */}
+                      <div className="flex items-center justify-between py-1.5 px-3 rounded-2xl text-xs text-zinc-700 dark:text-zinc-300 font-semibold">
                         <div className="flex items-center gap-2">
-                          {isDark ? <Moon className="w-3.5 h-3.5 text-amber-400" /> : <Sun className="w-3.5 h-3.5 text-zinc-500" />}
-                          <span>{isDark ? t('darkMode', 'Giao diện Tối') : t('lightMode', 'Giao diện Sáng')}</span>
+                          {isDark ? (
+                            <Moon className="w-3.5 h-3.5 text-amber-400" />
+                          ) : (
+                            <Sun className="w-3.5 h-3.5 text-zinc-500" />
+                          )}
+                          <span>{t('theme', 'Giao diện')}</span>
                         </div>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#edebe4] dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
-                          {isDark ? t('darkMode', 'Tối') : t('lightMode', 'Sáng')}
-                        </span>
-                      </button>
+
+                        {/* Theme Button Capsule (Sáng / Tối) */}
+                        <div className="flex items-center p-0.5 rounded-full bg-[#edebe4] dark:bg-zinc-800 border border-[#dedbd0] dark:border-zinc-700">
+                          <button
+                            type="button"
+                            onClick={() => setDarkMode(false)}
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-all flex items-center gap-1 ${
+                              !isDark
+                                ? 'bg-white dark:bg-[#24242b] text-zinc-900 dark:text-white shadow-xs'
+                                : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                            }`}
+                            title={t('lightMode', 'Giao diện Sáng')}
+                          >
+                            <Sun className={`w-3 h-3 ${!isDark ? 'text-amber-500 fill-amber-500' : ''}`} />
+                            <span>{t('lightShort', 'Sáng')}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDarkMode(true)}
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-all flex items-center gap-1 ${
+                              isDark
+                                ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-xs'
+                                : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                            }`}
+                            title={t('darkMode', 'Giao diện Tối')}
+                          >
+                            <Moon className={`w-3 h-3 ${isDark ? 'text-amber-300 fill-amber-300' : ''}`} />
+                            <span>{t('darkShort', 'Tối')}</span>
+                          </button>
+                        </div>
+                      </div>
 
                       {deferredPrompt && (
                         <button

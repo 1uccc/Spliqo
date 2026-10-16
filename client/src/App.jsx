@@ -5,6 +5,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { ConfirmProvider } from './contexts/ConfirmContext';
 import MainLayout from './layouts/MainLayout';
 import ServerWakeBanner from './components/common/ServerWakeBanner';
 
@@ -84,10 +85,12 @@ export default function App() {
         <LanguageProvider>
           <AuthProvider>
             <ToastProvider>
-              <NotificationProvider>
-                <ServerWakeBanner />
-                <AppRoutes />
-              </NotificationProvider>
+              <ConfirmProvider>
+                <NotificationProvider>
+                  <ServerWakeBanner />
+                  <AppRoutes />
+                </NotificationProvider>
+              </ConfirmProvider>
             </ToastProvider>
           </AuthProvider>
         </LanguageProvider>

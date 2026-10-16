@@ -10,6 +10,7 @@ import {
   completeTrip,
   getTripInvitePreview
 } from '../controllers/tripController.js';
+import { getTripActivities } from '../controllers/activityController.js';
 import {
   getMembers,
   removeMember
@@ -98,6 +99,7 @@ router.post('/trips', createTrip);
 router.get('/trips', getTrips);
 router.post('/trips/join', strictActionLimiter, joinTrip);
 router.get('/trips/:tripId', getTripById);
+router.get('/trips/:tripId/activities', getTripActivities);
 router.put('/trips/:tripId', updateTrip);
 router.delete('/trips/:tripId', deleteTrip);
 router.post('/trips/:tripId/complete', completeTrip);
