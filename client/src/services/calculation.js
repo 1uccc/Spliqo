@@ -55,3 +55,17 @@ export function formatVND(amount) {
   const num = Math.round(Number(amount) || 0);
   return `${num.toLocaleString('vi-VN')}đ`;
 }
+
+export function formatVNDInput(val) {
+  if (val === '' || val === null || val === undefined) return '';
+  const digits = String(val).replace(/\D/g, '');
+  if (!digits) return '';
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+export function parseVNDInput(val) {
+  if (val === '' || val === null || val === undefined) return 0;
+  const digits = String(val).replace(/\D/g, '');
+  return digits ? parseInt(digits, 10) : 0;
+}
+

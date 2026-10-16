@@ -1,7 +1,7 @@
 import React from 'react';
 import Modal from '../Modal';
 import { Camera, Globe, ArrowRightLeft } from 'lucide-react';
-import { formatVND } from '../../services/calculation';
+import { formatVND, formatVNDInput, parseVNDInput } from '../../services/calculation';
 import { SUPPORTED_CURRENCIES, getCurrencyInfo } from '../../services/currencyService';
 
 export default function ExpenseFormModal({
@@ -41,6 +41,54 @@ export default function ExpenseFormModal({
   onToggleParticipant,
   t
 }) {
+  const handleCustomAmountChange = (changedUserId, inputValue) => {
+    const totalAmount = Math.round(Number(expAmount) || 0);
+    const digitsOnly = String(inputValue).replace(/\D/g, '');
+    const enteredAmount = digitsOnly === '' ? 0 : Number(digitsOnly);
+
+    const changedIndex = expParticipants.indexOf(changedUserId);
+    if (changedIndex === -1) return;
+
+    const nextAmounts = { ...expIndividualAmounts };
+    nextAmounts[changedUserId] = digitsOnly === '' ? '' : enteredAmount;
+
+    const subsequentParticipants = expParticipants.slice(changedIndex + 1);
+
+    if (subsequentParticipants.length > 0) {
+      // Sum of participants up to changedIndex
+      const sumPrior = expParticipants.slice(0, changedIndex).reduce((sum, pid) => {
+        return sum + (Number(nextAmounts[pid]) || 0);
+      }, 0);
+      const sumAllocated = sumPrior + enteredAmount;
+      const remaining = Math.max(0, totalAmount - sumAllocated);
+
+      const count = subsequentParticipants.length;
+      const base = Math.floor(remaining / count);
+      const rem = remaining % count;
+
+      subsequentParticipants.forEach((pid, subIdx) => {
+        nextAmounts[pid] = base + (subIdx < rem ? 1 : 0);
+      });
+    } else {
+      // If editing the last participant in the list, auto-adjust the preceding participant(s)
+      const priorParticipants = expParticipants.slice(0, changedIndex);
+      if (priorParticipants.length === 1) {
+        const onlyOtherId = priorParticipants[0];
+        nextAmounts[onlyOtherId] = Math.max(0, totalAmount - enteredAmount);
+      } else if (priorParticipants.length > 1) {
+        const remaining = Math.max(0, totalAmount - enteredAmount);
+        const count = priorParticipants.length;
+        const base = Math.floor(remaining / count);
+        const rem = remaining % count;
+        priorParticipants.forEach((pid, pIdx) => {
+          nextAmounts[pid] = base + (pIdx < rem ? 1 : 0);
+        });
+      }
+    }
+
+    setExpIndividualAmounts(nextAmounts);
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -179,21 +227,33 @@ export default function ExpenseFormModal({
             </label>
             <div className="relative">
               <input
-                type="number"
+                type={expCurrency === 'VND' ? 'text' : 'number'}
+                inputMode={expCurrency === 'VND' ? 'numeric' : 'decimal'}
                 required
                 step="any"
-                min={expCurrency === 'VND' ? '1' : '0.01'}
+                min={expCurrency === 'VND' ? undefined : '0.01'}
                 placeholder="0"
-                value={expCurrency === 'VND' ? expAmount : expOriginalAmount}
+                value={expCurrency === 'VND' ? formatVNDInput(expAmount) : expOriginalAmount}
                 onChange={(e) => {
                   const val = e.target.value;
                   if (expCurrency === 'VND') {
-                    setExpAmount(val);
-                    setExpOriginalAmount(val);
+                    const rawDigits = val.replace(/\D/g, '');
+                    setExpAmount(rawDigits);
+                    setExpOriginalAmount(rawDigits);
+                    if (expSplitType === 'custom' && expParticipants.length > 0 && rawDigits) {
+                      const total = Number(rawDigits) || 0;
+                      const base = Math.floor(total / expParticipants.length);
+                      const rem = total % expParticipants.length;
+                      const updated = {};
+                      expParticipants.forEach((pid, idx) => {
+                        updated[pid] = base + (idx < rem ? 1 : 0);
+                      });
+                      setExpIndividualAmounts(updated);
+                    }
                   } else {
                     setExpOriginalAmount(val);
                     const rate = Number(expExchangeRate) || getCurrencyInfo(expCurrency).defaultRate;
-                    setExpAmount(Math.round((Number(val) || 0) * rate));
+                    setExpAmount(String(Math.round((Number(val) || 0) * rate)));
                   }
                 }}
                 className="w-full px-4 py-2.5 rounded-2xl bg-[#f4f3ec] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2e2e38] text-sm font-bold text-zinc-900 dark:text-white outline-none focus:border-zinc-900 dark:focus:border-purple-500 focus:bg-white dark:focus:bg-[#20202c] transition-colors"
@@ -229,6 +289,15 @@ export default function ExpenseFormModal({
                       const next = current + chip.val;
                       setExpAmount(String(next));
                       setExpOriginalAmount(String(next));
+                      if (expSplitType === 'custom' && expParticipants.length > 0) {
+                        const base = Math.floor(next / expParticipants.length);
+                        const rem = next % expParticipants.length;
+                        const updated = {};
+                        expParticipants.forEach((pid, idx) => {
+                          updated[pid] = base + (idx < rem ? 1 : 0);
+                        });
+                        setExpIndividualAmounts(updated);
+                      }
                     }}
                     className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[#f4f3ec] dark:bg-[#252532] text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-[#323242] transition-colors border border-[#e6e4dc] dark:border-[#32323e] cursor-pointer"
                   >
@@ -241,6 +310,13 @@ export default function ExpenseFormModal({
                     onClick={() => {
                       setExpAmount('');
                       setExpOriginalAmount('');
+                      if (expSplitType === 'custom') {
+                        const updated = {};
+                        expParticipants.forEach((pid) => {
+                          updated[pid] = 0;
+                        });
+                        setExpIndividualAmounts(updated);
+                      }
                     }}
                     className="px-1.5 py-0.5 rounded-lg text-[10px] font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
                   >
@@ -446,18 +522,11 @@ export default function ExpenseFormModal({
                     <span className="font-semibold text-zinc-700 dark:text-zinc-300 truncate">{m?.displayName}</span>
                     <div className="w-36 relative">
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="0"
-                        min="0"
-                        step="any"
-                        value={expIndividualAmounts[userId] || ''}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setExpIndividualAmounts((prev) => ({
-                            ...prev,
-                            [userId]: val ? Number(val) : 0,
-                          }));
-                        }}
+                        value={formatVNDInput(expIndividualAmounts[userId])}
+                        onChange={(e) => handleCustomAmountChange(userId, e.target.value)}
                         className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-right font-mono font-bold text-xs outline-none focus:border-zinc-900 dark:focus:border-purple-500 text-zinc-900 dark:text-white"
                       />
                     </div>
