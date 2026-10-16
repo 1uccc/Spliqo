@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useCallback, useRef, useEff
 import { createPortal } from 'react-dom';
 import { Trash2, AlertTriangle, Info, X } from 'lucide-react';
 
+import { lockBodyScroll, unlockBodyScroll } from '../utils/scrollLock';
+
 const ConfirmContext = createContext(null);
 
 export function ConfirmProvider({ children }) {
@@ -44,25 +46,29 @@ export function ConfirmProvider({ children }) {
     setConfig((prev) => ({ ...prev, isOpen: false }));
   }, []);
 
-  // Keyboard accessibility (Escape key to cancel)
+  const handleCancelRef = useRef(handleCancel);
+  useEffect(() => {
+    handleCancelRef.current = handleCancel;
+  });
+
+  // Keyboard accessibility (Escape key to cancel) & coordinated scroll lock
   useEffect(() => {
     if (!config.isOpen) return;
 
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    lockBodyScroll();
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        handleCancel();
+        handleCancelRef.current?.();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.body.style.overflow = originalOverflow || 'unset';
       window.removeEventListener('keydown', handleKeyDown);
+      unlockBodyScroll();
     };
-  }, [config.isOpen, handleCancel]);
+  }, [config.isOpen]);
 
   const renderIcon = () => {
     if (config.icon) {

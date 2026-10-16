@@ -9,6 +9,7 @@ import { useConfirm } from '../contexts/ConfirmContext';
 import BottomNav from '../components/BottomNav';
 import api from '../services/api';
 import { offlineSyncService } from '../services/offlineSyncService';
+import { forceUnlockBodyScroll } from '../utils/scrollLock';
 import { 
   Home, 
   ShoppingBag, 
@@ -149,6 +150,11 @@ export default function MainLayout({ onOpenAddExpense }) {
       window.removeEventListener('spliqo:offline-sync-completed', updateQueue);
     };
   }, []);
+
+  // Ensure body scroll is never trapped across page navigations
+  useEffect(() => {
+    forceUnlockBodyScroll();
+  }, [location.pathname]);
 
   const handleInstallApp = async () => {
     if (!deferredPrompt) return;

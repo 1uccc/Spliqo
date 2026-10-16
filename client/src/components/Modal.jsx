@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { lockBodyScroll, unlockBodyScroll } from '../utils/scrollLock';
 
 export default function Modal({
   isOpen,
@@ -11,26 +12,30 @@ export default function Modal({
   footer = null
 }) {
   const contentRef = useRef(null);
+  const onCloseRef = useRef(onClose);
 
   useEffect(() => {
-    if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
+    onCloseRef.current = onClose;
+  });
 
-      const handleKeyDown = (e) => {
-        if (e.key === 'Escape') {
-          onClose?.();
-        }
-      };
+  useEffect(() => {
+    if (!isOpen) return;
 
-      window.addEventListener('keydown', handleKeyDown);
+    lockBodyScroll();
 
-      return () => {
-        document.body.style.overflow = originalOverflow || 'unset';
-        window.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-  }, [isOpen, onClose]);
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onCloseRef.current?.();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      unlockBodyScroll();
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
