@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Receipt, Users, Share2, Check, Flag, ArrowRight, Sparkles, Calendar } from 'lucide-react';
 import { formatVND } from '../../services/calculation';
+import { getTripVisual } from '../../utils/tripVisuals';
 
 // Curated harmonious, gentle pastel color palettes for each trip
 export const PASTEL_TRIP_THEMES = [
@@ -123,6 +124,8 @@ export default function TripCard({
   const navigate = useNavigate();
   const isCompleted = trip.status === 'COMPLETED';
   const theme = getTripTheme(trip.id || trip.tripCode || '');
+  const visual = getTripVisual(trip);
+  const VisualIcon = visual.Icon;
 
   const handleCardClick = () => {
     navigate(`/trips/${trip.id}`);
@@ -146,14 +149,20 @@ export default function TripCard({
       {/* Top subtle decorative color bar */}
       <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.accentBar} opacity-80`} />
 
-      <div>
-        {/* Card Header: Initial Avatar + Name/Code + Status Badge + Share Button */}
+      {/* Ambient Decorative Background Watermark Icon */}
+      <div className="absolute -right-4 -bottom-4 opacity-[0.06] dark:opacity-[0.08] pointer-events-none transform -rotate-12 transition-transform duration-500 group-hover:scale-125 group-hover:-rotate-6 text-[#18181b] dark:text-white">
+        <VisualIcon className="w-36 h-36 stroke-[1.1]" />
+      </div>
+
+      <div className="relative z-10">
+        {/* Card Header: Icon Avatar + Name/Code + Status Badge + Share Button */}
         <div className="flex items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <div
-              className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 shadow-xs transition-transform group-hover:scale-105 ${theme.avatarBg}`}
+              className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-xs transition-transform duration-300 group-hover:scale-110 relative overflow-hidden bg-gradient-to-br ${visual.gradient} text-white`}
+              title={`${trip.name} • ${visual.label}`}
             >
-              {trip.name ? trip.name.charAt(0).toUpperCase() : 'T'}
+              <VisualIcon className="w-5 h-5 stroke-[2.3] drop-shadow-xs" />
             </div>
             <div className="min-w-0">
               <h3 className="text-sm sm:text-base font-extrabold text-[#18181b] dark:text-white truncate group-hover:underline underline-offset-2 transition-colors">

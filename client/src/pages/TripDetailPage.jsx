@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -23,6 +23,7 @@ import SmartNudgeModal from '../components/SmartNudgeModal';
 import LuckyWheelModal from '../components/trip/LuckyWheelModal';
 import TripWrappedModal from '../components/trip/TripWrappedModal';
 import confetti from 'canvas-confetti';
+import { getTripVisual } from '../utils/tripVisuals';
 import { 
   ArrowLeft, 
   Copy, 
@@ -54,8 +55,35 @@ export default function TripDetailPage() {
   const [loading, setLoading] = useState(true);
   const [isOfflineMode, setIsOfflineMode] = useState(!navigator.onLine);
 
-  // Active Tab: overview | expenses | members | settlement
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const validTabs = ['overview', 'expenses', 'members', 'settlement'];
+  const tabFromUrl = searchParams.get('tab');
+
+  // Active Tab: overview | expenses | members | settlement (sync with URL ?tab=...)
+  const [activeTab, setActiveTab] = useState(() => {
+    return tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : 'overview';
+  });
+
+  // Sync activeTab whenever ?tab= query parameter in URL changes
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && validTabs.includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab);
+    setSearchParams((prev) => {
+      const nextParams = new URLSearchParams(prev);
+      if (newTab === 'overview') {
+        nextParams.delete('tab');
+      } else {
+        nextParams.set('tab', newTab);
+      }
+      return nextParams;
+    }, { replace: true });
+  };
 
   // Copy code feedback
   const [copiedCode, setCopiedCode] = useState(false);
@@ -722,8 +750,17 @@ export default function TripDetailPage() {
       )}
 
       {/* Main Trip Header Card */}
-      <div className="tactile-card p-6 sm:p-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="tactile-card p-6 sm:p-8 relative overflow-hidden">
+        {trip && (() => {
+          const visual = getTripVisual(trip);
+          const VisualIcon = visual.Icon;
+          return (
+            <div className="absolute -right-6 -bottom-6 opacity-[0.04] dark:opacity-[0.06] pointer-events-none transform -rotate-12 text-[#18181b] dark:text-white">
+              <VisualIcon className="w-48 h-48 stroke-[1.1]" />
+            </div>
+          );
+        })()}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           <div className="space-y-2">
             <div className="flex items-center gap-2.5 flex-wrap">
               <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-transparent dark:border-emerald-800/40">
@@ -774,9 +811,23 @@ export default function TripDetailPage() {
               </button>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#18181b] dark:text-white tracking-tight">
-              {trip.name}
-            </h1>
+            <div className="flex items-center gap-3 pt-1">
+              {trip && (() => {
+                const visual = getTripVisual(trip);
+                const VisualIcon = visual.Icon;
+                return (
+                  <div
+                    className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-xs bg-gradient-to-br ${visual.gradient} text-white`}
+                    title={visual.label}
+                  >
+                    <VisualIcon className="w-5 h-5 stroke-[2.3] drop-shadow-xs" />
+                  </div>
+                );
+              })()}
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#18181b] dark:text-white tracking-tight">
+                {trip.name}
+              </h1>
+            </div>
 
             {trip.description && (
               <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-xl">
@@ -832,7 +883,7 @@ export default function TripDetailPage() {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`tactile-tab shrink-0 whitespace-nowrap ${isTabActive ? 'active-purple' : ''}`}
               >
                 <span className="whitespace-nowrap shrink-0">{tab.label}</span>
