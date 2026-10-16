@@ -36,6 +36,7 @@ export default function TripWrappedModal({
   const [currentSlide, setCurrentSlide] = useState(0);
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
   const cardRef = useRef(null);
 
   if (!trip) return null;
@@ -114,7 +115,7 @@ export default function TripWrappedModal({
   };
 
   // Export Neo-Retro Brutalism Canvas (Cream / Orange / Black)
-  const handleDownloadImage = () => {
+  const handleDownloadImage = async () => {
     setExporting(true);
     try {
       const canvas = document.createElement('canvas');
@@ -305,11 +306,61 @@ export default function TripWrappedModal({
       ctx.fillText('QUÉT MÃ & CHIA TIỀN TỨC THÌ', 1000, 1805);
       ctx.textAlign = 'left';
 
-      // Download Trigger
-      const link = document.createElement('a');
-      link.download = `Spliqo_RetroWrapped_${trip.name.replace(/\s+/g, '_')}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
+      // Convert canvas to image
+      const dataUrl = canvas.toDataURL('image/png');
+      const filename = `Spliqo_RetroWrapped_${trip.name.replace(/\s+/g, '_')}.png`;
+
+      // Helper: convert dataURL to Blob
+      const dataURLtoBlob = (data) => {
+        const arr = data.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], { type: mime });
+      };
+
+      const blob = dataURLtoBlob(dataUrl);
+      const file = new File([blob], filename, { type: 'image/png' });
+
+      // Detect iOS (iPhone / iPad / iPod)
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+      // 1. Try Native Web Share API first (Native iOS Action Sheet with "Lưu hình ảnh" / Save Image)
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `Spliqo Wrapped - ${trip.name}`,
+            text: `Ký ức tài chính chuyến đi ${trip.name} trên Spliqo!`
+          });
+          return;
+        } catch (shareErr) {
+          if (shareErr.name === 'AbortError') {
+            return; // User dismissed share sheet
+          }
+          console.warn('[Wrapped] navigator.share error:', shareErr);
+        }
+      }
+
+      // 2. If on iOS (or if Web Share failed/unavailable), open the touch-and-hold Preview Modal
+      if (isIOS) {
+        setPreviewImage(dataUrl);
+      } else {
+        // Desktop / Android: Standard direct file download via blob URL
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = blobUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1500);
+      }
     } catch (err) {
       console.error('Export error:', err);
     } finally {
@@ -318,7 +369,8 @@ export default function TripWrappedModal({
   };
 
   return (
-    <Modal
+    <>
+      <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={
@@ -691,5 +743,85 @@ export default function TripWrappedModal({
         </div>
       </div>
     </Modal>
+
+    {/* iOS & Mobile Fallback Image Preview Modal */}
+    {previewImage && (
+      <Modal
+        isOpen={!!previewImage}
+        onClose={() => setPreviewImage(null)}
+        title={
+          <div className="flex items-center gap-2">
+            <span className="font-extrabold text-[#18181b] dark:text-white">
+              Lưu ảnh Wrapped 📸
+            </span>
+          </div>
+        }
+        maxWidth="max-w-md"
+        footer={
+          <div className="flex items-center justify-between w-full gap-2">
+            <button
+              type="button"
+              onClick={() => setPreviewImage(null)}
+              className="tactile-btn-pill px-4 py-2 text-xs font-bold cursor-pointer"
+            >
+              Đóng
+            </button>
+            {navigator.share && (
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const arr = previewImage.split(',');
+                    const mime = arr[0].match(/:(.*?);/)[1];
+                    const bstr = atob(arr[1]);
+                    let n = bstr.length;
+                    const u8arr = new Uint8Array(n);
+                    while (n--) {
+                      u8arr[n] = bstr.charCodeAt(n);
+                    }
+                    const blob = new Blob([u8arr], { type: mime });
+                    const file = new File([blob], `Spliqo_RetroWrapped_${trip.name.replace(/\s+/g, '_')}.png`, { type: 'image/png' });
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                      await navigator.share({
+                        files: [file],
+                        title: `Spliqo Wrapped - ${trip.name}`
+                      });
+                    }
+                  } catch (err) {
+                    if (err.name !== 'AbortError') console.warn(err);
+                  }
+                }}
+                className="tactile-btn-dark px-4 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+              >
+                <Download className="w-4 h-4" />
+                <span>Chia sẻ / Lưu ảnh</span>
+              </button>
+            )}
+          </div>
+        }
+      >
+        <div className="space-y-3">
+          <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 text-xs text-amber-900 dark:text-amber-200">
+            <p className="font-bold flex items-center gap-1.5 text-xs text-amber-800 dark:text-amber-300">
+              <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              Hướng dẫn lưu ảnh trên iPhone:
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed text-amber-950 dark:text-amber-100">
+              Nhấn giữ vào ảnh bên dưới trong <strong>1 giây</strong>, sau đó chọn <strong>"Lưu vào Ảnh" (Save to Photos)</strong> để tải về máy.
+            </p>
+          </div>
+
+          <div className="max-h-[60vh] overflow-y-auto rounded-2xl border-2 border-[#18181b] dark:border-zinc-700 shadow-md flex justify-center bg-zinc-100 dark:bg-zinc-900 p-2">
+            <img
+              src={previewImage}
+              alt="Spliqo Wrapped"
+              className="w-full h-auto object-contain rounded-xl select-auto"
+              style={{ WebkitTouchCallout: 'default' }}
+            />
+          </div>
+        </div>
+      </Modal>
+    )}
+    </>
   );
 }
