@@ -35,3 +35,4 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SPLIQ0 }}
           channelId: live
           projectId: spliq0
+          firebaseToolsVersion: '13.31.0'
