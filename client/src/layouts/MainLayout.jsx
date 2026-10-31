@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { sanitizeDisplayName } from '../utils/userUtils';
@@ -7,7 +7,6 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useConfirm } from '../contexts/ConfirmContext';
 import BottomNav from '../components/BottomNav';
-import api from '../services/api';
 import { offlineSyncService } from '../services/offlineSyncService';
 import { forceUnlockBodyScroll } from '../utils/scrollLock';
 import { 
@@ -280,10 +279,27 @@ export default function MainLayout({ onOpenAddExpense }) {
           {/* Settings Circle Button */}
           <Link
             to="/profile"
-            className="w-9 h-9 rounded-full bg-white dark:bg-[#24242b] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center justify-center shadow-xs border border-[#e6e4dc] dark:border-[#32323c] transition-all hover:scale-105"
+            className={`w-9 h-9 rounded-full flex items-center justify-center shadow-xs border transition-all hover:scale-105 ${
+              isActive('/profile')
+                ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] border-transparent font-bold'
+                : 'bg-white dark:bg-[#24242b] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white border-[#e6e4dc] dark:border-[#32323c]'
+            }`}
             title="Cài đặt tài khoản"
           >
             <Settings className="w-4 h-4 stroke-[2.2]" />
+          </Link>
+
+          {/* About & Author Circle Button */}
+          <Link
+            to="/about"
+            className={`w-9 h-9 rounded-full flex items-center justify-center shadow-xs border transition-all hover:scale-105 ${
+              isActive('/about')
+                ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] border-transparent font-bold'
+                : 'bg-white dark:bg-[#24242b] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white border-[#e6e4dc] dark:border-[#32323c]'
+            }`}
+            title="Về Spliqo & Tác giả (1uccc)"
+          >
+            <Info className="w-4 h-4 stroke-[2.2]" />
           </Link>
         </div>
       </aside>
@@ -326,16 +342,42 @@ export default function MainLayout({ onOpenAddExpense }) {
                 </button>
 
                 {helpOpen && (
-                  <div className="absolute right-0 mt-3 w-72 bg-white dark:bg-[#18181f] rounded-3xl p-4 border border-[#dedbd0] dark:border-[#32323e] shadow-xl z-50 text-xs animate-fade-in text-[#18181b] dark:text-zinc-100">
+                  <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-[#18181f] rounded-3xl p-4 border border-[#dedbd0] dark:border-[#32323e] shadow-2xl z-50 text-xs animate-fade-in text-[#18181b] dark:text-zinc-100">
                     <div className="font-bold text-[#18181b] dark:text-white mb-1 flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-amber-500" /> {t('quickGuide', 'Hướng dẫn nhanh Spliqo')}
                     </div>
-                    <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed mb-2">
+                    <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">
                       {t('quickGuideDesc', 'Tạo chuyến đi, thêm khoản chi, hệ thống tự động tối ưu giao dịch chuyển khoản VietQR và tạo mã QR kèm STK sẵn sàng thanh toán!')}
                     </p>
+
+                    {/* Creator & About Link Callout */}
+                    <div className="p-3 rounded-2xl bg-[#f4f3ec] dark:bg-[#252530] border border-[#dedbd0] dark:border-[#333342] mb-3 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-[#18181b] dark:text-white flex items-center gap-1">
+                          <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                          <span>Product by 1uccc</span>
+                        </span>
+                        <a
+                          href="https://instagram.com/1uccc.ng"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] text-pink-600 dark:text-pink-400 font-bold hover:underline"
+                        >
+                          ig: 1uccc.ng
+                        </a>
+                      </div>
+                      <Link
+                        to="/about"
+                        onClick={() => setHelpOpen(false)}
+                        className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 flex items-center gap-1 pt-0.5"
+                      >
+                        <span>Xem chi tiết giới thiệu trang About →</span>
+                      </Link>
+                    </div>
+
                     <button 
                       onClick={() => setHelpOpen(false)}
-                      className="w-full text-center py-1.5 bg-[#edebe4] dark:bg-[#252530] hover:bg-[#dedbd0] dark:hover:bg-[#2f2f3d] text-[#18181b] dark:text-white font-bold rounded-full transition-colors"
+                      className="w-full text-center py-2 bg-[#edebe4] dark:bg-[#252530] hover:bg-[#dedbd0] dark:hover:bg-[#2f2f3d] text-[#18181b] dark:text-white font-bold rounded-full transition-colors cursor-pointer"
                     >
                       {t('gotIt', 'Đã hiểu')}
                     </button>
@@ -678,6 +720,14 @@ export default function MainLayout({ onOpenAddExpense }) {
                       >
                         <Settings className="w-3.5 h-3.5 text-zinc-500" />
                         {t('profileSettingsAndBank', 'Cài đặt tài khoản & STK')}
+                      </Link>
+
+                      <Link
+                        to="/about"
+                        className="w-full flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white font-semibold py-2 px-3 rounded-2xl hover:bg-[#edebe4]/60 dark:hover:bg-zinc-800 transition-colors"
+                      >
+                        <Info className="w-3.5 h-3.5 text-zinc-500" />
+                        <span>{t('about', 'Giới thiệu & Tác giả')}</span>
                       </Link>
 
                       <button

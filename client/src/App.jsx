@@ -19,6 +19,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const FriendsPage = lazy(() => import('./pages/FriendsPage'));
 const SettlementsPage = lazy(() => import('./pages/SettlementsPage'));
 const JoinTripPage = lazy(() => import('./pages/JoinTripPage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
 
 function PageFallback() {
   return (
@@ -71,6 +72,7 @@ function AppRoutes() {
           <Route path="settlements" element={<SettlementsPage />} />
           <Route path="friends" element={<FriendsPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="about" element={<AboutPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
