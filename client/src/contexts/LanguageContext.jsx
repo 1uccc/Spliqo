@@ -143,7 +143,6 @@ export const translations = {
     receiveBackDesc: 'Khoản bạn cần nhận lại từ nhóm',
     noReceiveDesc: 'Không có khoản tiền chờ nhận',
     activeTripsTitle: 'Cần bạn chú ý',
-    activeTripsSubtitle: 'Danh sách các chuyến đi và khoản chi tiêu nhóm đang được theo dõi trực tiếp',
     membersUnit: 'người',
     expensesUnit: 'chi',
     noTripsInCategory: 'Chưa có chuyến đi nào trong mục này',
@@ -296,7 +295,6 @@ export const translations = {
     authJoinBanner: 'Đăng nhập hoặc đăng ký để tiếp tục tham gia chuyến đi',
 
     // Extra Dashboard & Trip Status Keys
-    active: 'Đang diễn ra',
     activeTrips: 'Đang diễn ra',
     activeTripsSectionTitle: 'Chuyến đi đang diễn ra',
     activeTripsSubtitle: 'Chạm vào bất kỳ chuyến đi nào để xem chi tiết chi phí và danh sách thành viên',
@@ -305,9 +303,6 @@ export const translations = {
     noActiveTripsDesc: 'Chưa có chuyến đi đang diễn ra nào. Bấm tạo mới để bắt đầu!',
     completedTrips: 'Đã chốt sổ',
     completedTripsHint: 'Chuyến đi đã chốt sổ được lưu trữ gọn gàng trong mục "Chuyến đi" để giữ Trang tổng quan luôn tập trung vào các chuyến đang diễn ra.',
-    settleNow: 'Quyết toán',
-    membersUnit: 'người',
-    expensesUnit: 'chi',
     viewTripDetails: 'Xem chi tiết chuyến đi',
     defaultTripDesc: 'Chuyến đi cùng bạn bè, chia sẻ chi phí ăn uống và du lịch sòng phẳng.',
     shareTripTooltip: 'Mời & Chia sẻ mã QR chuyến đi',
@@ -611,7 +606,6 @@ export const translations = {
     receiveBackDesc: 'Amount to collect from group',
     noReceiveDesc: 'No pending receivables',
     activeTripsTitle: 'Active Trips',
-    activeTripsSubtitle: 'List of trips and group expenses actively tracked',
     membersUnit: 'members',
     expensesUnit: 'expenses',
     noTripsInCategory: 'No trips found in this category',
@@ -765,7 +759,6 @@ export const translations = {
     authJoinBanner: 'Sign in or sign up to continue joining the trip',
 
     // Extra Dashboard & Trip Status Keys
-    active: 'Active',
     activeTrips: 'Active',
     activeTripsSectionTitle: 'Active Trips',
     activeTripsSubtitle: 'Tap on any trip to view expense breakdowns and members',
@@ -774,9 +767,6 @@ export const translations = {
     noActiveTripsDesc: 'No active trips at the moment. Create a new trip to start!',
     completedTrips: 'Completed',
     completedTripsHint: 'Completed trips are neatly archived under "My Trips" to keep your Dashboard focused on active events.',
-    settleNow: 'Settle Up',
-    membersUnit: 'members',
-    expensesUnit: 'expenses',
     viewTripDetails: 'View trip details',
     defaultTripDesc: 'Trip with friends, easily splitting food and travel expenses.',
     shareTripTooltip: 'Invite & share trip QR code',

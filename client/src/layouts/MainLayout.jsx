@@ -350,7 +350,6 @@ export default function MainLayout({ onOpenAddExpense }) {
                   onClick={() => {
                     setNotificationsOpen(!notificationsOpen);
                     setHelpOpen(false);
-                    setServerStatusOpen(false);
                     setUserDropdownOpen(false);
                   }}
                   className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white dark:bg-[#24242b] hover:bg-zinc-50 dark:hover:bg-[#2e2e38] text-zinc-700 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white border border-[#dedbd0]/70 dark:border-[#32323c] flex items-center justify-center shadow-xs transition-all hover:scale-105 active:scale-95 relative cursor-pointer"
@@ -557,7 +556,6 @@ export default function MainLayout({ onOpenAddExpense }) {
                 <button
                   onClick={() => {
                     setUserDropdownOpen(!userDropdownOpen);
-                    setServerStatusOpen(false);
                     setHelpOpen(false);
                     setNotificationsOpen(false);
                   }}

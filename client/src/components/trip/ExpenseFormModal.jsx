@@ -1,7 +1,7 @@
 import React from 'react';
 import Modal from '../Modal';
 import { Camera, Globe, ArrowRightLeft } from 'lucide-react';
-import { formatVND, formatVNDInput, parseVNDInput } from '../../services/calculation';
+import { formatVND, formatVNDInput } from '../../services/calculation';
 import { SUPPORTED_CURRENCIES, getCurrencyInfo } from '../../services/currencyService';
 
 export default function ExpenseFormModal({

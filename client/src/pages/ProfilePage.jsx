@@ -34,7 +34,7 @@ const VIETNAM_BANKS = [
 export default function ProfilePage() {
   const { currentUser, updateUserProfile } = useAuth();
   const { showToast } = useToast();
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage, t, isEn } = useLanguage();
 
   const [displayName, setDisplayName] = useState('');
   const [phone, setPhone] = useState('');

@@ -8,6 +8,7 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import { ConfirmProvider } from './contexts/ConfirmContext';
 import MainLayout from './layouts/MainLayout';
 import ServerWakeBanner from './components/common/ServerWakeBanner';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Lazy load pages for efficient mobile code splitting
 const AuthPage = lazy(() => import('./pages/AuthPage'));
@@ -88,7 +89,9 @@ export default function App() {
               <ConfirmProvider>
                 <NotificationProvider>
                   <ServerWakeBanner />
-                  <AppRoutes />
+                  <ErrorBoundary>
+                    <AppRoutes />
+                  </ErrorBoundary>
                 </NotificationProvider>
               </ConfirmProvider>
             </ToastProvider>
