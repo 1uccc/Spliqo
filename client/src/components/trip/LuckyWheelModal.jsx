@@ -414,7 +414,7 @@ export default function LuckyWheelModal({
               </div>
             </div>
             <button type="button" onClick={spinWheel} disabled={spinning || participants.length < 2}
-              className="absolute left-1/2 top-1/2 z-10 flex h-[13.5%] w-[13.5%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full text-center font-black italic text-[#fde047] transition-transform hover:scale-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70 select-none shadow-md"
+              className="absolute left-1/2 top-1/2 z-10 flex h-[18%] w-[18%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full text-center font-black italic text-[#fde047] transition-transform hover:scale-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70 select-none shadow-md"
               style={{ fontSize: 'clamp(10px, 2.8vw, 12px)', lineHeight: 1 }}>
               <span>{spinning ? '...' : 'START'}</span>
               {!spinning && <span className="text-[8px] not-italic tracking-[.15em] opacity-90 mt-0.5">&gt;&gt;</span>}
