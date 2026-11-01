@@ -2,8 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Download,
-  Copy,
-  Check,
   ChevronRight,
   ChevronLeft,
   Calendar,
@@ -35,7 +33,6 @@ export default function TripWrappedModal({
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
 
@@ -160,53 +157,6 @@ export default function TripWrappedModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, handleNext, handlePrev, onClose]);
 
-  // Copy text recap to clipboard
-  const handleCopyRecap = async () => {
-    const text = isEn ? `┌──────────────────────────────────────────────┐
-  ★ SPLIQO WRAPPED // Y2K RETRO RECAP ★
-  EXPEDITION: ${trip.name.toUpperCase()} [#${trip.tripCode || 'SPLIQO'}]
-└──────────────────────────────────────────────┘
-✦ TOTAL TRIP SPENT: ${formatVND(totalExpense)}
-✦ AVERAGE / PERSON: ${formatVND(avgPerPerson)}/person
-✦ TIMELINE: ${totalDays} DAYS • ${members.length} MEMBERS • ${expenses.length} BILLS
-
-👑 THE MONEY LORD (TOP SPENDER):
-  ${topPayer.displayName} (Paid upfront: ${formatVND(topPayer.totalPaid)} ~ ${topPayerPercent}%)
-
-🥩 RECORD-BREAKING BILL:
-  "${topExpense ? topExpense.title : 'None'}" - ${topExpense ? formatVND(topExpense.amount) : '0đ'}
-
-⚡ 100% RECONCILED // ZERO DRAMA:
-  All debts settled seamlessly via VietQR!
-────────────────────────────────────────────────
-✦ Generated smartly with Spliqo App` : `┌──────────────────────────────────────────────┐
-  ★ SPLIQO WRAPPED // KỶ LỤC CHUYẾN ĐI ★
-  CHUYẾN ĐI: ${trip.name.toUpperCase()} [#${trip.tripCode || 'SPLIQO'}]
-└──────────────────────────────────────────────┘
-✦ TỔNG CHI PHÍ: ${formatVND(totalExpense)}
-✦ ĐỊNH MỨC BÌNH QUÂN: ${formatVND(avgPerPerson)}/người
-✦ QUY MÔ: ${totalDays} NGÀY • ${members.length} THÀNH VIÊN • ${expenses.length} HÓA ĐƠN
-
-👑 CHỦ TỊCH GÁNH TEAM:
-  ${topPayer.displayName} (Đã ứng trước: ${formatVND(topPayer.totalPaid)} ~ ${topPayerPercent}%)
-
-🥩 HÓA ĐƠN KỶ LỤC:
-  "${topExpense ? topExpense.title : 'Chưa có'}" - ${topExpense ? formatVND(topExpense.amount) : '0đ'}
-
-⚡ 100% SÒNG PHẲNG // ZERO DRAMA:
-  Mọi công nợ tất toán thần tốc qua VietQR chuẩn từng đồng!
-────────────────────────────────────────────────
-✦ Quản lý tài chính nhóm bởi Spliqo App`;
-
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      showToast(isEn ? 'Copied recap to clipboard!' : 'Đã sao chép nội dung recap!', 'success');
-      setTimeout(() => setCopied(false), 2500);
-    } catch {
-      showToast('Không thể sao chép tự động', 'error');
-    }
-  };
 
   // Canvas Generator: Y2K Retro-Futurism × Neo-Psychedelic × Maximalist Digital Design (1080x1920)
   const generateSlideCanvas = (slideIndex) => {
@@ -986,7 +936,7 @@ export default function TripWrappedModal({
         </div>
 
         {/* TOP STORY HEADER & PROGRESS BARS */}
-        <div className="relative z-20 px-4 pt-3.5 pb-2 space-y-2.5 shrink-0 bg-gradient-to-b from-black/90 via-black/60 to-transparent">
+        <div className="relative z-20 px-4 pt-[max(3.5rem,calc(env(safe-area-inset-top)+1rem))] sm:pt-4 pb-2 space-y-2.5 shrink-0 bg-gradient-to-b from-black/95 via-black/75 to-transparent">
           {/* Segmented Story Progress Bar (Instagram / Spotify Wrapped style) */}
           <div className="flex items-center gap-1.5 w-full">
             {Array.from({ length: totalSlides }).map((_, idx) => (
@@ -1348,17 +1298,18 @@ export default function TripWrappedModal({
         </div>
 
         {/* BOTTOM STORY CONTROL & ACTION BAR */}
-        <div className="relative z-20 px-3.5 py-3 shrink-0 bg-gradient-to-t from-black via-black/95 to-transparent border-t border-white/10 space-y-2">
+        <div className="relative z-20 px-3.5 pt-3 pb-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.75rem))] sm:pb-3.5 shrink-0 bg-gradient-to-t from-black via-black/95 to-transparent border-t border-white/10 space-y-2">
           {/* Main Action Buttons */}
           <div className="flex items-center justify-between gap-2">
             {/* Prev / Next Small Arrows */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={handlePrev}
                 disabled={currentSlide === 0}
-                className={`p-2 rounded-lg border border-white/20 bg-white/5 text-white transition-all cursor-pointer ${currentSlide === 0 ? 'opacity-25 cursor-not-allowed' : 'hover:bg-white/15 active:scale-95'
-                  }`}
+                className={`p-2.5 rounded-xl border border-white/20 bg-white/5 text-white transition-all cursor-pointer ${
+                  currentSlide === 0 ? 'opacity-25 cursor-not-allowed' : 'hover:bg-white/15 active:scale-95'
+                }`}
                 title="Trang trước"
               >
                 <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
@@ -1367,35 +1318,25 @@ export default function TripWrappedModal({
                 type="button"
                 onClick={handleNext}
                 disabled={currentSlide === totalSlides - 1}
-                className={`p-2 rounded-lg border border-white/20 bg-white/5 text-white transition-all cursor-pointer ${currentSlide === totalSlides - 1 ? 'opacity-25 cursor-not-allowed' : 'hover:bg-white/15 active:scale-95'
-                  }`}
+                className={`p-2.5 rounded-xl border border-white/20 bg-white/5 text-white transition-all cursor-pointer ${
+                  currentSlide === totalSlides - 1 ? 'opacity-25 cursor-not-allowed' : 'hover:bg-white/15 active:scale-95'
+                }`}
                 title="Trang tiếp theo"
               >
                 <ChevronRight className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
 
-            {/* Copy Recap */}
-            <button
-              type="button"
-              onClick={handleCopyRecap}
-              className="px-2.5 py-2 rounded-lg border border-white/20 bg-white/5 hover:bg-white/15 text-white font-mono font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
-              title="Sao chép văn bản recap"
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-[#00FF66]" /> : <Copy className="w-3.5 h-3.5" />}
-              <span className="text-[11px]">{copied ? 'Đã copy' : 'Copy'}</span>
-            </button>
-
             {/* Save All 5 Slides */}
             <button
               type="button"
               onClick={handleDownloadAllSlides}
               disabled={exporting}
-              className="px-2.5 py-2 rounded-lg border border-[#7B2CBF] bg-[#7B2CBF]/20 hover:bg-[#7B2CBF]/40 text-[#00F0FF] font-mono font-black text-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+              className="px-3.5 py-2.5 rounded-xl border-2 border-[#7B2CBF] bg-[#7B2CBF]/20 hover:bg-[#7B2CBF]/40 text-[#00F0FF] font-mono font-black text-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
               title="Tải toàn bộ 5 ảnh story về máy"
             >
-              <Layers className="w-3.5 h-3.5" />
-              <span className="text-[11px]">Tải cả 5</span>
+              <Layers className="w-4 h-4" />
+              <span>Tải cả 5</span>
             </button>
 
             {/* Primary CTA: Save Current Slide Image */}
@@ -1403,12 +1344,12 @@ export default function TripWrappedModal({
               type="button"
               onClick={() => handleDownloadSlide(currentSlide)}
               disabled={exporting}
-              className="flex-1 px-3 py-2 rounded-lg bg-gradient-to-r from-[#FF0055] to-[#FFE600] text-black font-black text-xs flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(255,0,85,0.5)] hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+              className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#FF0055] via-[#FF007F] to-[#FFE600] text-black font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,0,85,0.6)] hover:brightness-110 active:scale-95 transition-all cursor-pointer"
               title="Lưu ảnh Story trang này (PNG)"
             >
-              <Download className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span className="text-[11px] truncate">
-                {exporting ? 'Đang tạo...' : `Lưu ảnh (${currentSlide + 1}/5)`}
+              <Download className="w-4 h-4 stroke-[2.5]" />
+              <span className="truncate">
+                {exporting ? 'Đang tạo...' : `Lưu ảnh Story (${currentSlide + 1}/5)`}
               </span>
             </button>
           </div>
