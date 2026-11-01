@@ -158,19 +158,19 @@ export default function TripWrappedModal({
   }, [isOpen, handleNext, handlePrev, onClose]);
 
 
-  // Canvas Generator: Y2K Retro-Futurism × Neo-Psychedelic × Maximalist Digital Design (1080x1920)
+  // Canvas Generator: Y2K Retro-Futurism × Neo-Psychedelic on App Cream Canvas (1080x1920)
   const generateSlideCanvas = (slideIndex) => {
     const canvas = document.createElement('canvas');
     canvas.width = 1080;
     canvas.height = 1920;
     const ctx = canvas.getContext('2d');
 
-    // 1. Deep Black Canvas Background
-    ctx.fillStyle = '#050508';
+    // 1. Warm Creamy White Canvas Background (Spliqo App Aesthetic)
+    ctx.fillStyle = '#faf9f6';
     ctx.fillRect(0, 0, 1080, 1920);
 
-    // 2. Cyber Matrix Grid Lines
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.08)';
+    // 2. Cyber Matrix Grid Lines on Cream
+    ctx.strokeStyle = 'rgba(24, 24, 27, 0.05)';
     ctx.lineWidth = 1.5;
     for (let x = 40; x < 1080; x += 60) {
       ctx.beginPath();
@@ -196,9 +196,9 @@ export default function TripWrappedModal({
       ctx.fill();
     };
 
-    drawGlowOrb(900, 300, 500, 'rgba(123, 44, 191, 0.35)');
-    drawGlowOrb(180, 1100, 450, 'rgba(0, 240, 255, 0.25)');
-    drawGlowOrb(800, 1600, 550, 'rgba(255, 0, 85, 0.2)');
+    drawGlowOrb(900, 300, 520, 'rgba(123, 44, 191, 0.15)');
+    drawGlowOrb(180, 1100, 480, 'rgba(0, 240, 255, 0.18)');
+    drawGlowOrb(800, 1600, 550, 'rgba(255, 0, 85, 0.12)');
 
     // 4. Retro 3D Ribbons (Curved 3D Neon Gradient Bands)
     const draw3DRibbon = (startY, midY, endY, c1, c2, c3, c4) => {
@@ -212,8 +212,8 @@ export default function TripWrappedModal({
       grad.addColorStop(1, c4);
 
       ctx.strokeStyle = grad;
-      ctx.shadowColor = c2;
-      ctx.shadowBlur = 45;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+      ctx.shadowBlur = 30;
       ctx.beginPath();
       ctx.moveTo(-60, startY);
       ctx.bezierCurveTo(320, startY - 140, 760, midY, 1140, endY);
@@ -221,7 +221,7 @@ export default function TripWrappedModal({
 
       // Inner 3D Highlight Tube
       ctx.lineWidth = 14;
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
       ctx.shadowBlur = 0;
       ctx.stroke();
       ctx.restore();
@@ -232,15 +232,15 @@ export default function TripWrappedModal({
     } else if (slideIndex === 1) {
       draw3DRibbon(440, 850, 1300, '#FF0055', '#7B2CBF', '#FFE600', '#00F0FF');
     } else if (slideIndex === 2) {
-      draw3DRibbon(350, 920, 1400, '#00FF66', '#00F0FF', '#7B2CBF', '#FFE600');
+      draw3DRibbon(350, 920, 1400, '#00C853', '#00F0FF', '#7B2CBF', '#FF0055');
     } else if (slideIndex === 3) {
-      draw3DRibbon(400, 750, 1250, '#FFE600', '#FF0055', '#7B2CBF', '#00F0FF');
+      draw3DRibbon(400, 750, 1250, '#FFB703', '#FF0055', '#7B2CBF', '#00F0FF');
     } else {
       draw3DRibbon(320, 880, 1450, '#00F0FF', '#7B2CBF', '#FF0055', '#FFE600');
     }
 
-    // 5. Helper: Stepped Pixelated Gradient Card
-    const drawPixelCard = (x, y, w, h, fill = '#0a0a14', stepC1 = '#00F0FF', stepC2 = '#7B2CBF', stepC3 = '#FF0055') => {
+    // 5. Helper: Stepped Pixelated Gradient Card (Crisp White with Stark Black Borders & Neon Stepped Shadows)
+    const drawPixelCard = (x, y, w, h, fill = '#ffffff', stepC1 = '#00F0FF', stepC2 = '#7B2CBF', stepC3 = '#FF0055') => {
       // Step 3 shadow
       ctx.fillStyle = stepC3;
       ctx.fillRect(x + 16, y + 16, w, h);
@@ -257,13 +257,13 @@ export default function TripWrappedModal({
       ctx.fillStyle = fill;
       ctx.fillRect(x, y, w, h);
 
-      // Neon Border
+      // Stark Black Border
       ctx.lineWidth = 4;
-      ctx.strokeStyle = stepC1;
+      ctx.strokeStyle = '#18181b';
       ctx.strokeRect(x, y, w, h);
 
       // 8-bit Pixel Corners
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = '#18181b';
       ctx.fillRect(x - 2, y - 2, 10, 10);
       ctx.fillRect(x + w - 8, y - 2, 10, 10);
       ctx.fillRect(x - 2, y + h - 8, 10, 10);
@@ -271,11 +271,11 @@ export default function TripWrappedModal({
     };
 
     // 6. Helper: Starburst Glyphs (✦)
-    const drawStarburst = (cx, cy, spikes = 4, outerR = 24, innerR = 6, color = '#FFE600') => {
+    const drawStarburst = (cx, cy, spikes = 4, outerR = 24, innerR = 6, color = '#FF0055') => {
       ctx.save();
       ctx.fillStyle = color;
-      ctx.shadowColor = color;
-      ctx.shadowBlur = 15;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.12)';
+      ctx.shadowBlur = 10;
       ctx.beginPath();
       let rot = (Math.PI / 2) * 3;
       let x = cx;
@@ -301,21 +301,20 @@ export default function TripWrappedModal({
     };
 
     // 7. Top Header Ribbon (Common to stories)
-    // Story progress indicator bar
     for (let i = 0; i < totalSlides; i++) {
       const barW = (1080 - 140 - 4 * 12) / 5;
       const barX = 70 + i * (barW + 12);
-      ctx.fillStyle = i <= slideIndex ? '#00F0FF' : 'rgba(255, 255, 255, 0.2)';
+      ctx.fillStyle = i <= slideIndex ? '#18181b' : 'rgba(24, 24, 27, 0.12)';
       ctx.fillRect(barX, 60, barW, 6);
     }
 
     // Top Brand Tag
-    ctx.fillStyle = '#FFE600';
+    ctx.fillStyle = '#18181b';
     ctx.font = '900 24px monospace';
     ctx.fillText('SPLIQO // 2026 WRAPPED ✦', 70, 115);
 
     ctx.textAlign = 'right';
-    ctx.fillStyle = '#00F0FF';
+    ctx.fillStyle = '#7B2CBF';
     ctx.font = '900 24px monospace';
     ctx.fillText(`STORY 0${slideIndex + 1} / 05`, 1010, 115);
     ctx.textAlign = 'left';
@@ -323,28 +322,27 @@ export default function TripWrappedModal({
     // 8. RENDER CHAPTER CONTENT
     if (slideIndex === 0) {
       // SLIDE 0: THE EXPEDITION
-      drawStarburst(940, 220, 4, 36, 8, '#FFE600');
-      drawStarburst(120, 720, 4, 28, 6, '#00F0FF');
+      drawStarburst(940, 220, 4, 36, 8, '#FF0055');
+      drawStarburst(120, 720, 4, 28, 6, '#7B2CBF');
 
       // Chapter badge
       ctx.fillStyle = '#FFE600';
       ctx.fillRect(70, 170, 360, 46);
-      ctx.fillStyle = '#000000';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#18181b';
+      ctx.strokeRect(70, 170, 360, 46);
+      ctx.fillStyle = '#18181b';
       ctx.font = '900 20px monospace';
       ctx.fillText('✦ CHAPTER 01 // OVERVIEW', 90, 201);
 
-      // Hero Trip Name (Chromatic Aberration style)
+      // Hero Trip Name
       ctx.font = '900 78px sans-serif';
       const truncName = trip.name.length > 18 ? trip.name.substring(0, 16) + '...' : trip.name;
-      ctx.fillStyle = '#FF0055';
-      ctx.fillText(truncName.toUpperCase(), 74, 304);
-      ctx.fillStyle = '#00F0FF';
-      ctx.fillText(truncName.toUpperCase(), 66, 296);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = '#18181b';
       ctx.fillText(truncName.toUpperCase(), 70, 300);
 
       // Subtitle
-      ctx.fillStyle = '#A1A1AA';
+      ctx.fillStyle = '#52525b';
       ctx.font = 'bold 26px monospace';
       ctx.fillText(
         isEn
@@ -354,19 +352,19 @@ export default function TripWrappedModal({
         355
       );
 
-      // Main Budget Card (Stepped Pixel Gradient Border)
-      drawPixelCard(70, 420, 940, 460, '#0c0c16', '#00F0FF', '#7B2CBF', '#FF0055');
+      // Main Budget Card (Stepped Pixel Gradient Border on White)
+      drawPixelCard(70, 420, 940, 460, '#ffffff', '#00F0FF', '#7B2CBF', '#FF0055');
 
-      ctx.fillStyle = '#00F0FF';
+      ctx.fillStyle = '#FF0055';
       ctx.font = '900 22px monospace';
       ctx.fillText(isEn ? '► TOTAL EXPEDITION BUDGET' : '► TỔNG CHI PHÍ TOÀN BỘ CHUYẾN ĐI', 110, 485);
 
-      ctx.fillStyle = '#FFE600';
+      ctx.fillStyle = '#FF4500';
       ctx.font = '900 110px monospace';
       ctx.fillText(formatVND(totalExpense), 110, 630);
 
-      // Dashed neon divider
-      ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+      // Dashed divider
+      ctx.strokeStyle = '#dedbd0';
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.setLineDash([10, 10]);
@@ -375,39 +373,39 @@ export default function TripWrappedModal({
       ctx.stroke();
       ctx.setLineDash([]);
 
-      ctx.fillStyle = '#A1A1AA';
+      ctx.fillStyle = '#52525b';
       ctx.font = 'bold 28px sans-serif';
       ctx.fillText(isEn ? 'Average per person:' : 'Định mức bình quân:', 110, 790);
 
       ctx.textAlign = 'right';
-      ctx.fillStyle = '#00FF66';
+      ctx.fillStyle = '#059669';
       ctx.font = '900 36px monospace';
       ctx.fillText(`${formatVND(avgPerPerson)}/${isEn ? 'person' : 'người'}`, 970, 790);
       ctx.textAlign = 'left';
 
       // Two Mini Pixel Cards
-      drawPixelCard(70, 940, 450, 260, '#0c0c16', '#FFE600', '#FF0055', '#7B2CBF');
-      ctx.fillStyle = '#FFE600';
+      drawPixelCard(70, 940, 450, 260, '#ffffff', '#FFE600', '#FF0055', '#7B2CBF');
+      ctx.fillStyle = '#7B2CBF';
       ctx.font = '900 24px monospace';
       ctx.fillText('⚡ BILLS // HÓA ĐƠN', 105, 1010);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = '#18181b';
       ctx.font = '900 58px sans-serif';
       ctx.fillText(`${expenses.length} KHOẢN CHI`, 105, 1110);
 
-      drawPixelCard(560, 940, 450, 260, '#0c0c16', '#00FF66', '#00F0FF', '#7B2CBF');
-      ctx.fillStyle = '#00FF66';
+      drawPixelCard(560, 940, 450, 260, '#ffffff', '#00F0FF', '#00C853', '#7B2CBF');
+      ctx.fillStyle = '#0284c7';
       ctx.font = '900 24px monospace';
       ctx.fillText('🪐 JOURNEY // THỜI GIAN', 595, 1010);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = '#18181b';
       ctx.font = '900 58px sans-serif';
       ctx.fillText(`${totalDays} NGÀY ĐI`, 595, 1110);
 
       // Highlight Slogan Box
-      drawPixelCard(70, 1260, 940, 260, '#0c0c16', '#FF0055', '#FFE600', '#00F0FF');
+      drawPixelCard(70, 1260, 940, 260, '#ffffff', '#FF0055', '#FFE600', '#00F0FF');
       ctx.fillStyle = '#FF0055';
       ctx.font = '900 28px sans-serif';
       ctx.fillText('✦ STATUS: 100% RECONCILED // ZERO DRAMA', 110, 1335);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = '#18181b';
       ctx.font = 'bold 28px sans-serif';
       ctx.fillText('Tài chính rõ ràng minh bạch giúp tình bạn luôn bền chặt!', 110, 1405);
       ctx.fillText('Mọi chi phí phân chia sòng phẳng, chuẩn xác từng đồng.', 110, 1455);
@@ -415,31 +413,33 @@ export default function TripWrappedModal({
     } else if (slideIndex === 1) {
       // SLIDE 1: THE MONEY LORD (TOP SPENDER)
       drawStarburst(920, 220, 4, 38, 9, '#FF0055');
-      drawStarburst(140, 760, 4, 28, 6, '#FFE600');
+      drawStarburst(140, 760, 4, 28, 6, '#7B2CBF');
 
       // Chapter badge
       ctx.fillStyle = '#FF0055';
       ctx.fillRect(70, 170, 420, 46);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#18181b';
+      ctx.strokeRect(70, 170, 420, 46);
+      ctx.fillStyle = '#ffffff';
       ctx.font = '900 20px monospace';
       ctx.fillText('👑 CHAPTER 02 // TOP SPENDER MVP', 90, 201);
 
       // Title
       ctx.font = '900 70px sans-serif';
-      ctx.fillStyle = '#FFE600';
+      ctx.fillStyle = '#18181b';
       ctx.fillText('ĐẠI GIA GÁNH TEAM', 70, 295);
 
-      ctx.fillStyle = '#A1A1AA';
+      ctx.fillStyle = '#52525b';
       ctx.font = 'bold 26px monospace';
       ctx.fillText('[ THE MONEY LORD OF THE EXPEDITION ]', 70, 345);
 
       // Avatar Showcase Card
-      drawPixelCard(340, 410, 400, 360, '#0c0c16', '#FFE600', '#FF0055', '#7B2CBF');
-      ctx.fillStyle = '#FF0055';
+      drawPixelCard(340, 410, 400, 360, '#ffffff', '#FFE600', '#FF0055', '#7B2CBF');
       ctx.font = '900 110px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('👑', 540, 580);
-      ctx.fillStyle = '#FFE600';
+      ctx.fillStyle = '#FF0055';
       ctx.font = '900 26px monospace';
       ctx.fillText('#1 SPENDER // 9999 HP', 540, 670);
       ctx.textAlign = 'left';
@@ -447,24 +447,24 @@ export default function TripWrappedModal({
       // Name Headline
       ctx.textAlign = 'center';
       ctx.font = '900 64px sans-serif';
-      ctx.fillStyle = '#00F0FF';
+      ctx.fillStyle = '#18181b';
       ctx.fillText(topPayer.displayName.toUpperCase(), 540, 850);
-      ctx.fillStyle = '#A1A1AA';
+      ctx.fillStyle = '#71717a';
       ctx.font = 'bold 26px monospace';
       ctx.fillText('CHỦ TỊCH QUẸT THẺ NHANH NHẤT HỆ MẶT TRỜI', 540, 905);
       ctx.textAlign = 'left';
 
       // Hero Stat Card
-      drawPixelCard(70, 970, 940, 380, '#0c0c16', '#FF0055', '#FFE600', '#00F0FF');
+      drawPixelCard(70, 970, 940, 380, '#ffffff', '#FF0055', '#FFE600', '#00F0FF');
       ctx.fillStyle = '#FF0055';
       ctx.font = '900 24px monospace';
       ctx.fillText('► SỐ TIỀN ĐÃ ỨNG TRƯỚC CHO CẢ ĐOÀN:', 110, 1045);
 
-      ctx.fillStyle = '#FFE600';
+      ctx.fillStyle = '#FF4500';
       ctx.font = '900 108px monospace';
       ctx.fillText(formatVND(topPayer.totalPaid), 110, 1180);
 
-      ctx.strokeStyle = 'rgba(255, 0, 85, 0.4)';
+      ctx.strokeStyle = '#dedbd0';
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.setLineDash([10, 10]);
@@ -473,95 +473,98 @@ export default function TripWrappedModal({
       ctx.stroke();
       ctx.setLineDash([]);
 
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = '#18181b';
       ctx.font = 'bold 30px sans-serif';
       ctx.fillText(`Chiếm tới ${topPayerPercent}% toàn bộ ngân sách cả chuyến đi!`, 110, 1295);
 
       // Thank You Shoutout
-      drawPixelCard(70, 1400, 940, 180, '#0c0c16', '#FFE600', '#00FF66', '#7B2CBF');
-      ctx.fillStyle = '#00FF66';
+      drawPixelCard(70, 1400, 940, 180, '#ffffff', '#00C853', '#00F0FF', '#7B2CBF');
+      ctx.fillStyle = '#059669';
       ctx.font = '900 26px sans-serif';
       ctx.fillText('🙏 CREW SHOUTOUT // TRI ÂN CHỦ TỊCH', 110, 1465);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = '#18181b';
       ctx.font = 'bold 26px sans-serif';
       ctx.fillText('Cảm ơn chủ tịch đã quẹt thẻ chi trả trước cho mọi hoạt động ăn chơi!', 110, 1520);
 
     } else if (slideIndex === 2) {
       // SLIDE 2: THE RECORD BREAKER
-      drawStarburst(940, 220, 4, 38, 9, '#00FF66');
+      drawStarburst(940, 220, 4, 38, 9, '#059669');
       drawStarburst(140, 780, 4, 28, 6, '#00F0FF');
 
       // Chapter badge
-      ctx.fillStyle = '#00FF66';
+      ctx.fillStyle = '#059669';
       ctx.fillRect(70, 170, 440, 46);
-      ctx.fillStyle = '#000000';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#18181b';
+      ctx.strokeRect(70, 170, 440, 46);
+      ctx.fillStyle = '#ffffff';
       ctx.font = '900 20px monospace';
       ctx.fillText('🥩 CHAPTER 03 // RECORD-BREAKING BILL', 90, 201);
 
       // Title
       ctx.font = '900 70px sans-serif';
-      ctx.fillStyle = '#00FF66';
+      ctx.fillStyle = '#18181b';
       ctx.fillText('HÓA ĐƠN KỶ LỤC', 70, 295);
 
-      ctx.fillStyle = '#A1A1AA';
+      ctx.fillStyle = '#52525b';
       ctx.font = 'bold 26px monospace';
       ctx.fillText('[ THE HEAVYWEIGHT CHAMPION OF EXPENSES ]', 70, 345);
 
       // Big Bill Card
-      drawPixelCard(70, 410, 940, 480, '#0c0c16', '#00FF66', '#00F0FF', '#7B2CBF');
-      ctx.fillStyle = '#00F0FF';
+      drawPixelCard(70, 410, 940, 480, '#ffffff', '#059669', '#00F0FF', '#7B2CBF');
+      ctx.fillStyle = '#0284c7';
       ctx.font = '900 24px monospace';
       ctx.fillText('► BILL KỶ LỤC CỦA CHUYẾN ĐI', 110, 480);
 
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = '#18181b';
       ctx.font = '900 58px sans-serif';
       const expTitle = topExpense ? `"${topExpense.title}"` : '"Chưa có khoản chi"';
       const truncExp = expTitle.length > 20 ? expTitle.substring(0, 18) + '..."' : expTitle;
       ctx.fillText(truncExp.toUpperCase(), 110, 580);
 
-      ctx.fillStyle = '#00FF66';
+      ctx.fillStyle = '#059669';
       ctx.font = '900 110px monospace';
       ctx.fillText(formatVND(topExpense ? topExpense.amount : 0), 110, 730);
 
       const expPct = totalExpense > 0 && topExpense ? Math.round((topExpense.amount / totalExpense) * 100) : 0;
-      ctx.fillStyle = '#A1A1AA';
+      ctx.fillStyle = '#52525b';
       ctx.font = 'bold 28px sans-serif';
       ctx.fillText(`Chiếm ${expPct}% tổng chi tiêu toàn đoàn!`, 110, 820);
 
       // Bill Details Matrix
-      drawPixelCard(70, 940, 940, 380, '#0c0c16', '#FFE600', '#FF0055', '#7B2CBF');
-      ctx.fillStyle = '#FFE600';
+      drawPixelCard(70, 940, 940, 380, '#ffffff', '#FFE600', '#FF0055', '#7B2CBF');
+      ctx.fillStyle = '#7B2CBF';
       ctx.font = '900 28px monospace';
       ctx.fillText('✦ TRANSACTION ANATOMY // CHI TIẾT', 110, 1020);
 
       ctx.font = 'bold 30px sans-serif';
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = '#52525b';
       ctx.fillText(`• Người thanh toán:`, 110, 1100);
       ctx.textAlign = 'right';
-      ctx.fillStyle = '#00F0FF';
+      ctx.fillStyle = '#18181b';
       ctx.fillText(`${topExpensePayer?.displayName || 'Thành viên'}`, 970, 1100);
       ctx.textAlign = 'left';
 
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = '#52525b';
       ctx.fillText(`• Ngày ghi nhận:`, 110, 1180);
       ctx.textAlign = 'right';
-      ctx.fillStyle = '#FFE600';
+      ctx.fillStyle = '#FF4500';
       ctx.fillText(`${topExpense?.date || 'Trong chuyến đi'}`, 970, 1180);
       ctx.textAlign = 'left';
 
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = '#52525b';
       ctx.fillText(`• Quy mô chia bill:`, 110, 1260);
       ctx.textAlign = 'right';
-      ctx.fillStyle = '#00FF66';
+      ctx.fillStyle = '#059669';
       ctx.fillText(`${topExpense?.participants?.length || members.length} thành viên`, 970, 1260);
       ctx.textAlign = 'left';
 
       // Slogan
-      drawPixelCard(70, 1370, 940, 200, '#0c0c16', '#FF0055', '#FFE600', '#00FF66');
+      drawPixelCard(70, 1370, 940, 200, '#ffffff', '#FF0055', '#FFE600', '#00C853');
       ctx.fillStyle = '#FF0055';
       ctx.font = '900 28px sans-serif';
       ctx.fillText('✦ BILL NÀY GÁNH CẢ THANH XUÂN', 110, 1445);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = '#18181b';
       ctx.font = 'bold 26px sans-serif';
       ctx.fillText('Những bữa ăn ngon nhất chính là những kỷ niệm đắt giá nhất!', 110, 1505);
 
@@ -573,39 +576,41 @@ export default function TripWrappedModal({
       // Chapter badge
       ctx.fillStyle = '#7B2CBF';
       ctx.fillRect(70, 170, 450, 46);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#18181b';
+      ctx.strokeRect(70, 170, 450, 46);
+      ctx.fillStyle = '#ffffff';
       ctx.font = '900 20px monospace';
       ctx.fillText('⚡ CHAPTER 04 // FAIR PLAY ENERGY', 90, 201);
 
       // Title
       ctx.font = '900 70px sans-serif';
-      ctx.fillStyle = '#00F0FF';
+      ctx.fillStyle = '#18181b';
       ctx.fillText('100% SÒNG PHẲNG', 70, 295);
 
-      ctx.fillStyle = '#A1A1AA';
+      ctx.fillStyle = '#52525b';
       ctx.font = 'bold 26px monospace';
       ctx.fillText('[ ZERO DRAMA • MAXIMUM CREDIBILITY ]', 70, 345);
 
       // Center Lightning Icon Box
-      drawPixelCard(420, 410, 240, 240, '#0c0c16', '#FFE600', '#FF0055', '#00F0FF');
-      ctx.fillStyle = '#FFE600';
+      drawPixelCard(420, 410, 240, 240, '#ffffff', '#FFE600', '#FF0055', '#00F0FF');
       ctx.font = '900 120px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('⚡', 540, 580);
       ctx.textAlign = 'left';
 
       // Main Progress Card
-      drawPixelCard(70, 710, 940, 400, '#0c0c16', '#00F0FF', '#7B2CBF', '#FF0055');
-      ctx.fillStyle = '#00F0FF';
+      drawPixelCard(70, 710, 940, 400, '#ffffff', '#00F0FF', '#7B2CBF', '#FF0055');
+      ctx.fillStyle = '#7B2CBF';
       ctx.font = '900 26px monospace';
       ctx.fillText('► RECONCILIATION PROGRESS // TIẾN ĐỘ', 110, 785);
 
-      ctx.fillStyle = '#FFE600';
+      ctx.fillStyle = '#059669';
       ctx.font = '900 96px monospace';
       ctx.fillText('100% COMPLETE', 110, 910);
 
-      // Rainbow Stepped Progress Bar
-      ctx.fillStyle = '#181824';
+      // Stepped Rainbow Progress Bar
+      ctx.fillStyle = '#f4f3ec';
       ctx.fillRect(110, 955, 860, 44);
       const barGrad = ctx.createLinearGradient(110, 955, 970, 955);
       barGrad.addColorStop(0, '#00F0FF');
@@ -615,25 +620,25 @@ export default function TripWrappedModal({
       ctx.fillStyle = barGrad;
       ctx.fillRect(110, 955, 860, 44);
       ctx.lineWidth = 3;
-      ctx.strokeStyle = '#FFFFFF';
+      ctx.strokeStyle = '#18181b';
       ctx.strokeRect(110, 955, 860, 44);
 
-      ctx.fillStyle = '#A1A1AA';
+      ctx.fillStyle = '#18181b';
       ctx.font = 'bold 26px sans-serif';
       ctx.fillText('Toàn bộ công nợ đã được tất toán chuẩn xác từng đồng qua VietQR!', 110, 1055);
 
       // Fastest Settler Card
-      drawPixelCard(70, 1170, 940, 340, '#0c0c16', '#FFE600', '#00FF66', '#7B2CBF');
-      ctx.fillStyle = '#FFE600';
+      drawPixelCard(70, 1170, 940, 340, '#ffffff', '#FFE600', '#00C853', '#7B2CBF');
+      ctx.fillStyle = '#FF0055';
       ctx.font = '900 24px monospace';
       ctx.fillText('✦ LIGHTNING-FAST SETTLER // TẤT TOÁN NHANH NHẤT', 110, 1245);
 
-      ctx.fillStyle = '#00FF66';
+      ctx.fillStyle = '#059669';
       ctx.font = '900 58px sans-serif';
       const settlerName = fastestSettler?.displayName || (isEn ? 'WHOLE CREW' : 'CẢ NHÓM');
       ctx.fillText(settlerName.toUpperCase(), 110, 1345);
 
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = '#18181b';
       ctx.font = 'bold 28px sans-serif';
       ctx.fillText('Tinh thần sòng phẳng thần tốc, chuẩn 10 điểm uy tín!', 110, 1430);
 
@@ -645,55 +650,61 @@ export default function TripWrappedModal({
       // Chapter badge
       ctx.fillStyle = '#FF0055';
       ctx.fillRect(70, 160, 480, 46);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#18181b';
+      ctx.strokeRect(70, 160, 480, 46);
+      ctx.fillStyle = '#ffffff';
       ctx.font = '900 20px monospace';
       ctx.fillText('★ CHAPTER 05 // OFFICIAL CYBER PASS', 90, 191);
 
       // Title
       ctx.font = '900 68px sans-serif';
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = '#18181b';
       ctx.fillText(truncName.toUpperCase(), 70, 280);
 
-      ctx.fillStyle = '#00F0FF';
+      ctx.fillStyle = '#7B2CBF';
       ctx.font = 'bold 26px monospace';
       ctx.fillText(`CODE: #${trip.tripCode || 'SPLIQO'} • TIMELINE: ${trip.startDate || '2026'}`, 70, 330);
 
       // Giant Cyber Pass Card
-      drawPixelCard(70, 380, 940, 860, '#0c0c16', '#00F0FF', '#7B2CBF', '#FF0055');
+      drawPixelCard(70, 380, 940, 860, '#ffffff', '#00F0FF', '#7B2CBF', '#FF0055');
 
       // Top Tag
-      ctx.fillStyle = '#00F0FF';
+      ctx.fillStyle = '#FFE600';
       ctx.fillRect(70, 380, 420, 52);
-      ctx.fillStyle = '#000000';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#18181b';
+      ctx.strokeRect(70, 380, 420, 52);
+      ctx.fillStyle = '#18181b';
       ctx.font = '900 22px monospace';
       ctx.fillText('SPLIQO BOARDING PASS // 2026', 95, 415);
 
       // Row 1: Total Spent
-      ctx.fillStyle = '#A1A1AA';
+      ctx.fillStyle = '#52525b';
       ctx.font = 'bold 30px sans-serif';
       ctx.fillText('Tổng chi tiêu toàn chuyến:', 110, 500);
       ctx.textAlign = 'right';
-      ctx.fillStyle = '#FFE600';
+      ctx.fillStyle = '#FF4500';
       ctx.font = '900 48px monospace';
       ctx.fillText(formatVND(totalExpense), 970, 500);
       ctx.textAlign = 'left';
 
       // Row 2: Top Spender
-      ctx.fillStyle = '#A1A1AA';
+      ctx.fillStyle = '#52525b';
       ctx.font = 'bold 30px sans-serif';
       ctx.fillText('👑 Chủ tịch gánh team:', 110, 600);
       ctx.textAlign = 'right';
-      ctx.fillStyle = '#00F0FF';
+      ctx.fillStyle = '#18181b';
       ctx.font = '900 36px sans-serif';
       ctx.fillText(`${topPayer.displayName}`, 970, 600);
       ctx.textAlign = 'left';
 
       // Row 3: Biggest Bill
-      ctx.fillStyle = '#A1A1AA';
+      ctx.fillStyle = '#52525b';
       ctx.font = 'bold 30px sans-serif';
       ctx.fillText('🥩 Hóa đơn kỷ lục:', 110, 700);
       ctx.textAlign = 'right';
-      ctx.fillStyle = '#00FF66';
+      ctx.fillStyle = '#059669';
       ctx.font = '900 36px sans-serif';
       const bTitle = topExpense ? topExpense.title : 'Chưa có';
       const bTrunc = bTitle.length > 14 ? bTitle.substring(0, 12) + '...' : bTitle;
@@ -701,17 +712,17 @@ export default function TripWrappedModal({
       ctx.textAlign = 'left';
 
       // Row 4: Settlement
-      ctx.fillStyle = '#A1A1AA';
+      ctx.fillStyle = '#52525b';
       ctx.font = 'bold 30px sans-serif';
       ctx.fillText('⚡ Đối soát công nợ:', 110, 800);
       ctx.textAlign = 'right';
-      ctx.fillStyle = '#FF0055';
+      ctx.fillStyle = '#7B2CBF';
       ctx.font = '900 36px sans-serif';
       ctx.fillText('100% Sòng phẳng', 970, 800);
       ctx.textAlign = 'left';
 
       // Dashed divider line
-      ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+      ctx.strokeStyle = '#dedbd0';
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.setLineDash([10, 10]);
@@ -721,23 +732,23 @@ export default function TripWrappedModal({
       ctx.setLineDash([]);
 
       // Holographic Stamp Box
-      ctx.fillStyle = '#FFE600';
+      ctx.fillStyle = '#FF0055';
       ctx.font = '900 34px sans-serif';
       ctx.fillText('★ CHỨNG NHẬN SÒNG PHẲNG SPLIQO ★', 110, 960);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = '#18181b';
       ctx.font = 'bold 26px sans-serif';
       ctx.fillText('Tài chính rõ ràng • Đi chơi sảng khoái • Trọn vẹn tình bạn', 110, 1030);
 
-      ctx.fillStyle = '#00FF66';
+      ctx.fillStyle = '#059669';
       ctx.font = '900 48px monospace';
       ctx.fillText('GRADE: 10/10 ★★★★★', 110, 1140);
 
       // Quote Card
-      drawPixelCard(70, 1300, 940, 260, '#0c0c16', '#FFE600', '#FF0055', '#00F0FF');
-      ctx.fillStyle = '#FFE600';
+      drawPixelCard(70, 1300, 940, 260, '#ffffff', '#FFE600', '#FF0055', '#00F0FF');
+      ctx.fillStyle = '#7B2CBF';
       ctx.font = '900 28px sans-serif';
       ctx.fillText('✦ KỶ NIỆM VÔ GIÁ CÙNG SPLIQO ✦', 110, 1375);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = '#18181b';
       ctx.font = 'bold 26px sans-serif';
       ctx.fillText('Chuyến đi đã khép lại, nhưng những kỷ niệm đẹp sẽ còn mãi.', 110, 1445);
       ctx.fillText('Hẹn gặp lại cả nhóm trong hành trình tiếp theo!', 110, 1500);
@@ -748,21 +759,21 @@ export default function TripWrappedModal({
     const barcodeY = 1760;
     const barPattern = [4, 2, 8, 3, 2, 6, 4, 3, 7, 2, 4, 8, 3, 2, 5, 4, 2, 7, 3, 8, 2, 4, 6, 3, 2, 8, 5, 3, 2, 7];
     let curX = barcodeX;
-    ctx.fillStyle = '#00F0FF';
+    ctx.fillStyle = '#18181b';
     for (const w of barPattern) {
       ctx.fillRect(curX, barcodeY, w, 50);
       curX += w + 6;
     }
 
     ctx.font = 'bold 22px monospace';
-    ctx.fillStyle = '#A1A1AA';
+    ctx.fillStyle = '#71717a';
     ctx.fillText('* SPLIQO-CYBER-WRAPPED-2026 *', barcodeX, 1845);
 
     ctx.textAlign = 'right';
-    ctx.fillStyle = '#FFE600';
+    ctx.fillStyle = '#18181b';
     ctx.font = '900 26px monospace';
     ctx.fillText('SPLIQO.APP ✦ SMART EXPENSE', 1010, 1795);
-    ctx.fillStyle = '#00FF66';
+    ctx.fillStyle = '#059669';
     ctx.fillText('CHIA TIỀN TỨC THÌ • CHƠI ĐẸP', 1010, 1835);
     ctx.textAlign = 'left';
 
@@ -862,10 +873,10 @@ export default function TripWrappedModal({
       {/* 9:16 Vertical Story Viewer Container */}
       <div
         ref={storyContainerRef}
-        className="relative w-full max-w-[440px] h-[100dvh] sm:h-[92dvh] max-h-[900px] flex flex-col justify-between overflow-hidden bg-[#050508] text-white sm:rounded-[2.5rem] border-0 sm:border-2 sm:border-[#00F0FF]/40 shadow-[0_0_60px_rgba(0,240,255,0.25)]"
+        className="relative w-full max-w-[440px] h-[100dvh] sm:h-[92dvh] max-h-[900px] flex flex-col justify-between overflow-hidden bg-[#faf9f6] text-[#18181b] sm:rounded-[2.5rem] border-0 sm:border-2 sm:border-[#18181b] shadow-[0_20px_50px_rgba(0,0,0,0.35)]"
       >
         {/* Dynamic 3D Psychedelic Ribbon SVG Background */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-80 z-0">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-90 z-0">
           <svg className="w-full h-full" viewBox="0 0 440 850" fill="none">
             <defs>
               <linearGradient id="cyberRibbonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -876,7 +887,7 @@ export default function TripWrappedModal({
                 <stop offset="100%" stopColor="#FFE600" />
               </linearGradient>
               <filter id="ribbonGlow" x="-30%" y="-30%" width="160%" height="160%">
-                <feGaussianBlur stdDeviation="10" result="blur" />
+                <feGaussianBlur stdDeviation="8" result="blur" />
                 <feMerge>
                   <feMergeNode in="blur" />
                   <feMergeNode in="SourceGraphic" />
@@ -885,7 +896,7 @@ export default function TripWrappedModal({
             </defs>
 
             {/* Ambient Background Grid */}
-            <g stroke="rgba(0, 240, 255, 0.08)" strokeWidth="1">
+            <g stroke="rgba(24, 24, 27, 0.05)" strokeWidth="1">
               {Array.from({ length: 15 }).map((_, i) => (
                 <line key={`v-${i}`} x1={i * 32} y1="0" x2={i * 32} y2="850" />
               ))}
@@ -927,7 +938,7 @@ export default function TripWrappedModal({
                         ? "M-30,350 C80,200 160,580 300,400 C390,280 380,700 480,620"
                         : "M-40,150 C120,250 180,120 280,380 C360,550 400,450 480,700"
               }
-              stroke="rgba(255, 255, 255, 0.7)"
+              stroke="rgba(255, 255, 255, 0.85)"
               strokeWidth="6"
               strokeLinecap="round"
               className="transition-all duration-700 ease-out"
@@ -936,8 +947,8 @@ export default function TripWrappedModal({
         </div>
 
         {/* TOP STORY HEADER & PROGRESS BARS */}
-        <div className="relative z-20 px-4 pt-[max(3.5rem,calc(env(safe-area-inset-top)+1rem))] sm:pt-4 pb-2 space-y-2.5 shrink-0 bg-gradient-to-b from-black/95 via-black/75 to-transparent">
-          {/* Segmented Story Progress Bar (Instagram / Spotify Wrapped style) */}
+        <div className="relative z-20 px-4 pt-[max(3.5rem,calc(env(safe-area-inset-top)+1rem))] sm:pt-4 pb-2 space-y-2.5 shrink-0 bg-gradient-to-b from-[#faf9f6] via-[#faf9f6]/90 to-transparent">
+          {/* Segmented Story Progress Bar */}
           <div className="flex items-center gap-1.5 w-full">
             {Array.from({ length: totalSlides }).map((_, idx) => (
               <div
@@ -946,10 +957,10 @@ export default function TripWrappedModal({
                   setCurrentSlide(idx);
                   setProgress(0);
                 }}
-                className="h-1 flex-1 rounded-full overflow-hidden bg-white/20 cursor-pointer"
+                className="h-1 flex-1 rounded-full overflow-hidden bg-black/10 cursor-pointer"
               >
                 <div
-                  className="h-full bg-[#00F0FF] shadow-[0_0_8px_#00F0FF] transition-all duration-100 ease-linear"
+                  className="h-full bg-[#18181b] shadow-[0_0_4px_rgba(0,0,0,0.3)] transition-all duration-100 ease-linear"
                   style={{
                     width: idx < currentSlide ? '100%' : idx === currentSlide ? `${progress}%` : '0%'
                   }}
@@ -961,10 +972,10 @@ export default function TripWrappedModal({
           {/* Top Bar Navigation & Info */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 bg-[#FFE600] text-black font-mono font-black text-[10px] tracking-wider uppercase shadow-[2px_2px_0px_#FF0055]">
+              <span className="px-2.5 py-0.5 bg-[#FFE600] text-black font-mono font-black text-[10px] tracking-wider uppercase border border-[#18181b] shadow-[2px_2px_0px_#18181b]">
                 SPLIQO WRAPPED ✦
               </span>
-              <span className="font-mono text-xs font-bold text-[#00F0FF] tracking-wider">
+              <span className="font-mono text-xs font-bold text-[#7B2CBF] tracking-wider">
                 STORY {currentSlide + 1}/5
               </span>
             </div>
@@ -974,7 +985,7 @@ export default function TripWrappedModal({
               <button
                 type="button"
                 onClick={() => setIsPaused((p) => !p)}
-                className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"
+                className="p-1.5 rounded-full bg-black/5 hover:bg-black/10 text-[#18181b] border border-black/10 transition-all cursor-pointer"
                 title={isPaused ? "Tiếp tục" : "Tạm dừng"}
               >
                 {isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5 fill-current" />}
@@ -984,7 +995,7 @@ export default function TripWrappedModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="w-7 h-7 rounded-full bg-white/10 hover:bg-[#FF0055] text-white flex items-center justify-center transition-all cursor-pointer hover:rotate-90 active:scale-90"
+                className="w-7 h-7 rounded-full bg-black/5 hover:bg-[#FF0055] hover:text-white text-[#18181b] border border-black/10 flex items-center justify-center transition-all cursor-pointer hover:rotate-90 active:scale-90"
                 title="Đóng (ESC)"
               >
                 <X className="w-4 h-4 stroke-[2.5]" />
@@ -1024,63 +1035,63 @@ export default function TripWrappedModal({
           {currentSlide === 0 && (
             <div className="space-y-3 animate-fade-in">
               <div className="flex items-center justify-between">
-                <span className="inline-block px-2.5 py-0.5 bg-[#FFE600] text-black font-mono font-black text-[10px] tracking-wider uppercase shadow-[2px_2px_0px_#FF0055]">
+                <span className="inline-block px-2.5 py-0.5 bg-[#FFE600] text-black font-mono font-black text-[10px] tracking-wider uppercase border border-[#18181b] shadow-[2px_2px_0px_#18181b]">
                   ✦ CHƯƠNG 01 // OVERVIEW ✦
                 </span>
-                <span className="text-[#FFE600] text-lg font-black animate-pulse">✶</span>
+                <span className="text-[#FF0055] text-lg font-black animate-pulse">✶</span>
               </div>
 
               <div>
-                <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tighter uppercase drop-shadow-[0_0_15px_#00F0FF] leading-none">
+                <h2 className="text-3xl sm:text-4xl font-black text-[#18181b] tracking-tighter uppercase leading-none">
                   {truncName}
                 </h2>
-                <p className="text-[11px] font-mono font-bold text-[#A1A1AA] mt-1 tracking-wider">
+                <p className="text-[11px] font-mono font-bold text-[#52525b] mt-1 tracking-wider">
                   [ {totalDays} NGÀY KHÁM PHÁ • {members.length} THÀNH VIÊN • #{trip.tripCode || 'SPLIQO'} ]
                 </p>
               </div>
 
-              {/* Main Stat Card (Stepped Pixelated Gradient Border) */}
-              <div className="p-4 bg-[#0a0a14] border-2 border-[#00F0FF] shadow-[4px_4px_0px_#7B2CBF,8px_8px_0px_#FF0055] space-y-1 relative">
-                <div className="flex items-center justify-between text-[10px] font-mono font-black text-[#00F0FF] tracking-wider uppercase">
+              {/* Main Stat Card (Crisp White Card with Stepped Shadows) */}
+              <div className="p-4 bg-white border-2 border-[#18181b] shadow-[4px_4px_0px_#00F0FF,8px_8px_0px_#FF0055] space-y-1 relative">
+                <div className="flex items-center justify-between text-[10px] font-mono font-black text-[#FF0055] tracking-wider uppercase">
                   <span>► TỔNG CHI PHÍ CHUYẾN ĐI</span>
-                  <span className="text-white text-xs">✦</span>
+                  <span className="text-[#18181b] text-xs">✦</span>
                 </div>
-                <div className="text-3xl sm:text-4xl font-black text-[#FFE600] font-mono tracking-tight drop-shadow-[0_0_12px_rgba(255,230,0,0.5)]">
+                <div className="text-3xl sm:text-4xl font-black text-[#FF4500] font-mono tracking-tight">
                   {formatVND(totalExpense)}
                 </div>
-                <div className="pt-2 border-t-2 border-dashed border-[#00F0FF]/30 flex items-center justify-between text-xs font-bold font-mono">
-                  <span className="text-zinc-400">Định mức bình quân:</span>
-                  <span className="text-[#00FF66] font-black">{formatVND(avgPerPerson)}/người</span>
+                <div className="pt-2 border-t-2 border-dashed border-[#e4e2d8] flex items-center justify-between text-xs font-bold font-mono">
+                  <span className="text-zinc-500">Định mức bình quân:</span>
+                  <span className="text-[#059669] font-black">{formatVND(avgPerPerson)}/người</span>
                 </div>
               </div>
 
               {/* Two Mini Pixel Cards */}
               <div className="grid grid-cols-2 gap-2.5">
-                <div className="p-3 bg-[#0a0a14] border-2 border-[#FFE600] shadow-[3px_3px_0px_#FF0055] space-y-0.5">
-                  <div className="text-[9px] font-mono font-black text-[#FFE600] uppercase tracking-wider flex items-center gap-1">
+                <div className="p-3 bg-white border-2 border-[#18181b] shadow-[3px_3px_0px_#FFE600] space-y-0.5">
+                  <div className="text-[9px] font-mono font-black text-[#7B2CBF] uppercase tracking-wider flex items-center gap-1">
                     <Receipt className="w-3 h-3" />
                     <span>HÓA ĐƠN</span>
                   </div>
-                  <div className="text-lg font-black text-white font-sans tracking-tight">
+                  <div className="text-lg font-black text-[#18181b] font-sans tracking-tight">
                     {expenses.length} KHOẢN CHI
                   </div>
                 </div>
 
-                <div className="p-3 bg-[#0a0a14] border-2 border-[#00FF66] shadow-[3px_3px_0px_#00F0FF] space-y-0.5">
-                  <div className="text-[9px] font-mono font-black text-[#00FF66] uppercase tracking-wider flex items-center gap-1">
+                <div className="p-3 bg-white border-2 border-[#18181b] shadow-[3px_3px_0px_#00F0FF] space-y-0.5">
+                  <div className="text-[9px] font-mono font-black text-[#0284c7] uppercase tracking-wider flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
                     <span>HÀNH TRÌNH</span>
                   </div>
-                  <div className="text-lg font-black text-white font-sans tracking-tight">
+                  <div className="text-lg font-black text-[#18181b] font-sans tracking-tight">
                     {totalDays} NGÀY ĐI
                   </div>
                 </div>
               </div>
 
               {/* Highlight Tag */}
-              <div className="p-2.5 bg-[#0a0a14] border border-[#FF0055] shadow-[2px_2px_0px_#FFE600] flex items-center justify-between text-[11px] font-mono font-bold">
+              <div className="p-2.5 bg-white border border-[#18181b] shadow-[2px_2px_0px_#FF0055] flex items-center justify-between text-[11px] font-mono font-bold">
                 <span className="text-[#FF0055] font-black">✦ STATUS: 100% RECONCILED</span>
-                <span className="text-[#00F0FF]">ZERO DRAMA ⚡</span>
+                <span className="text-[#7B2CBF]">ZERO DRAMA ⚡</span>
               </div>
             </div>
           )}
@@ -1089,45 +1100,45 @@ export default function TripWrappedModal({
           {currentSlide === 1 && (
             <div className="space-y-3.5 animate-fade-in text-center">
               <div className="flex justify-center">
-                <span className="px-3 py-0.5 bg-[#FF0055] text-white font-mono font-black text-[10px] tracking-wider uppercase shadow-[2px_2px_0px_#FFE600]">
+                <span className="px-3 py-0.5 bg-[#FF0055] text-white font-mono font-black text-[10px] tracking-wider uppercase border border-[#18181b] shadow-[2px_2px_0px_#18181b]">
                   CHƯƠNG 02 // TOP SPENDER MVP
                 </span>
               </div>
 
-              {/* Avatar Box with Stepped Neon Gradient */}
+              {/* Avatar Box */}
               <div className="relative inline-block mx-auto">
-                <div className="w-20 h-20 rounded-none bg-[#0c0c16] border-2 border-[#FFE600] shadow-[4px_4px_0px_#FF0055,8px_8px_0px_#7B2CBF] p-1 overflow-hidden flex items-center justify-center">
-                  <span className="text-4xl drop-shadow-[0_0_15px_#FFE600]">👑</span>
+                <div className="w-20 h-20 rounded-none bg-white border-2 border-[#18181b] shadow-[4px_4px_0px_#FF0055,8px_8px_0px_#FFE600] p-1 overflow-hidden flex items-center justify-center">
+                  <span className="text-4xl">👑</span>
                 </div>
-                <div className="absolute -bottom-2 -right-2 px-1.5 py-0.5 bg-[#FFE600] text-black font-mono font-black text-[9px] shadow-[1.5px_1.5px_0px_#000]">
+                <div className="absolute -bottom-2 -right-2 px-1.5 py-0.5 bg-[#FFE600] text-black font-mono font-black text-[9px] border border-[#18181b] shadow-[1.5px_1.5px_0px_#18181b]">
                   #1 MVP
                 </div>
               </div>
 
               <div>
-                <h3 className="text-2xl sm:text-3xl font-black text-[#00F0FF] uppercase tracking-tight drop-shadow-[0_0_12px_#00F0FF]">
+                <h3 className="text-2xl sm:text-3xl font-black text-[#18181b] uppercase tracking-tight">
                   {topPayer.displayName}
                 </h3>
-                <p className="text-[10px] font-mono font-bold text-zinc-400 tracking-wider mt-0.5">
+                <p className="text-[10px] font-mono font-bold text-zinc-500 tracking-wider mt-0.5">
                   [ NGƯỜI CHỊU CHI BẠO TAY NHẤT CẢ CHUYẾN ĐI ]
                 </p>
               </div>
 
               {/* Main Spend Box */}
-              <div className="p-3.5 bg-[#0a0a14] border-2 border-[#FF0055] shadow-[4px_4px_0px_#FFE600] text-left space-y-1">
+              <div className="p-3.5 bg-white border-2 border-[#18181b] shadow-[4px_4px_0px_#FFE600] text-left space-y-1">
                 <div className="text-[9px] font-mono font-black uppercase text-[#FF0055] tracking-wider">
                   ► TỔNG TIỀN ĐÃ ỨNG TRƯỚC:
                 </div>
-                <div className="text-2xl sm:text-3xl font-black text-[#FFE600] font-mono tracking-tight drop-shadow-[0_0_10px_rgba(255,230,0,0.5)]">
+                <div className="text-2xl sm:text-3xl font-black text-[#FF4500] font-mono tracking-tight">
                   {formatVND(topPayer.totalPaid)}
                 </div>
-                <p className="text-[11px] font-bold text-zinc-300 pt-1 border-t border-dashed border-[#FF0055]/30">
-                  Gánh tới <strong className="text-[#00F0FF] font-black">{topPayerPercent}%</strong> toàn bộ ngân sách chi tiêu cả đoàn!
+                <p className="text-[11px] font-bold text-zinc-600 pt-1 border-t border-dashed border-[#e4e2d8]">
+                  Gánh tới <strong className="text-[#0284c7] font-black">{topPayerPercent}%</strong> toàn bộ ngân sách chi tiêu cả đoàn!
                 </p>
               </div>
 
               {/* Shoutout Tag */}
-              <div className="p-2.5 bg-[#0a0a14] border border-[#00FF66] shadow-[2px_2px_0px_#7B2CBF] text-[11px] text-zinc-300 font-bold">
+              <div className="p-2.5 bg-white border border-[#18181b] shadow-[2px_2px_0px_#059669] text-[11px] text-[#18181b] font-bold">
                 🙏 Cả đoàn xin nghiêng mình cảm tạ chủ tịch đã quẹt thẻ trước không trượt phát nào!
               </div>
             </div>
@@ -1137,52 +1148,52 @@ export default function TripWrappedModal({
           {currentSlide === 2 && (
             <div className="space-y-3.5 animate-fade-in">
               <div className="flex justify-between items-center">
-                <span className="px-3 py-0.5 bg-[#00FF66] text-black font-mono font-black text-[10px] tracking-wider uppercase shadow-[2px_2px_0px_#00F0FF]">
+                <span className="px-3 py-0.5 bg-[#059669] text-white font-mono font-black text-[10px] tracking-wider uppercase border border-[#18181b] shadow-[2px_2px_0px_#18181b]">
                   CHƯƠNG 03 // BIGGEST RECORD BILL
                 </span>
-                <span className="text-[#00FF66] text-base font-black">✦</span>
+                <span className="text-[#059669] text-base font-black">✦</span>
               </div>
 
               <div>
-                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight uppercase">
+                <h3 className="text-xl sm:text-2xl font-black text-[#18181b] tracking-tight uppercase">
                   HÓA ĐƠN KỶ LỤC
                 </h3>
-                <p className="text-[10px] font-mono font-bold text-zinc-400 tracking-wider">
+                <p className="text-[10px] font-mono font-bold text-zinc-500 tracking-wider">
                   [ THE HEAVYWEIGHT CHAMPION OF EXPENSES ]
                 </p>
               </div>
 
               {/* Record Bill Card */}
-              <div className="p-3.5 bg-[#0a0a14] border-2 border-[#00FF66] shadow-[4px_4px_0px_#00F0FF,8px_8px_0px_#7B2CBF] space-y-1">
-                <span className="text-[9px] font-mono font-black text-[#00F0FF] uppercase tracking-wider">
+              <div className="p-3.5 bg-white border-2 border-[#18181b] shadow-[4px_4px_0px_#00F0FF,8px_8px_0px_#7B2CBF] space-y-1">
+                <span className="text-[9px] font-mono font-black text-[#0284c7] uppercase tracking-wider">
                   ► HÓA ĐƠN ĐẮT ĐỎ NHẤT
                 </span>
-                <h4 className="text-lg sm:text-xl font-black text-white uppercase truncate">
+                <h4 className="text-lg sm:text-xl font-black text-[#18181b] uppercase truncate">
                   {topExpense ? `"${topExpense.title}"` : '"Chưa có khoản chi"'}
                 </h4>
-                <div className="text-2xl sm:text-3xl font-black text-[#00FF66] font-mono drop-shadow-[0_0_12px_rgba(0,255,102,0.5)]">
+                <div className="text-2xl sm:text-3xl font-black text-[#059669] font-mono">
                   {formatVND(topExpense ? topExpense.amount : 0)}
                 </div>
               </div>
 
               {/* Anatomy details */}
-              <div className="p-3 bg-[#0a0a14] border-2 border-[#FFE600] shadow-[3px_3px_0px_#FF0055] text-xs font-bold font-mono space-y-1.5">
-                <div className="flex justify-between text-zinc-300">
+              <div className="p-3 bg-white border-2 border-[#18181b] shadow-[3px_3px_0px_#FFE600] text-xs font-bold font-mono space-y-1.5">
+                <div className="flex justify-between text-zinc-600">
                   <span>Người thanh toán:</span>
-                  <strong className="text-[#00F0FF]">{topExpensePayer?.displayName || 'Thành viên'}</strong>
+                  <strong className="text-[#18181b]">{topExpensePayer?.displayName || 'Thành viên'}</strong>
                 </div>
-                <div className="flex justify-between text-zinc-300">
+                <div className="flex justify-between text-zinc-600">
                   <span>Ngày ghi nhận:</span>
-                  <span className="text-[#FFE600]">{topExpense?.date || 'Trong chuyến đi'}</span>
+                  <span className="text-[#FF4500]">{topExpense?.date || 'Trong chuyến đi'}</span>
                 </div>
-                <div className="flex justify-between text-zinc-300">
+                <div className="flex justify-between text-zinc-600">
                   <span>Số người chia:</span>
-                  <span className="text-[#00FF66]">{topExpense?.participants?.length || members.length} thành viên</span>
+                  <span className="text-[#059669]">{topExpense?.participants?.length || members.length} thành viên</span>
                 </div>
               </div>
 
               {/* Tagline */}
-              <div className="p-2.5 bg-[#0a0a14] border border-[#FF0055] text-[11px] text-zinc-200 font-bold text-center">
+              <div className="p-2.5 bg-white border border-[#18181b] shadow-[2px_2px_0px_#FF0055] text-[11px] text-[#18181b] font-bold text-center">
                 ✦ Bữa ăn ngon nhất chính là những kỷ niệm đắt giá nhất! ✦
               </div>
             </div>
@@ -1192,50 +1203,50 @@ export default function TripWrappedModal({
           {currentSlide === 3 && (
             <div className="space-y-3.5 animate-fade-in text-center">
               <div className="flex justify-center">
-                <span className="px-3 py-0.5 bg-[#7B2CBF] text-white font-mono font-black text-[10px] tracking-wider uppercase shadow-[2px_2px_0px_#00F0FF]">
+                <span className="px-3 py-0.5 bg-[#7B2CBF] text-white font-mono font-black text-[10px] tracking-wider uppercase border border-[#18181b] shadow-[2px_2px_0px_#18181b]">
                   ⚡ CHƯƠNG 04 // FAIR-PLAY ENERGY ⚡
                 </span>
               </div>
 
-              <div className="w-16 h-16 mx-auto bg-[#0c0c16] border-2 border-[#FFE600] shadow-[4px_4px_0px_#00F0FF] flex items-center justify-center">
-                <span className="text-3xl drop-shadow-[0_0_15px_#FFE600]">⚡</span>
+              <div className="w-16 h-16 mx-auto bg-white border-2 border-[#18181b] shadow-[4px_4px_0px_#00F0FF] flex items-center justify-center">
+                <span className="text-3xl">⚡</span>
               </div>
 
               <div>
-                <h3 className="text-2xl sm:text-3xl font-black text-[#00F0FF] tracking-tight uppercase">
+                <h3 className="text-2xl sm:text-3xl font-black text-[#18181b] tracking-tight uppercase">
                   100% SÒNG PHẲNG
                 </h3>
-                <p className="text-[10px] font-mono font-bold text-zinc-400 tracking-wider">
+                <p className="text-[10px] font-mono font-bold text-zinc-500 tracking-wider">
                   [ ZERO DRAMA • MAXIMUM CREDIBILITY ]
                 </p>
               </div>
 
               {/* Progress Card */}
-              <div className="p-3.5 bg-[#0a0a14] border-2 border-[#00F0FF] shadow-[4px_4px_0px_#FF0055] text-left space-y-1.5">
-                <div className="flex justify-between text-[10px] font-mono font-black text-[#00F0FF] uppercase tracking-wider">
+              <div className="p-3.5 bg-white border-2 border-[#18181b] shadow-[4px_4px_0px_#FF0055] text-left space-y-1.5">
+                <div className="flex justify-between text-[10px] font-mono font-black text-[#7B2CBF] uppercase tracking-wider">
                   <span>TIẾN ĐỘ ĐỐI SOÁT:</span>
-                  <span className="text-[#FFE600]">100% COMPLETE</span>
+                  <span className="text-[#059669]">100% COMPLETE</span>
                 </div>
 
                 {/* Stepped Pixel Progress Bar */}
-                <div className="w-full bg-zinc-900 h-3 border border-white/20 p-0.5">
-                  <div className="h-full w-full bg-gradient-to-r from-[#00F0FF] via-[#7B2CBF] to-[#FFE600] shadow-[0_0_8px_#00F0FF]" />
+                <div className="w-full bg-[#f4f3ec] h-3.5 border-2 border-[#18181b] p-0.5">
+                  <div className="h-full w-full bg-gradient-to-r from-[#00F0FF] via-[#7B2CBF] to-[#FFE600]" />
                 </div>
 
-                <p className="text-[10px] text-zinc-300 font-bold">
+                <p className="text-[10px] text-zinc-600 font-bold">
                   Mọi khoản nợ được tất toán thần tốc và minh bạch chuẩn từng đồng qua VietQR!
                 </p>
               </div>
 
               {/* Fastest Settler */}
-              <div className="p-3 bg-[#0a0a14] border-2 border-[#FFE600] shadow-[3px_3px_0px_#00FF66] text-left">
-                <div className="text-[9px] font-mono font-black text-[#FFE600] uppercase tracking-wider">
+              <div className="p-3 bg-white border-2 border-[#18181b] shadow-[3px_3px_0px_#059669] text-left">
+                <div className="text-[9px] font-mono font-black text-[#FF0055] uppercase tracking-wider">
                   ⚡ THÀNH VIÊN THANH TOÁN THẦN TỐC:
                 </div>
-                <div className="text-lg font-black text-[#00FF66] uppercase mt-0.5">
-                  {fastestSettler?.displayName || (isEn ? 'Whole crew' : 'Cả nhóm')}
+                <div className="text-lg font-black text-[#059669] uppercase mt-0.5">
+                  {fastestSettler?.displayName || (isEn ? 'Whole crew' : 'CẢ NHÓM')}
                 </div>
-                <p className="text-[10px] font-mono text-zinc-400">
+                <p className="text-[10px] font-mono text-zinc-500">
                   Quét mã QR nhanh như chớp, chuẩn 10/10 uy tín!
                 </p>
               </div>
@@ -1246,51 +1257,51 @@ export default function TripWrappedModal({
           {currentSlide === 4 && (
             <div className="space-y-3 animate-fade-in">
               <div className="flex items-center justify-between">
-                <span className="px-2.5 py-0.5 bg-[#FF0055] text-white font-mono font-black text-[10px] tracking-wider uppercase shadow-[2px_2px_0px_#FFE600]">
+                <span className="px-2.5 py-0.5 bg-[#FF0055] text-white font-mono font-black text-[10px] tracking-wider uppercase border border-[#18181b] shadow-[2px_2px_0px_#18181b]">
                   ★ CHƯƠNG 05 // CYBER PASS ★
                 </span>
-                <span className="text-[#FFE600] text-sm font-mono font-black">2026 // PASS</span>
+                <span className="text-[#7B2CBF] text-sm font-mono font-black">2026 // PASS</span>
               </div>
 
               <div>
-                <h3 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight truncate">
+                <h3 className="text-xl sm:text-2xl font-black text-[#18181b] uppercase tracking-tight truncate">
                   {truncName}
                 </h3>
-                <p className="text-[10px] font-mono font-bold text-[#00F0FF] tracking-wider">
+                <p className="text-[10px] font-mono font-bold text-[#7B2CBF] tracking-wider">
                   CODE: #{trip.tripCode || 'SPLIQO'} • {trip.startDate}
                 </p>
               </div>
 
               {/* The Cyber Ticket Breakdown */}
-              <div className="p-3.5 bg-[#0a0a14] border-2 border-[#00F0FF] shadow-[4px_4px_0px_#7B2CBF,8px_8px_0px_#FF0055] space-y-1.5 text-xs font-mono font-bold">
-                <div className="flex justify-between items-center pb-1 border-b border-dashed border-[#00F0FF]/30">
-                  <span className="text-zinc-400">Tổng chi toàn chuyến:</span>
-                  <strong className="text-sm font-black text-[#FFE600]">{formatVND(totalExpense)}</strong>
+              <div className="p-3.5 bg-white border-2 border-[#18181b] shadow-[4px_4px_0px_#00F0FF,8px_8px_0px_#FF0055] space-y-1.5 text-xs font-mono font-bold">
+                <div className="flex justify-between items-center pb-1 border-b border-dashed border-[#e4e2d8]">
+                  <span className="text-zinc-500">Tổng chi toàn chuyến:</span>
+                  <strong className="text-sm font-black text-[#FF4500]">{formatVND(totalExpense)}</strong>
                 </div>
 
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-zinc-400">Chi bạo nhất:</span>
-                  <strong className="text-[#00F0FF] truncate max-w-[150px]">{topPayer.displayName}</strong>
+                  <span className="text-zinc-500">Chi bạo nhất:</span>
+                  <strong className="text-[#0284c7] truncate max-w-[150px]">{topPayer.displayName}</strong>
                 </div>
 
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-zinc-400">Bill đắt nhất:</span>
-                  <strong className="text-[#00FF66] truncate max-w-[150px]">{topExpense ? topExpense.title : 'Chưa có'}</strong>
+                  <span className="text-zinc-500">Bill đắt nhất:</span>
+                  <strong className="text-[#059669] truncate max-w-[150px]">{topExpense ? topExpense.title : 'Chưa có'}</strong>
                 </div>
 
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-zinc-400">Đối soát:</span>
-                  <strong className="text-[#FF0055]">100%</strong>
+                  <span className="text-zinc-500">Đối soát:</span>
+                  <strong className="text-[#7B2CBF]">100% Sòng phẳng</strong>
                 </div>
               </div>
 
               {/* Holographic Badge */}
-              <div className="p-2.5 bg-[#0a0a14] border-2 border-[#FFE600] shadow-[3px_3px_0px_#00FF66] flex items-center justify-between text-xs font-bold">
-                <span className="text-[#FFE600] font-black flex items-center gap-1.5 text-[11px]">
-                  <Award className="w-4 h-4 text-[#FFE600]" />
+              <div className="p-2.5 bg-white border-2 border-[#18181b] shadow-[3px_3px_0px_#059669] flex items-center justify-between text-xs font-bold">
+                <span className="text-[#FF0055] font-black flex items-center gap-1.5 text-[11px]">
+                  <Award className="w-4 h-4 text-[#FF0055]" />
                   <span>CHỨNG NHẬN SÒNG PHẲNG</span>
                 </span>
-                <span className="font-mono font-black text-[#00FF66] text-xs">10/10 ★★★★★</span>
+                <span className="font-mono font-black text-[#059669] text-xs">10/10 ★★★★★</span>
               </div>
             </div>
           )}
@@ -1298,7 +1309,7 @@ export default function TripWrappedModal({
         </div>
 
         {/* BOTTOM STORY CONTROL & ACTION BAR */}
-        <div className="relative z-20 px-3.5 pt-3 pb-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.75rem))] sm:pb-3.5 shrink-0 bg-gradient-to-t from-black via-black/95 to-transparent border-t border-white/10 space-y-2">
+        <div className="relative z-20 px-3.5 pt-3 pb-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.75rem))] sm:pb-3.5 shrink-0 bg-gradient-to-t from-[#faf9f6] via-[#faf9f6]/95 to-transparent border-t border-[#dedbd0] space-y-2">
           {/* Main Action Buttons */}
           <div className="flex items-center justify-between gap-2">
             {/* Prev / Next Small Arrows */}
@@ -1307,8 +1318,8 @@ export default function TripWrappedModal({
                 type="button"
                 onClick={handlePrev}
                 disabled={currentSlide === 0}
-                className={`p-2.5 rounded-xl border border-white/20 bg-white/5 text-white transition-all cursor-pointer ${
-                  currentSlide === 0 ? 'opacity-25 cursor-not-allowed' : 'hover:bg-white/15 active:scale-95'
+                className={`p-2.5 rounded-xl border border-[#18181b] bg-white text-[#18181b] shadow-[2px_2px_0px_#18181b] transition-all cursor-pointer ${
+                  currentSlide === 0 ? 'opacity-30 cursor-not-allowed shadow-none' : 'hover:bg-[#edebe4] active:scale-95'
                 }`}
                 title="Trang trước"
               >
@@ -1318,8 +1329,8 @@ export default function TripWrappedModal({
                 type="button"
                 onClick={handleNext}
                 disabled={currentSlide === totalSlides - 1}
-                className={`p-2.5 rounded-xl border border-white/20 bg-white/5 text-white transition-all cursor-pointer ${
-                  currentSlide === totalSlides - 1 ? 'opacity-25 cursor-not-allowed' : 'hover:bg-white/15 active:scale-95'
+                className={`p-2.5 rounded-xl border border-[#18181b] bg-white text-[#18181b] shadow-[2px_2px_0px_#18181b] transition-all cursor-pointer ${
+                  currentSlide === totalSlides - 1 ? 'opacity-30 cursor-not-allowed shadow-none' : 'hover:bg-[#edebe4] active:scale-95'
                 }`}
                 title="Trang tiếp theo"
               >
@@ -1332,7 +1343,7 @@ export default function TripWrappedModal({
               type="button"
               onClick={handleDownloadAllSlides}
               disabled={exporting}
-              className="px-3.5 py-2.5 rounded-xl border-2 border-[#7B2CBF] bg-[#7B2CBF]/20 hover:bg-[#7B2CBF]/40 text-[#00F0FF] font-mono font-black text-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+              className="px-3.5 py-2.5 rounded-xl border-2 border-[#7B2CBF] bg-white text-[#7B2CBF] shadow-[2px_2px_0px_#7B2CBF] font-mono font-black text-xs flex items-center gap-1.5 transition-all cursor-pointer hover:bg-[#7B2CBF] hover:text-white active:scale-95"
               title="Tải toàn bộ 5 ảnh story về máy"
             >
               <Layers className="w-4 h-4" />
@@ -1344,7 +1355,7 @@ export default function TripWrappedModal({
               type="button"
               onClick={() => handleDownloadSlide(currentSlide)}
               disabled={exporting}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#FF0055] via-[#FF007F] to-[#FFE600] text-black font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,0,85,0.6)] hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+              className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#FF0055] via-[#FF5500] to-[#FFE600] text-black font-black text-xs sm:text-sm flex items-center justify-center gap-2 border-2 border-[#18181b] shadow-[3px_3px_0px_#18181b] hover:brightness-105 active:scale-95 transition-all cursor-pointer"
               title="Lưu ảnh Story trang này (PNG)"
             >
               <Download className="w-4 h-4 stroke-[2.5]" />
@@ -1359,31 +1370,31 @@ export default function TripWrappedModal({
       {/* iOS & Mobile Fallback Image Preview Modal */}
       {previewImage && (
         <div
-          className="fixed inset-0 z-[120] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-fade-in"
+          className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-fade-in"
           onClick={() => setPreviewImage(null)}
         >
           <div
-            className="w-full max-w-sm bg-[#0a0a14] border-2 border-[#00F0FF] shadow-[0_0_30px_rgba(0,240,255,0.4)] p-4 space-y-3"
+            className="w-full max-w-sm bg-[#faf9f6] border-2 border-[#18181b] shadow-[0_20px_50px_rgba(0,0,0,0.35)] p-4 space-y-3"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
-              <span className="font-black text-sm text-[#00F0FF] uppercase tracking-wider font-mono">
+              <span className="font-black text-sm text-[#18181b] uppercase tracking-wider font-mono">
                 📸 LƯU ẢNH STORY
               </span>
               <button
                 type="button"
                 onClick={() => setPreviewImage(null)}
-                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer"
+                className="w-7 h-7 rounded-full bg-black/5 hover:bg-[#FF0055] hover:text-white text-[#18181b] flex items-center justify-center cursor-pointer transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-2.5 bg-yellow-950/40 border border-[#FFE600] text-[11px] text-[#FFE600] font-mono leading-relaxed">
+            <div className="p-2.5 bg-amber-50 border border-amber-300 text-[11px] text-amber-900 font-mono leading-relaxed">
               Nhấn giữ vào ảnh bên dưới trong <strong>1 giây</strong>, sau đó chọn <strong>"Lưu vào Ảnh" (Save to Photos)</strong> để tải về máy.
             </div>
 
-            <div className="max-h-[65vh] overflow-y-auto border border-white/20 flex justify-center bg-black p-1">
+            <div className="max-h-[65vh] overflow-y-auto border border-[#dedbd0] flex justify-center bg-[#faf9f6] p-1">
               <img
                 src={previewImage}
                 alt="Spliqo Wrapped Story"
