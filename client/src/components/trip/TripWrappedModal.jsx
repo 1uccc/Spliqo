@@ -149,442 +149,502 @@ export default function TripWrappedModal({
     }
   };
 
-  // Generate canvas image for a specific slide (0 to 4)
+  // Generate canvas image matching the exact on-screen card design of each slide (Image 1 style)
   const generateSlideCanvas = (slideIndex) => {
     const canvas = document.createElement('canvas');
     canvas.width = 1080;
-    canvas.height = 1920;
+    canvas.height = 1440;
     const ctx = canvas.getContext('2d');
 
     const isDarkPoster = isDark;
-    const bgPaper = isDarkPoster ? '#16161f' : '#fbf9f3';
-    const cardFill = isDarkPoster ? '#22222e' : '#ffffff';
+    const bgBackdrop = isDarkPoster ? '#121218' : '#edebe4';
+    const cardBg = isDarkPoster ? '#1a1a24' : '#fbf9f3';
+    const cardFill = isDarkPoster ? '#252532' : '#ffffff';
     const textPrimary = isDarkPoster ? '#ffffff' : '#18181b';
-    const textMuted = isDarkPoster ? '#a1a1aa' : '#71717a';
-    const borderStroke = isDarkPoster ? '#ffffff' : '#18181b';
-    const shadowColor = isDarkPoster ? '#000000' : '#18181b';
-    const dotColor = isDarkPoster ? 'rgba(255, 255, 255, 0.08)' : 'rgba(24, 24, 27, 0.04)';
+    const textMuted = isDarkPoster ? '#a1a1aa' : '#52525b';
+    const borderStroke = isDarkPoster ? '#3f3f46' : '#18181b';
+    const shadowColor = isDarkPoster ? 'rgba(0,0,0,0.85)' : '#18181b';
     const yellowCardBg = isDarkPoster ? '#2d2919' : '#fef08a';
     const peachCardBg = isDarkPoster ? '#2e2118' : '#fed7aa';
     const yellowCardText = isDarkPoster ? '#fef08a' : '#18181b';
     const peachCardText = isDarkPoster ? '#fed7aa' : '#18181b';
+    const dashedColor = isDarkPoster ? 'rgba(255, 255, 255, 0.2)' : 'rgba(24, 24, 27, 0.2)';
 
-    // 1. Background Paper
-    ctx.fillStyle = bgPaper;
-    ctx.fillRect(0, 0, 1080, 1920);
+    // Helper: Rounded Rectangle Path
+    const drawRoundedRect = (c, x, y, width, height, radius) => {
+      c.beginPath();
+      c.moveTo(x + radius, y);
+      c.lineTo(x + width - radius, y);
+      c.arcTo(x + width, y, x + width, y + radius, radius);
+      c.lineTo(x + width, y + height - radius);
+      c.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+      c.lineTo(x + radius, y + height);
+      c.arcTo(x, y + height, x, y + height - radius, radius);
+      c.lineTo(x, y + radius);
+      c.arcTo(x, y, x + radius, y, radius);
+      c.closePath();
+    };
 
-    // 2. Retro Dot-Matrix Halftone Texture
-    ctx.fillStyle = dotColor;
-    for (let x = 30; x < 1080; x += 36) {
-      for (let y = 30; y < 1920; y += 36) {
+    // Helper: Brutalist Card with Hard Drop Shadow
+    const drawCard = (x, y, w, h, radius, fill, shadowOffset = 7, strokeW = 4.5) => {
+      ctx.fillStyle = shadowColor;
+      drawRoundedRect(ctx, x + shadowOffset, y + shadowOffset, w, h, radius);
+      ctx.fill();
+
+      ctx.fillStyle = fill;
+      drawRoundedRect(ctx, x, y, w, h, radius);
+      ctx.fill();
+
+      ctx.lineWidth = strokeW;
+      ctx.strokeStyle = borderStroke;
+      drawRoundedRect(ctx, x, y, w, h, radius);
+      ctx.stroke();
+    };
+
+    // Helper: Dashed Divider Line
+    const drawDashedLine = (x1, y1, x2, y2, color = dashedColor, width = 2.5) => {
+      ctx.save();
+      ctx.beginPath();
+      ctx.setLineDash([8, 8]);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    // Helper: Bottom Barcode & Footer matching on-screen card
+    const drawBottomBarcode = (slideIdx) => {
+      ctx.save();
+      ctx.strokeStyle = isDarkPoster ? 'rgba(255,255,255,0.2)' : 'rgba(24,24,27,0.2)';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(115, 1220);
+      ctx.lineTo(965, 1220);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.fillStyle = textMuted;
+      ctx.font = 'bold 30px monospace';
+      ctx.fillText('||| | |||| | |||', 115, 1275);
+
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#ff5400';
+      ctx.font = '900 28px sans-serif';
+      const label = slideIdx < 4 ? (isEn ? 'NEXT →' : 'TIẾP THEO →') : (isEn ? 'FINISH ★' : 'KẾT THÚC ★');
+      ctx.fillText(label, 965, 1275);
+      ctx.textAlign = 'left';
+    };
+
+    // 1. Canvas Backdrop
+    ctx.fillStyle = bgBackdrop;
+    ctx.fillRect(0, 0, 1080, 1440);
+
+    // 2. Main Card Container (x=60, y=70, w=960, h=1300, r=32)
+    const cardX = 60;
+    const cardY = 70;
+    const cardW = 960;
+    const cardH = 1300;
+    const cardRadius = 32;
+
+    // Outer card drop shadow
+    ctx.fillStyle = shadowColor;
+    drawRoundedRect(ctx, cardX + 10, cardY + 10, cardW, cardH, cardRadius);
+    ctx.fill();
+
+    // Outer card body fill
+    ctx.fillStyle = cardBg;
+    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, cardRadius);
+    ctx.fill();
+
+    // Subtle Halftone Dot Matrix Texture inside Card (Clipped to rounded card)
+    ctx.save();
+    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, cardRadius);
+    ctx.clip();
+    ctx.fillStyle = isDarkPoster ? 'rgba(255, 255, 255, 0.12)' : 'rgba(24, 24, 27, 0.16)';
+    for (let dx = cardX + 16; dx < cardX + cardW; dx += 28) {
+      for (let dy = cardY + 16; dy < cardY + cardH; dy += 28) {
         ctx.beginPath();
-        ctx.arc(x, y, 2, 0, 2 * Math.PI);
+        ctx.arc(dx, dy, 2, 0, 2 * Math.PI);
         ctx.fill();
       }
     }
+    ctx.restore();
 
-    // 3. Thick Brutalist Outer Frame
-    ctx.lineWidth = 6;
+    // Outer card border
+    ctx.lineWidth = 5;
     ctx.strokeStyle = borderStroke;
-    ctx.strokeRect(40, 40, 1000, 1840);
+    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, cardRadius);
+    ctx.stroke();
 
-    // Inner thin frame line
-    ctx.lineWidth = 2;
+    // 3. Top Orange Tape Sticker (Overlapping card top edge, tilted -1.2 deg)
+    ctx.save();
+    ctx.translate(540, cardY);
+    ctx.rotate((-1.2 * Math.PI) / 180);
+    const tapeW = 420;
+    const tapeH = 50;
+    ctx.fillStyle = shadowColor;
+    ctx.fillRect(-tapeW / 2 + 3.5, -tapeH / 2 + 3.5, tapeW, tapeH);
+    ctx.fillStyle = '#ff5400';
+    ctx.fillRect(-tapeW / 2, -tapeH / 2, tapeW, tapeH);
+    ctx.lineWidth = 3.5;
     ctx.strokeStyle = borderStroke;
-    ctx.strokeRect(52, 52, 976, 1816);
-
-    // Helper function for Brutalist Neomorphic Drop-Shadow Cards
-    const drawBrutalistCard = (x, y, w, h, fill = cardFill, shadowOffset = 12) => {
-      ctx.fillStyle = shadowColor;
-      ctx.fillRect(x + shadowOffset, y + shadowOffset, w, h);
-      ctx.fillStyle = fill;
-      ctx.fillRect(x, y, w, h);
-      ctx.lineWidth = 5;
-      ctx.strokeStyle = borderStroke;
-      ctx.strokeRect(x, y, w, h);
-    };
-
-    // 4. Top Retro Header Ribbon
-    drawBrutalistCard(80, 85, 920, 105, '#ff5400', 8);
+    ctx.strokeRect(-tapeW / 2, -tapeH / 2, tapeW, tapeH);
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 38px sans-serif';
-    ctx.fillText('★ SPLIQO WRAPPED ★', 115, 150);
-    ctx.font = 'bold 24px monospace';
-    ctx.textAlign = 'right';
-    ctx.fillText(isEn ? `STORY ${slideIndex + 1}/5` : `TRANG ${slideIndex + 1}/5`, 965, 148);
-    ctx.textAlign = 'left';
+    ctx.font = '900 22px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('★ SPLIQO VINTAGE TICKET ★', 0, 1);
+    ctx.restore();
 
-    // 5. Trip Name Headline & Subtitle
-    ctx.fillStyle = textPrimary;
-    ctx.font = '900 64px sans-serif';
-    const truncatedName = trip.name.length > 20 ? trip.name.substring(0, 18) + '...' : trip.name;
-    ctx.fillText(truncatedName.toUpperCase(), 80, 260);
-
-    ctx.fillStyle = textMuted;
-    ctx.font = 'bold 26px monospace';
-    ctx.fillText(
-      isEn
-        ? `${totalDays} DAYS EXPLORING • ${members.length} MEMBERS • ${expenses.length} BILLS`
-        : `KỲ NGHỈ ${totalDays} NGÀY • ${members.length} THÀNH VIÊN • ${expenses.length} HÓA ĐƠN`,
-      80,
-      305
-    );
-
-    // 6. RENDER SPECIFIC SLIDE CONTENT
+    // 4. RENDER SLIDE CONTENT (Matching on-screen layout exactly, no extra cards)
     if (slideIndex === 0) {
-      // SLIDE 0: TỔNG QUAN TÀI CHÍNH
-      drawBrutalistCard(80, 360, 920, 380, cardFill, 14);
-      ctx.fillStyle = isDarkPoster ? '#ff5400' : '#18181b';
-      ctx.fillRect(80, 360, 460, 52);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 22px monospace';
-      ctx.fillText(isEn ? '● TOTAL TRIP EXPENSES' : '● TỔNG CHI PHÍ CHUYẾN ĐI', 105, 396);
+      // Pill badge: FINANCIAL OVERVIEW • #CODE
+      const badgeText = `FINANCIAL OVERVIEW • #${trip.tripCode || 'SPLIQO'}`;
+      ctx.font = 'bold 18px monospace';
+      const badgeTextWidth = ctx.measureText(badgeText).width;
+      const badgeW = badgeTextWidth + 32;
+      const badgeH = 38;
+      drawCard(115, 135, badgeW, badgeH, 8, isDarkPoster ? '#ffffff' : '#18181b', 3, 2.5);
+      ctx.fillStyle = isDarkPoster ? '#18181b' : '#ffffff';
+      ctx.font = 'bold 18px monospace';
+      ctx.fillText(badgeText, 131, 160);
 
-      ctx.fillStyle = '#ff5400';
-      ctx.font = '900 102px monospace';
-      ctx.fillText(formatVND(totalExpense), 115, 540);
+      // Title: Trip Name
+      ctx.fillStyle = textPrimary;
+      ctx.font = '900 56px sans-serif';
+      const nameTrunc = trip.name.length > 20 ? trip.name.substring(0, 18) + '...' : trip.name;
+      ctx.fillText(nameTrunc.toUpperCase(), 115, 235);
 
+      // Subtitle: X NGÀY KHÁM PHÁ • Y THÀNH VIÊN
       ctx.fillStyle = textMuted;
-      ctx.font = 'bold 30px sans-serif';
+      ctx.font = 'bold 20px monospace';
       ctx.fillText(
-        isEn ? `Average per person: ${formatVND(avgPerPerson)}` : `Bình quân mỗi người: ${formatVND(avgPerPerson)}`, 
-        115, 
-        640
+        `${totalDays} ${isEn ? 'DAYS OF EXPLORING' : 'NGÀY KHÁM PHÁ'} • ${members.length} ${isEn ? 'MEMBERS' : 'THÀNH VIÊN'}`,
+        115,
+        275
       );
 
-      // Grid of 2 Mini Cards
-      drawBrutalistCard(80, 780, 440, 220, yellowCardBg, 10);
-      ctx.fillStyle = yellowCardText;
-      ctx.font = 'bold 24px monospace';
-      ctx.fillText(isEn ? '✦ DURATION' : '✦ THỜI GIAN', 110, 840);
-      ctx.font = '900 58px sans-serif';
-      ctx.fillText(isEn ? `${totalDays} DAYS` : `${totalDays} NGÀY`, 110, 925);
-
-      drawBrutalistCard(560, 780, 440, 220, peachCardBg, 10);
-      ctx.fillStyle = peachCardText;
-      ctx.font = 'bold 24px monospace';
-      ctx.fillText(isEn ? '✦ TOTAL BILLS' : '✦ TỔNG SỐ BILL', 590, 840);
-      ctx.font = '900 58px sans-serif';
-      ctx.fillText(isEn ? `${expenses.length} BILLS` : `${expenses.length} BILL`, 590, 925);
-
-      // Summary Highlight Card
-      drawBrutalistCard(80, 1040, 920, 280, cardFill, 14);
-      ctx.fillStyle = '#ff5400';
-      ctx.fillRect(80, 1040, 440, 48);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 22px sans-serif';
-      ctx.fillText(isEn ? '👑 TOP SPENDER' : '👑 NGƯỜI CHI BẠO NHẤT', 105, 1073);
-
-      ctx.fillStyle = textPrimary;
-      ctx.font = '900 52px sans-serif';
-      ctx.fillText(topPayer.displayName.toUpperCase(), 115, 1160);
-
-      ctx.fillStyle = '#ff5400';
-      ctx.font = '900 42px monospace';
-      ctx.fillText(isEn ? `PAID UPFRONT: ${formatVND(topPayer.totalPaid)}` : `ĐÃ ỨNG TRƯỚC: ${formatVND(topPayer.totalPaid)}`, 115, 1225);
-
+      // Big Card: Total Expense
+      drawCard(115, 310, 850, 400, 24, cardFill, 7);
       ctx.fillStyle = textMuted;
-      ctx.font = 'bold 24px sans-serif';
-      ctx.fillText(isEn ? `Covered ${topPayerPercent}% of total trip budget.` : `Chiếm ${topPayerPercent}% toàn bộ ngân sách cả chuyến đi.`, 115, 1275);
-
-      // Slogan Card
-      drawBrutalistCard(80, 1360, 920, 280, yellowCardBg, 12);
-      ctx.fillStyle = yellowCardText;
-      ctx.font = '900 36px sans-serif';
-      ctx.fillText(isEn ? '⚡ FAIR PLAY • QUICK SETTLE' : '⚡ CHIA SÒNG PHẲNG • ĐI KHẮP NƠI', 120, 1445);
-      ctx.font = 'bold 26px sans-serif';
-      ctx.fillText(isEn ? 'All expenses calculated smartly with Spliqo.' : 'Mọi chi phí được tính toán tự động chuẩn xác cùng Spliqo.', 120, 1515);
-      ctx.fillText(isEn ? 'No awkward calculations, pure good memories!' : 'Không lo tính toán, trọn vẹn kỷ niệm đẹp bên bạn bè!', 120, 1565);
-
-    } else if (slideIndex === 1) {
-      // SLIDE 1: CHỦ TỊCH GÁNH TEAM MVP
-      drawBrutalistCard(80, 360, 920, 140, '#ff5400', 10);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 38px sans-serif';
-      ctx.fillText(isEn ? '👑 TOP SPENDER MVP OF THE TRIP 👑' : '👑 CHỦ TỊCH GÁNH TEAM TOÀN ĐOÀN 👑', 120, 445);
-
-      // MVP Avatar Showcase Card
-      drawBrutalistCard(340, 550, 400, 380, cardFill, 16);
-      ctx.fillStyle = '#fef08a';
-      ctx.fillRect(360, 570, 360, 260);
-      ctx.lineWidth = 4;
-      ctx.strokeStyle = borderStroke;
-      ctx.strokeRect(360, 570, 360, 260);
-      
-      // Crown & MVP Tag
-      ctx.fillStyle = '#ff5400';
-      ctx.font = '900 90px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('👑', 540, 720);
-      ctx.font = '900 30px sans-serif';
-      ctx.fillStyle = '#18181b';
-      ctx.fillText('#1 MVP SPENDER', 540, 785);
-      ctx.textAlign = 'left';
-
-      // Name & title
-      ctx.fillStyle = textPrimary;
-      ctx.font = '900 68px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(topPayer.displayName.toUpperCase(), 540, 1010);
-      ctx.fillStyle = textMuted;
-      ctx.font = 'bold 26px monospace';
-      ctx.fillText(isEn ? 'MOST GENEROUS SPENDER OF THE TRIP' : 'NGƯỜI CHỊU CHI BẠO TAY NHẤT CẢ CHUYẾN ĐI', 540, 1060);
-      ctx.textAlign = 'left';
-
-      // Giant Stat Card
-      drawBrutalistCard(80, 1130, 920, 300, cardFill, 14);
-      ctx.fillStyle = '#ff5400';
-      ctx.fillRect(80, 1130, 480, 50);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 22px sans-serif';
-      ctx.fillText(isEn ? '● TOTAL AMOUNT ADVANCED' : '● SỐ TIỀN ĐÃ ỨNG TRƯỚC', 105, 1163);
+      ctx.font = 'bold 18px monospace';
+      ctx.fillText(isEn ? 'TOTAL TRIP EXPENSES' : 'TỔNG CHI PHÍ TOÀN BỘ CHUYẾN ĐI', 150, 365);
 
       ctx.fillStyle = '#ff5400';
       ctx.font = '900 96px monospace';
-      ctx.fillText(formatVND(topPayer.totalPaid), 115, 1290);
+      ctx.fillText(formatVND(totalExpense), 150, 500);
+
+      drawDashedLine(150, 565, 925, 565);
 
       ctx.fillStyle = textMuted;
-      ctx.font = 'bold 28px sans-serif';
-      ctx.fillText(
-        isEn 
-          ? `Covered ${topPayerPercent}% of total trip budget!`
-          : `Gánh tới ${topPayerPercent}% toàn bộ ngân sách chi tiêu cả đoàn!`,
-        115, 
-        1370
-      );
-
-      // Gratitude Card
-      drawBrutalistCard(80, 1470, 920, 180, yellowCardBg, 10);
-      ctx.fillStyle = yellowCardText;
-      ctx.font = '900 30px sans-serif';
-      ctx.fillText(isEn ? '🙏 CREW SHOUTOUT' : '🙏 THAY LỜI CẢM ƠN TỪ CẢ ĐOÀN', 120, 1540);
       ctx.font = 'bold 24px sans-serif';
-      ctx.fillText(isEn ? 'Big thanks for paying upfront and keeping the trip smooth!' : 'Cảm ơn chủ tịch đã quẹt thẻ chi trả trước cho mọi hoạt động ăn chơi!', 120, 1595);
-
-    } else if (slideIndex === 2) {
-      // SLIDE 2: KHOẢN CHI KỶ LỤC
-      drawBrutalistCard(80, 360, 920, 130, '#18181b', 10);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 36px sans-serif';
-      ctx.fillText(isEn ? '🥩 BIGGEST RECORD EXPENSE 🥩' : '🥩 KHOẢN CHI ĐẮT ĐỎ NHẤT CHUYẾN ĐI 🥩', 120, 440);
-
-      // Giant Expense Card
-      drawBrutalistCard(80, 530, 920, 440, cardFill, 14);
-      ctx.fillStyle = '#ff5400';
-      ctx.fillRect(80, 530, 480, 50);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 22px sans-serif';
-      ctx.fillText(isEn ? '● RECORD BILL OF TRIP' : '● HÓA ĐƠN KỶ LỤC', 105, 563);
-
+      ctx.fillText(isEn ? 'Average quota:' : 'Định mức bình quân:', 150, 640);
+      ctx.textAlign = 'right';
       ctx.fillStyle = textPrimary;
-      ctx.font = '900 60px sans-serif';
-      const expTitle = topExpense ? topExpense.title : (isEn ? 'No Expenses' : 'Chưa có khoản chi');
-      const expTrunc = expTitle.length > 22 ? expTitle.substring(0, 20) + '...' : expTitle;
-      ctx.fillText(`"${expTrunc.toUpperCase()}"`, 115, 680);
-
-      ctx.fillStyle = '#ff5400';
-      ctx.font = '900 102px monospace';
-      ctx.fillText(formatVND(topExpense ? topExpense.amount : 0), 115, 830);
-
-      ctx.fillStyle = textMuted;
-      ctx.font = 'bold 26px sans-serif';
-      const expSharePercent = totalExpense > 0 && topExpense ? Math.round((topExpense.amount / totalExpense) * 100) : 0;
-      ctx.fillText(isEn ? `Accounted for ${expSharePercent}% of total trip spending.` : `Chiếm ${expSharePercent}% tổng toàn bộ chi phí cả chuyến đi.`, 115, 910);
-
-      // Detail Breakdown Card
-      drawBrutalistCard(80, 1010, 920, 380, yellowCardBg, 12);
-      ctx.fillStyle = yellowCardText;
-      ctx.font = '900 32px sans-serif';
-      ctx.fillText(isEn ? '✦ BILL DETAILS' : '✦ CHI TIẾT HÓA ĐƠN', 120, 1080);
-
-      ctx.font = 'bold 28px sans-serif';
-      ctx.fillText(isEn ? `• Payer: ${topExpensePayer?.displayName || 'Member'}` : `• Người thanh toán: ${topExpensePayer?.displayName || 'Thành viên'}`, 120, 1160);
-      ctx.fillText(isEn ? `• Date logged: ${topExpense?.date || 'During trip'}` : `• Ngày chi tiêu: ${topExpense?.date || 'Trong chuyến đi'}`, 120, 1230);
-      ctx.fillText(isEn ? `• Split between: ${topExpense?.participants?.length || members.length} members` : `• Số người cùng chia: ${topExpense?.participants?.length || members.length} thành viên`, 120, 1300);
-
-      // Quote Card
-      drawBrutalistCard(80, 1430, 920, 210, peachCardBg, 10);
-      ctx.fillStyle = peachCardText;
-      ctx.font = '900 32px sans-serif';
-      ctx.fillText(isEn ? '✨ BEST MEMORIES EVER' : '✨ ĂN CHƠI HẾT MÌNH', 120, 1510);
-      ctx.font = 'bold 24px sans-serif';
-      ctx.fillText(isEn ? 'Expensive bills turn into the richest travel memories!' : 'Những bữa ăn ngon nhất chính là những kỷ niệm đáng nhớ nhất!', 120, 1575);
-
-    } else if (slideIndex === 3) {
-      // SLIDE 3: SÒNG PHẲNG THẦN TỐC 100%
-      drawBrutalistCard(80, 360, 920, 140, '#ff5400', 10);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 36px sans-serif';
-      ctx.fillText(isEn ? '⚡ LIGHTNING-FAST SETTLEMENT ⚡' : '⚡ TINH THẦN SÒNG PHẲNG TUYỆT ĐỐI ⚡', 120, 445);
-
-      // Sparkles Icon
-      drawBrutalistCard(420, 540, 240, 240, cardFill, 14);
-      ctx.fillStyle = '#ff5400';
-      ctx.font = '900 120px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('⚡', 540, 705);
+      ctx.font = '900 28px monospace';
+      ctx.fillText(`${formatVND(avgPerPerson)}/${isEn ? 'person' : 'người'}`, 925, 640);
       ctx.textAlign = 'left';
 
-      // Title
+      // Two Mini Cards
+      // Left: Bills
+      drawCard(115, 745, 410, 230, 22, yellowCardBg, 7);
+      ctx.fillStyle = yellowCardText;
+      ctx.font = 'bold 19px monospace';
+      ctx.fillText(isEn ? '💵 BILLS' : '💵 HÓA ĐƠN', 145, 805);
+      ctx.font = '900 40px sans-serif';
+      ctx.fillText(`${expenses.length} ${isEn ? 'EXPENSES' : 'KHOẢN CHI'}`, 145, 905);
+
+      // Right: Journey
+      drawCard(555, 745, 410, 230, 22, peachCardBg, 7);
+      ctx.fillStyle = peachCardText;
+      ctx.font = 'bold 19px monospace';
+      ctx.fillText(isEn ? '📅 JOURNEY' : '📅 HÀNH TRÌNH', 585, 805);
+      ctx.font = '900 40px sans-serif';
+      ctx.fillText(`${totalDays} ${isEn ? 'DAYS TOGETHER' : 'NGÀY ĐỒNG HÀNH'}`, 585, 905);
+
+      // Barcode Row
+      drawBottomBarcode(0);
+
+    } else if (slideIndex === 1) {
+      // Header Badge
+      const mvpBadgeText = isEn ? '👑 TOP SPENDER MVP 👑' : '👑 CHỦ TỊCH GÁNH TEAM 👑';
+      ctx.font = '900 22px sans-serif';
+      const mvpBadgeW = ctx.measureText(mvpBadgeText).width + 36;
+      drawCard(540 - mvpBadgeW / 2, 135, mvpBadgeW, 46, 10, '#ff5400', 4);
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.font = '900 22px sans-serif';
+      ctx.fillText(mvpBadgeText, 540, 166);
+      ctx.textAlign = 'left';
+
+      // Avatar Container
+      drawCard(440, 215, 200, 200, 24, cardFill, 7);
+      ctx.fillStyle = '#ff5400';
+      ctx.font = '900 84px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('👑', 540, 335);
+
+      // MVP mini badge
+      drawCard(580, 375, 96, 36, 8, '#fef08a', 4, 3);
+      ctx.fillStyle = '#18181b';
+      ctx.font = '900 16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('#1 MVP', 628, 399);
+
+      // Name & Subtitle
+      ctx.textAlign = 'center';
       ctx.fillStyle = textPrimary;
       ctx.font = '900 48px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(isEn ? 'PLAY FAIR • SPLIT EVEN' : 'CHƠI ĐẸP • CHIA ĐỀU', 540, 850);
-      ctx.fillText(isEn ? 'TRIP COMPLETE!' : 'TRỌN VẸN TÌNH BẠN!', 540, 915);
+      const payerName = topPayer.displayName.length > 20 ? topPayer.displayName.substring(0, 18) + '...' : topPayer.displayName;
+      ctx.fillText(payerName.toUpperCase(), 540, 480);
       ctx.fillStyle = textMuted;
-      ctx.font = 'bold 24px monospace';
-      ctx.fillText(isEn ? '100% BALANCED VIA VIETQR' : '100% CÔNG NỢ ĐÃ TẤT TOÁN MINH BẠCH', 540, 965);
+      ctx.font = 'bold 20px monospace';
+      ctx.fillText(isEn ? 'MOST GENEROUS SPENDER OF THE TRIP' : 'NGƯỜI CHỊU CHI BẠO TAY NHẤT CHUYẾN ĐI', 540, 525);
       ctx.textAlign = 'left';
 
-      // Progress Card
-      drawBrutalistCard(80, 1030, 920, 320, cardFill, 14);
-      ctx.fillStyle = '#ff5400';
-      ctx.fillRect(80, 1030, 480, 50);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 22px sans-serif';
-      ctx.fillText(isEn ? '● RECONCILIATION PROGRESS' : '● TIẾN ĐỘ ĐỐI SOÁT CÔNG NỢ', 105, 1063);
+      // Big Card
+      drawCard(115, 575, 850, 360, 24, cardFill, 7);
+      ctx.fillStyle = textMuted;
+      ctx.font = 'bold 18px monospace';
+      ctx.fillText(isEn ? 'TOTAL PAID UPFRONT:' : 'SỐ TIỀN ĐÃ ỨNG TRƯỚC:', 150, 635);
 
       ctx.fillStyle = '#ff5400';
-      ctx.font = '900 86px monospace';
-      ctx.fillText(isEn ? '100% COMPLETE' : '100% HOÀN TẤT', 115, 1185);
+      ctx.font = '900 90px monospace';
+      ctx.fillText(formatVND(topPayer.totalPaid), 150, 765);
 
-      // Progress bar
-      ctx.fillStyle = '#edebe4';
-      ctx.fillRect(115, 1225, 850, 36);
-      ctx.fillStyle = '#ff5400';
-      ctx.fillRect(115, 1225, 850, 36);
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = borderStroke;
-      ctx.strokeRect(115, 1225, 850, 36);
+      drawDashedLine(150, 835, 925, 835);
 
       ctx.fillStyle = textMuted;
       ctx.font = 'bold 24px sans-serif';
-      ctx.fillText(isEn ? 'All debts balanced & settled cleanly via VietQR!' : 'Mọi khoản nợ được cân bằng đối soát chuẩn từng đồng qua VietQR!', 115, 1300);
-
-      // MVP Settler Card
-      drawBrutalistCard(80, 1390, 920, 250, yellowCardBg, 12);
-      ctx.fillStyle = yellowCardText;
-      ctx.font = '900 26px monospace';
-      ctx.fillText(isEn ? '✦ LIGHTNING-FAST SETTLER' : '✦ THÀNH VIÊN THANH TOÁN NHANH NHƯ CHỚP', 120, 1460);
-      ctx.font = '900 52px sans-serif';
-      ctx.fillText(fastestSettler?.displayName?.toUpperCase() || (isEn ? 'EVERYONE' : 'CẢ NHÓM'), 120, 1540);
+      const repStr = isEn ? 'Represents ' : 'Chiếm tới ';
+      ctx.fillText(repStr, 150, 895);
+      const repW = ctx.measureText(repStr).width;
+      ctx.fillStyle = textPrimary;
+      ctx.font = '900 24px sans-serif';
+      ctx.fillText(`${topPayerPercent}% `, 150 + repW, 895);
+      const pctW = ctx.measureText(`${topPayerPercent}% `).width;
+      ctx.fillStyle = textMuted;
       ctx.font = 'bold 24px sans-serif';
-      ctx.fillText(isEn ? 'Zero hesitation, 10/10 credibility points!' : 'Tinh thần sòng phẳng thần tốc, chuẩn 10 điểm uy tín!', 120, 1600);
+      ctx.fillText(isEn ? 'of total trip expenses.' : 'toàn bộ chi phí cả đoàn.', 150 + repW + pctW, 895);
 
-    } else if (slideIndex === 4) {
-      // SLIDE 4: VÉ TỔNG KẾT SPLIQO VINTAGE TICKET
-      drawBrutalistCard(80, 360, 920, 130, '#ff5400', 10);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 36px sans-serif';
-      ctx.fillText(isEn ? '★ SPLIQO VINTAGE TICKET • CHỐT SỔ ★' : '★ VÉ CHỐT SỔ CHUYẾN ĐI • VINTAGE TICKET ★', 120, 440);
+      // Barcode Row
+      drawBottomBarcode(1);
 
-      // Giant Ticket Boarding Pass Card
-      drawBrutalistCard(80, 530, 920, 840, cardFill, 16);
+    } else if (slideIndex === 2) {
+      // Badge
+      const expBadgeText = isEn ? '🥩 MOST EXPENSIVE BILL 🥩' : '🥩 KHOẢN CHI ĐẮT ĐỎ NHẤT 🥩';
+      ctx.font = '900 22px sans-serif';
+      const expBadgeW = ctx.measureText(expBadgeText).width + 36;
+      drawCard(115, 135, expBadgeW, 46, 10, isDarkPoster ? '#ffffff' : '#18181b', 4);
+      ctx.fillStyle = isDarkPoster ? '#18181b' : '#ffffff';
+      ctx.font = '900 22px sans-serif';
+      ctx.fillText(expBadgeText, 133, 166);
 
-      // Top Ticket Label
-      ctx.fillStyle = '#18181b';
-      ctx.fillRect(80, 530, 360, 50);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 22px monospace';
-      ctx.fillText('SPLIQO TICKET PASS', 105, 563);
+      // Big Card
+      drawCard(115, 215, 850, 410, 24, cardFill, 7);
+      ctx.fillStyle = textMuted;
+      ctx.font = 'bold 18px monospace';
+      ctx.fillText(isEn ? 'RECORD BILL OF THE TRIP' : 'BILL KỶ LỤC CỦA CHUYẾN ĐI', 150, 275);
 
       ctx.fillStyle = textPrimary;
-      ctx.font = '900 58px sans-serif';
-      ctx.fillText(truncatedName.toUpperCase(), 115, 660);
+      ctx.font = '900 48px sans-serif';
+      const expTitle = topExpense ? `"${topExpense.title.length > 20 ? topExpense.title.substring(0, 18) + '...' : topExpense.title}"` : (isEn ? '"No Expenses"' : '"Chưa có"');
+      ctx.fillText(expTitle.toUpperCase(), 150, 365);
 
-      ctx.fillStyle = textMuted;
-      ctx.font = 'bold 26px monospace';
-      ctx.fillText(`TRIP CODE: #${trip.tripCode || 'SPLIQO'} • ${trip.startDate || '2026'}`, 115, 715);
-
-      // Perforation Dashed Line
-      ctx.lineWidth = 3;
-      ctx.setLineDash([12, 10]);
-      ctx.strokeStyle = textMuted;
-      ctx.beginPath();
-      ctx.moveTo(100, 755);
-      ctx.lineTo(980, 755);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Row 1: Total spent
-      ctx.fillStyle = textMuted;
-      ctx.font = 'bold 28px sans-serif';
-      ctx.fillText(isEn ? 'Total Trip Spent:' : 'Tổng chi toàn chuyến:', 115, 825);
       ctx.fillStyle = '#ff5400';
-      ctx.font = '900 38px monospace';
+      ctx.font = '900 90px monospace';
+      ctx.fillText(formatVND(topExpense ? topExpense.amount : 0), 150, 515);
+
+      // Yellow Detail Card
+      drawCard(115, 655, 850, 310, 22, yellowCardBg, 7);
+      ctx.fillStyle = yellowCardText;
+
+      // Row 1
+      ctx.font = 'bold 26px sans-serif';
+      ctx.fillText(isEn ? 'Paid by:' : 'Người chi trả:', 150, 725);
       ctx.textAlign = 'right';
-      ctx.fillText(formatVND(totalExpense), 965, 825);
+      ctx.font = '900 26px sans-serif';
+      ctx.fillText(topExpensePayer?.displayName || (isEn ? 'Member' : 'Thành viên'), 925, 725);
       ctx.textAlign = 'left';
+
+      // Row 2
+      ctx.font = 'bold 26px sans-serif';
+      ctx.fillText(isEn ? 'Date logged:' : 'Ngày ghi nhận:', 150, 805);
+      ctx.textAlign = 'right';
+      ctx.font = '900 26px monospace';
+      ctx.fillText(topExpense?.date || (isEn ? 'During trip' : 'Trong chuyến đi'), 925, 805);
+      ctx.textAlign = 'left';
+
+      // Row 3
+      ctx.font = 'bold 26px sans-serif';
+      ctx.fillText(isEn ? 'Split between:' : 'Số người chia bill:', 150, 885);
+      ctx.textAlign = 'right';
+      ctx.font = '900 26px sans-serif';
+      ctx.fillText(`${topExpense?.participants?.length || members.length} ${isEn ? 'members' : 'thành viên'}`, 925, 885);
+      ctx.textAlign = 'left';
+
+      // Barcode Row
+      drawBottomBarcode(2);
+
+    } else if (slideIndex === 3) {
+      // Badge
+      const settleBadgeText = isEn ? '⚡ LIGHTNING-FAST SETTLEMENT ⚡' : '⚡ SÒNG PHẲNG THẦN TỐC ⚡';
+      ctx.font = '900 22px sans-serif';
+      const settleBadgeW = ctx.measureText(settleBadgeText).width + 36;
+      drawCard(540 - settleBadgeW / 2, 135, settleBadgeW, 46, 10, '#ff5400', 4);
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.font = '900 22px sans-serif';
+      ctx.fillText(settleBadgeText, 540, 166);
+      ctx.textAlign = 'left';
+
+      // Sparkles Box
+      drawCard(460, 215, 160, 160, 24, isDarkPoster ? '#252532' : '#18181b', 7);
+      ctx.fillStyle = '#ff5400';
+      ctx.font = '900 80px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('⚡', 540, 325);
+      ctx.textAlign = 'left';
+
+      // Title & Subtitle
+      ctx.fillStyle = textPrimary;
+      ctx.font = '900 40px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(isEn ? 'PLAY FAIR • SPLIT EVEN' : 'CHƠI ĐẸP • CHIA ĐỀU • TRỌN TÌNH BẠN', 540, 435);
+      ctx.fillStyle = textMuted;
+      ctx.font = 'bold 20px monospace';
+      ctx.fillText(isEn ? '100% RECONCILED TRANSPARENTLY' : '100% CÔNG NỢ ĐÃ TẤT TOÁN MINH BẠCH', 540, 480);
+      ctx.textAlign = 'left';
+
+      // Big Card
+      drawCard(115, 535, 850, 380, 24, cardFill, 7);
+      ctx.fillStyle = textMuted;
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText(isEn ? 'RECONCILIATION PROGRESS:' : 'TIẾN ĐỘ ĐỐI SOÁT:', 150, 605);
+
+      ctx.fillStyle = '#ff5400';
+      ctx.font = '900 28px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(isEn ? '100% COMPLETE' : '100% HOÀN TẤT', 925, 605);
+      ctx.textAlign = 'left';
+
+      // Progress bar
+      ctx.fillStyle = isDarkPoster ? '#1a1a24' : '#edebe4';
+      drawRoundedRect(ctx, 150, 645, 775, 30, 15);
+      ctx.fill();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = borderStroke;
+      ctx.stroke();
+
+      ctx.fillStyle = '#ff5400';
+      drawRoundedRect(ctx, 150, 645, 775, 30, 15);
+      ctx.fill();
+
+      drawDashedLine(150, 735, 925, 735);
+
+      ctx.fillStyle = textMuted;
+      ctx.font = 'bold 24px sans-serif';
+      const fastPrefix = `⚡ ${isEn ? 'Fastest payer: ' : 'Thành viên thanh toán thần tốc: '}`;
+      ctx.fillText(fastPrefix, 150, 805);
+      const fastW = ctx.measureText(fastPrefix).width;
+      ctx.fillStyle = textPrimary;
+      ctx.font = '900 24px sans-serif';
+      const settlerName = fastestSettler?.displayName || (isEn ? 'Whole crew' : 'Cả nhóm');
+      ctx.fillText(`${settlerName}!`, 150 + fastW, 805);
+
+      // Barcode Row
+      drawBottomBarcode(3);
+
+    } else if (slideIndex === 4) {
+      // Header
+      drawCard(115, 135, 170, 36, 8, isDarkPoster ? '#ffffff' : '#18181b', 3, 2.5);
+      ctx.fillStyle = isDarkPoster ? '#18181b' : '#ffffff';
+      ctx.font = 'bold 16px monospace';
+      ctx.fillText('SPLIQO TICKET', 130, 159);
+
+      ctx.fillStyle = textPrimary;
+      ctx.font = '900 46px sans-serif';
+      const truncTitle = trip.name.length > 18 ? trip.name.substring(0, 16) + '...' : trip.name;
+      ctx.fillText(truncTitle.toUpperCase(), 115, 225);
+
+      ctx.fillStyle = textMuted;
+      ctx.font = 'bold 22px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(trip.startDate || '2026', 965, 225);
+      ctx.textAlign = 'left';
+
+      // Divider
+      ctx.strokeStyle = isDarkPoster ? 'rgba(255,255,255,0.2)' : 'rgba(24,24,27,0.2)';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(115, 255);
+      ctx.lineTo(965, 255);
+      ctx.stroke();
+
+      // Breakdown Card
+      drawCard(115, 280, 850, 520, 24, cardFill, 7);
+
+      // Row 1: Total Spent
+      ctx.fillStyle = textMuted;
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillText(isEn ? 'Total spent:' : 'Tổng chi:', 150, 345);
+      ctx.fillStyle = '#ff5400';
+      ctx.font = '900 40px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(formatVND(totalExpense), 925, 345);
+      ctx.textAlign = 'left';
+
+      drawDashedLine(150, 395, 925, 395);
 
       // Row 2: Top Spender
       ctx.fillStyle = textMuted;
-      ctx.font = 'bold 28px sans-serif';
-      ctx.fillText(isEn ? '👑 Top Spender:' : '👑 Chi bạo nhất:', 115, 915);
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillText(isEn ? '👑 Top spender:' : '👑 Chi bạo nhất:', 150, 470);
       ctx.fillStyle = textPrimary;
-      ctx.font = '900 32px sans-serif';
+      ctx.font = '900 26px sans-serif';
       ctx.textAlign = 'right';
-      ctx.fillText(`${topPayer.displayName} (${formatVND(topPayer.totalPaid)})`, 965, 915);
+      const payerShort = `${topPayer.displayName} (${formatVND(topPayer.totalPaid)})`;
+      ctx.fillText(payerShort, 925, 470);
       ctx.textAlign = 'left';
 
-      // Row 3: Biggest bill
+      // Row 3: Biggest Bill
       ctx.fillStyle = textMuted;
-      ctx.font = 'bold 28px sans-serif';
-      ctx.fillText(isEn ? '🥩 Biggest Bill:' : '🥩 Bill đắt nhất:', 115, 1005);
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillText(isEn ? '🥩 Biggest bill:' : '🥩 Bill đắt nhất:', 150, 560);
       ctx.fillStyle = textPrimary;
-      ctx.font = '900 32px sans-serif';
+      ctx.font = '900 26px sans-serif';
       ctx.textAlign = 'right';
-      const billTrunc = topExpense ? (topExpense.title.length > 14 ? topExpense.title.substring(0, 12) + '...' : topExpense.title) : 'None';
-      ctx.fillText(`${billTrunc} (${formatVND(topExpense?.amount || 0)})`, 965, 1005);
+      const billName = topExpense ? (topExpense.title.length > 16 ? topExpense.title.substring(0, 14) + '...' : topExpense.title) : (isEn ? 'None' : 'Chưa có');
+      ctx.fillText(billName, 925, 560);
       ctx.textAlign = 'left';
 
       // Row 4: Settlement
       ctx.fillStyle = textMuted;
-      ctx.font = 'bold 28px sans-serif';
-      ctx.fillText(isEn ? '⚡ Settlement:' : '⚡ Đối soát:', 115, 1095);
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillText(isEn ? '⚡ Settlement:' : '⚡ Đối soát:', 150, 650);
       ctx.fillStyle = '#16a34a';
-      ctx.font = '900 32px sans-serif';
+      ctx.font = '900 26px sans-serif';
       ctx.textAlign = 'right';
-      ctx.fillText(isEn ? '100% Fair & Settled' : '100% Sòng phẳng', 965, 1095);
+      ctx.fillText(isEn ? '100% Fair & Settled' : '100% Sòng phẳng', 925, 650);
       ctx.textAlign = 'left';
 
-      // Row 5: Scale
-      ctx.fillStyle = textMuted;
-      ctx.font = 'bold 28px sans-serif';
-      ctx.fillText(isEn ? '👥 Scale:' : '👥 Quy mô:', 115, 1185);
-      ctx.fillStyle = textPrimary;
-      ctx.font = '900 30px monospace';
-      ctx.textAlign = 'right';
-      ctx.fillText(`${members.length} members • ${expenses.length} bills`, 965, 1185);
-      ctx.textAlign = 'left';
-
-      // Final Stamp Box
-      drawBrutalistCard(80, 1410, 920, 230, yellowCardBg, 12);
+      // Stamp Card
+      drawCard(115, 835, 850, 160, 20, yellowCardBg, 7);
       ctx.fillStyle = yellowCardText;
-      ctx.font = '900 36px sans-serif';
-      ctx.fillText(isEn ? '★ CERTIFIED SPLIQO TRIP ★' : '★ CHỨNG NHẬN SÒNG PHẲNG SPLIQO ★', 120, 1490);
-      ctx.font = 'bold 26px sans-serif';
-      ctx.fillText(isEn ? 'Fair financial habits build long-lasting friendships!' : 'Tài chính rõ ràng minh bạch giúp tình bạn luôn bền chặt!', 120, 1555);
-      ctx.fillText(isEn ? 'All debts settled seamlessly via VietQR.' : 'Toàn bộ công nợ đã được tất toán trọn vẹn qua VietQR.', 120, 1600);
-    }
+      ctx.font = '900 26px sans-serif';
+      ctx.fillText(`🏆 ${isEn ? 'SPLIQO CERTIFIED ADVENTURE' : 'CHỨNG NHẬN SÒNG PHẲNG SPLIQO'}`, 150, 930);
 
-    // 7. Bottom Ticket Barcode & Footer (Common to all slides)
-    ctx.fillStyle = textPrimary;
-    const barcodeX = 80;
-    const barcodeY = 1730;
-    const barPattern = [4, 2, 8, 3, 2, 6, 4, 3, 7, 2, 4, 8, 3, 2, 5, 4, 2, 7, 3, 8, 2, 4, 6, 3, 2, 8, 5, 3, 2, 7];
-    let currentX = barcodeX;
-    for (const width of barPattern) {
-      ctx.fillRect(currentX, barcodeY, width, 55);
-      currentX += width + 6;
-    }
-    ctx.font = 'bold 22px monospace';
-    ctx.fillText('* SPLIQO-EXPENSE-SHARING-2026 *', barcodeX, 1815);
+      ctx.fillStyle = '#ff5400';
+      ctx.font = '900 36px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText('10/10 ★', 925, 930);
+      ctx.textAlign = 'left';
 
-    ctx.textAlign = 'right';
-    ctx.font = 'bold 26px monospace';
-    ctx.fillText('SPLIQO.APP • SMART GROUP EXPENSE', 1000, 1770);
-    ctx.fillText('QUÉT MÃ & CHIA TIỀN TỨC THÌ', 1000, 1805);
-    ctx.textAlign = 'left';
+      // Barcode Row
+      drawBottomBarcode(4);
+    }
 
     return canvas;
   };
@@ -794,7 +854,7 @@ export default function TripWrappedModal({
           {/* Neo-Retro Brutalist Slide Container - Compact, perfectly fits inside modal with ZERO scrollbar */}
           <div 
             ref={cardRef}
-            className="relative rounded-3xl p-3.5 sm:p-4 flex flex-col justify-between border-[3px] border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_rgba(0,0,0,0.8)] bg-[#fbf9f3] dark:bg-[#1a1a24] text-[#18181b] dark:text-[#f4f4f5] select-none transition-all duration-300"
+            className="relative rounded-3xl p-3.5 sm:p-4 flex flex-col justify-between border-[3px] border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_rgba(0,0,0,0.8)] bg-[#fbf9f3] dark:bg-[#1a1a24] text-[#18181b] dark:text-[#f4f4f5] select-none transition-all duration-300 mt-2.5"
             style={{
               backgroundImage: isDark 
                 ? 'radial-gradient(rgba(255, 255, 255, 0.12) 1.5px, transparent 1.5px)' 
