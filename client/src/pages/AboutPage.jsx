@@ -65,7 +65,7 @@ export default function AboutPage() {
             <span>{t('aboutTitle', 'Giới thiệu về Spliqo')}</span>
           </h2>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-            {t('aboutSubtitle', 'Ứng dụng chia tiền nhóm thông minh, tối ưu công nợ và quyết toán VietQR')}
+            {t('aboutSubtitle', 'Ứng dụng chia tiền nhóm thông minh, tối ưu công nợ và quyết toán')}
           </p>
         </div>
 
@@ -98,10 +98,6 @@ export default function AboutPage() {
 
           {/* Details & Social Contacts */}
           <div className="flex-1 space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs font-bold border border-amber-500/20">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Spliqo Project Creator</span>
-            </div>
 
             <div className="space-y-1">
               <h3 className="text-xl sm:text-2xl font-black text-[#18181b] dark:text-white tracking-tight">
@@ -123,20 +119,9 @@ export default function AboutPage() {
                 title="Mở Instagram của 1uccc"
               >
                 <InstagramIcon className="w-4 h-4" />
-                <span>Contact: ig:1uccc.ng</span>
+                <span>Contact: 1uccc.ng</span>
                 <ExternalLink className="w-3.5 h-3.5 opacity-80" />
               </a>
-
-              {/* Copy Instagram Handle */}
-              <button
-                type="button"
-                onClick={handleCopyInstagram}
-                className="tactile-btn-pill px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs"
-                title="Sao chép tên tài khoản Instagram"
-              >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copied ? 'Đã sao chép @1uccc.ng' : 'Copy IG: 1uccc.ng'}</span>
-              </button>
             </div>
           </div>
         </div>
@@ -190,22 +175,7 @@ export default function AboutPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
           <div className="p-3 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e]">
             <span className="text-[10px] text-zinc-400 uppercase font-bold block mb-1">Phiên bản</span>
-            <span className="font-mono font-bold text-[#18181b] dark:text-white">v1.0.0 (Production)</span>
-          </div>
-
-          <div className="p-3 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e]">
-            <span className="text-[10px] text-zinc-400 uppercase font-bold block mb-1">Frontend</span>
-            <span className="font-mono font-bold text-[#18181b] dark:text-white">React 19 + Vite</span>
-          </div>
-
-          <div className="p-3 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e]">
-            <span className="text-[10px] text-zinc-400 uppercase font-bold block mb-1">Backend</span>
-            <span className="font-mono font-bold text-[#18181b] dark:text-white">Node.js + Express</span>
-          </div>
-
-          <div className="p-3 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e]">
-            <span className="text-[10px] text-zinc-400 uppercase font-bold block mb-1">Cơ sở dữ liệu</span>
-            <span className="font-mono font-bold text-[#18181b] dark:text-white">Cloud Firestore</span>
+            <span className="font-mono font-bold text-[#18181b] dark:text-white">v1.2.3 (Production)</span>
           </div>
         </div>
 
@@ -213,24 +183,6 @@ export default function AboutPage() {
           <div className="flex items-center gap-1.5">
             <Heart className="w-4 h-4 text-rose-500 fill-rose-500 inline" />
             <span>Crafted with love by <strong className="text-[#18181b] dark:text-white">1uccc</strong></span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link
-              to="/profile"
-              className="hover:text-black dark:hover:text-white font-semibold underline underline-offset-4"
-            >
-              Cài đặt tài khoản & STK
-            </Link>
-            <span>•</span>
-            <a
-              href={instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-pink-600 dark:text-pink-400 font-bold hover:underline"
-            >
-              ig: 1uccc.ng
-            </a>
           </div>
         </div>
       </div>

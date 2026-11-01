@@ -190,8 +190,8 @@ export default function ServerWakeBanner() {
               {isReady
                 ? 'Đã kết nối thành công tới dịch vụ đám mây Spliqo. Đang tải dữ liệu...'
                 : countdown > 0
-                ? `Máy chủ đang thức giấc sau thời gian nghỉ (Render Cloud). Vui lòng đợi trong khoảng ${countdown} giây...`
-                : 'Đang hoàn tất những bước cuối cùng, bạn vui lòng đợi thêm chút nhé...'}
+                ? `Máy chủ mệt quá ngủ nên ngủ quên. Chờ xíu nhaaa ${countdown} giây...`
+                : 'Dậy rồi nèee, đợi thêm chút nhé...'}
             </p>
 
             {/* Progress Bar (Visible while waking) */}
