@@ -179,8 +179,8 @@ export default function LuckyWheelModal({
       ctx.stroke();
 
       // Arrange the avatar along each segment's radius, oriented upright towards the rim.
-      const avatarX = RADIUS * 0.50;
-      const avatarSize = Math.max(30, Math.min(56, RADIUS * slice * 0.28));
+      const avatarX = RADIUS * 0.54;
+      const avatarSize = Math.max(28, Math.min(52, RADIUS * slice * 0.26));
       const radiusAvatar = avatarSize / 2;
       const img = picturesRef.current.get(photo);
 
@@ -236,7 +236,7 @@ export default function LuckyWheelModal({
       ctx.restore();
 
       // Name is tangential to the circle, readable above the avatar.
-      const textX = RADIUS * 0.79;
+      const textX = RADIUS * 0.81;
       ctx.save();
       ctx.rotate(mid);
       ctx.translate(textX, 0);
@@ -275,16 +275,16 @@ export default function LuckyWheelModal({
       ctx.fillStyle = '#f9fafb';
       ctx.fill();
     }
-    // The center hub is fixed and compact so it does not crowd the slices.
+    // The center hub is fixed so it doesn't spin with the participants.
     ctx.beginPath();
-    ctx.arc(CENTER, CENTER, 48, 0, TAU);
+    ctx.arc(CENTER, CENTER, 76, 0, TAU);
     ctx.fillStyle = BLACK;
     ctx.fill();
-    ctx.lineWidth = 5;
-    ctx.strokeStyle = '#3f3f46';
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = '#565c68';
     ctx.stroke();
     ctx.beginPath();
-    ctx.arc(CENTER, CENTER, 42, 0, TAU);
+    ctx.arc(CENTER, CENTER, 65, 0, TAU);
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#facc15';
     ctx.stroke();
@@ -414,10 +414,10 @@ export default function LuckyWheelModal({
               </div>
             </div>
             <button type="button" onClick={spinWheel} disabled={spinning || participants.length < 2}
-              className="absolute left-1/2 top-1/2 z-10 flex h-[18%] w-[18%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full text-center font-black italic text-[#fde047] transition-transform hover:scale-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70 select-none shadow-md"
-              style={{ fontSize: 'clamp(10px, 2.8vw, 12px)', lineHeight: 1 }}>
+              className="absolute left-1/2 top-1/2 z-10 flex h-[18%] w-[18%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full text-center font-black italic text-[#fde047] transition-transform hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70 select-none shadow-md"
+              style={{ fontSize: 'clamp(11px, 2.6vw, 13px)', lineHeight: 1.15 }}>
               <span>{spinning ? '...' : 'START'}</span>
-              {!spinning && <span className="text-[8px] not-italic tracking-[.15em] opacity-90 mt-0.5">&gt;&gt;</span>}
+              {!spinning && <span className="text-[9px] not-italic tracking-[.15em] opacity-90 mt-0.5">&gt;&gt;</span>}
             </button>
           </div>
           <p className="mt-1 text-center text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-white/95">
