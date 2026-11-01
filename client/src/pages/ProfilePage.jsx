@@ -412,7 +412,7 @@ export default function ProfilePage() {
                 <span className="text-2xl">🇬🇧</span>
                 <div>
                   <div className="font-bold text-sm">English</div>
-                  <div className="text-[11px] text-zinc-500">United States / Global</div>
+                  <div className="text-[11px] text-zinc-500">United States</div>
                 </div>
               </div>
               {language === 'en' && (
@@ -422,26 +422,6 @@ export default function ProfilePage() {
               )}
             </button>
           </div>
-        </div>
-
-        {/* About Spliqo & Author Card */}
-        <div className="tactile-card p-4 sm:p-5 flex items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-              <Flame className="w-4 h-4 fill-amber-400 text-amber-500" />
-            </div>
-            <div>
-              <div className="font-bold text-[#18181b] dark:text-white">Spliqo • Product by 1uccc</div>
-              <div className="text-[11px] text-zinc-400">Contact: ig:1uccc.ng</div>
-            </div>
-          </div>
-          <Link
-            to="/about"
-            className="tactile-btn-pill py-1.5 px-3 text-xs font-bold flex items-center gap-1 cursor-pointer shrink-0"
-          >
-            <span>Về Spliqo</span>
-            <ExternalLink className="w-3 h-3" />
-          </Link>
         </div>
 
         {/* Save button */}
