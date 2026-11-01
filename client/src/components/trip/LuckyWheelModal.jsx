@@ -1,34 +1,65 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Modal from '../Modal';
-import { 
-  Sparkles, 
-  RotateCw, 
-  Crown, 
-  CreditCard, 
-  Gift, 
-  ArrowRight, 
-  Check, 
-  PartyPopper,
-  Volume2,
-  VolumeX,
-  Flame
-} from 'lucide-react';
+import { ArrowRight, CreditCard, Crown, Gift, PartyPopper, Volume2, VolumeX } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useLanguage } from '../../contexts/LanguageContext';
 
-// Harmonious Spliqo Fintech & Tactile Palette (Amber, Emerald, Indigo, Teal, Violet, Sunset)
-const SPLIQO_WHEEL_PALETTE = [
-  '#f59e0b', // Warm Amber (Spliqo Brand)
-  '#10b981', // Emerald Green (Cash Balance)
-  '#6366f1', // Indigo (Tech / Smart)
-  '#ec4899', // Soft Coral Pink
-  '#0d9488', // Deep Teal
-  '#8b5cf6', // Electric Violet
-  '#f97316', // Sunset Orange
-  '#3b82f6', // Bright Azure
-  '#14b8a6', // Mint
-  '#f43f5e'  // Warm Crimson
-];
+const TAU = Math.PI * 2;
+const SIZE = 720;
+const CENTER = SIZE / 2;
+const RADIUS = 337;
+const SPIN_DURATION = 5200;
+const WHITE = '#ffffff';
+const CREAM = '#fff5be';
+const BLACK = '#17191d';
+const normalized = (value) => ((value % TAU) + TAU) % TAU;
+const fallbackAvatar = (member) =>
+  `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(String(member.userId || member.uid || member.id || member.displayName || 'member'))}`;
+
+function makeAudioPlayer() {
+  let ctx;
+  return {
+    tick(enabled) {
+      if (!enabled) return;
+      try {
+        ctx ||= new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === 'suspended') ctx.resume();
+        const time = ctx.currentTime;
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(680, time);
+        oscillator.frequency.exponentialRampToValueAtTime(220, time + 0.04);
+        gain.gain.setValueAtTime(0.065, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.045);
+        oscillator.connect(gain).connect(ctx.destination);
+        oscillator.start(time);
+        oscillator.stop(time + 0.05);
+      } catch { /* Browsers may block audio. */ }
+    },
+    fanfare(enabled) {
+      if (!enabled) return;
+      try {
+        ctx ||= new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === 'suspended') ctx.resume();
+        [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+          const at = ctx.currentTime + i * 0.1;
+          const oscillator = ctx.createOscillator();
+          const gain = ctx.createGain();
+          oscillator.type = 'sine';
+          oscillator.frequency.value = freq;
+          gain.gain.setValueAtTime(0.001, at);
+          gain.gain.linearRampToValueAtTime(0.12, at + 0.025);
+          gain.gain.exponentialRampToValueAtTime(0.001, at + 0.38);
+          oscillator.connect(gain).connect(ctx.destination);
+          oscillator.start(at);
+          oscillator.stop(at + 0.39);
+        });
+      } catch { /* Audio is optional. */ }
+    },
+    close() { ctx?.close().catch(() => { }); }
+  };
+}
 
 export default function LuckyWheelModal({
   isOpen,
@@ -39,404 +70,341 @@ export default function LuckyWheelModal({
 }) {
   const { t: tLang, isEn } = useLanguage();
   const t = tProp || tLang;
-
   const canvasRef = useRef(null);
+  const animationRef = useRef(null);
+  const rotationRef = useRef(0);
+  const picturesRef = useRef(new Map());
+  const audioRef = useRef(null);
+  const mountedRef = useRef(false);
+  const spinningRef = useRef(false);
+  const soundRef = useRef(true);
   const [spinning, setSpinning] = useState(false);
   const [winner, setWinner] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [gameMode, setGameMode] = useState('payer'); // 'payer', 'advance', 'lucky_free'
+  const [gameMode, setGameMode] = useState('payer');
+  const [imageVersion, setImageVersion] = useState(0);
 
-  const rotationRef = useRef(0);
-  const animFrameRef = useRef(null);
-  const lastSliceTickRef = useRef(-1);
-
-  // Audio helper functions
-  const playTickSound = () => {
-    if (!soundEnabled) return;
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(650, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(130, ctx.currentTime + 0.035);
-      gain.gain.setValueAtTime(0.12, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.035);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.04);
-    } catch {
-      // AudioContext policy
-    }
-  };
-
-  const playFanfare = () => {
-    if (!soundEnabled) return;
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const notes = [523.25, 659.25, 783.99, 1046.50];
-      notes.forEach((freq, idx) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = freq;
-        const startTime = ctx.currentTime + idx * 0.09;
-        gain.gain.setValueAtTime(0.14, startTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(startTime);
-        osc.stop(startTime + 0.38);
-      });
-    } catch {
-      // AudioContext policy
-    }
-  };
-
-  // Draw the Wheel onto Canvas with Spliqo Tactile Bento styling
-  const drawWheel = (currentAngle) => {
-    const canvas = canvasRef.current;
-    if (!canvas || members.length === 0) return;
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const radius = width / 2 - 18;
-    const numSlices = members.length;
-    const sliceAngle = (2 * Math.PI) / numSlices;
-
-    ctx.clearRect(0, 0, width, height);
-
-    // Save context for rotation
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.rotate(currentAngle);
-
-    // Draw Slices with smooth vibrant colors and crisp white dividers
-    members.forEach((member, i) => {
-      const startA = i * sliceAngle;
-      const endA = startA + sliceAngle;
-      const color = SPLIQO_WHEEL_PALETTE[i % SPLIQO_WHEEL_PALETTE.length];
-
-      // Wedge
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.arc(0, 0, radius, startA, endA);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-
-      // Clean White Divider Line
-      ctx.lineWidth = 2.5;
-      ctx.strokeStyle = '#ffffff';
-      ctx.stroke();
-
-      // Slice Text
-      ctx.save();
-      const textAngle = startA + sliceAngle / 2;
-      ctx.rotate(textAngle);
-      ctx.textAlign = 'right';
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 12.5px Outfit, Plus Jakarta Sans, system-ui, sans-serif';
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-      ctx.shadowBlur = 3;
-
-      const name = member.displayName || (isEn ? `Member ${i + 1}` : `Thành viên ${i + 1}`);
-      const truncated = name.length > 13 ? name.substring(0, 11) + '..' : name;
-      ctx.fillText(truncated, radius - 24, 4.5);
-      ctx.restore();
-    });
-
-    ctx.restore();
-
-    // Outer Bento Ring (Dark with subtle gold accent)
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius + 3, 0, 2 * Math.PI);
-    ctx.lineWidth = 5;
-    ctx.strokeStyle = '#18181b';
-    ctx.stroke();
-
-    // Subtle Gold Inner Accent Ring
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius + 6, 0, 2 * Math.PI);
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = '#fbbf24';
-    ctx.stroke();
-
-    // Center Bento Hub (Tactile dark circle with gold metallic border)
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, 24, 0, 2 * Math.PI);
-    ctx.fillStyle = '#18181b';
-    ctx.fill();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = '#fbbf24';
-    ctx.stroke();
-
-    // Center Gold Accent Dot
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, 8, 0, 2 * Math.PI);
-    ctx.fillStyle = '#fbbf24';
-    ctx.fill();
-  };
-
-  useEffect(() => {
-    if (isOpen) {
-      setWinner(null);
-      drawWheel(rotationRef.current);
-    }
-    return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    };
-  }, [isOpen, members]);
-
-  // Spin Action with Physics Deceleration
-  const spinWheel = () => {
-    if (spinning || members.length < 2) return;
-    setSpinning(true);
-    setWinner(null);
-
-    const numSlices = members.length;
-    const sliceAngle = (2 * Math.PI) / numSlices;
-
-    // Pick random target index
-    const targetIndex = Math.floor(Math.random() * numSlices);
-
-    // Calculate angle: Pointer is at top (3 * PI / 2)
-    const extraSpins = 5 + Math.floor(Math.random() * 3); // 5 to 7 full rotations
-    const sliceCenterAngle = targetIndex * sliceAngle + sliceAngle / 2;
-    
-    const targetOffset = (3 * Math.PI / 2) - sliceCenterAngle;
-    const currentRot = rotationRef.current % (2 * Math.PI);
-    let finalRotation = rotationRef.current - currentRot + (extraSpins * 2 * Math.PI) + targetOffset;
-    if (finalRotation < rotationRef.current) {
-      finalRotation += 2 * Math.PI * (extraSpins + 1);
-    }
-
-    const startRot = rotationRef.current;
-    const totalDelta = finalRotation - startRot;
-    const duration = 4400; // 4.4 seconds
-    const startTime = performance.now();
-
-    const animate = (currentTime) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(1, elapsed / duration);
-
-      // Deceleration easing (ease-out quintic)
-      const easeOut = 1 - Math.pow(1 - progress, 4.5);
-      const currentAngle = startRot + totalDelta * easeOut;
-      rotationRef.current = currentAngle;
-
-      // Tick sound detection on slice boundary
-      const normalizedAngle = (currentAngle % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
-      const currentSlice = Math.floor(normalizedAngle / sliceAngle);
-      if (currentSlice !== lastSliceTickRef.current) {
-        lastSliceTickRef.current = currentSlice;
-        playTickSound();
-      }
-
-      drawWheel(currentAngle);
-
-      if (progress < 1) {
-        animFrameRef.current = requestAnimationFrame(animate);
-      } else {
-        setSpinning(false);
-        const winMember = members[targetIndex];
-        setWinner(winMember);
-        playFanfare();
-        confetti({
-          particleCount: 85,
-          spread: 75,
-          origin: { y: 0.6 }
-        });
-      }
-    };
-
-    animFrameRef.current = requestAnimationFrame(animate);
-  };
-
-  const handleUseWinner = () => {
-    if (!winner) return;
-    onPickWinnerForExpense(winner, gameMode);
-    onClose();
-  };
+  const participants = useMemo(() => members.map((member, i) => ({
+    member,
+    name: member.displayName || (isEn ? `Member ${i + 1}` : `Thành viên ${i + 1}`),
+    photo: member.photoURL || fallbackAvatar(member)
+  })), [members, isEn]);
 
   const modeDescriptions = {
     payer: {
-      title: t('modePayerTitle', '👑 Ai bao trọn?'),
-      desc: t('modePayerDesc', 'Người được quay trúng sẽ là đại gia thanh toán toàn bộ cho cả nhóm.'),
+      title: t('modePayerLabel', 'Ai bao trọn'),
+      desc: t('modePayerDesc', 'Người được chọn thanh toán toàn bộ cho cả nhóm.'),
       banner: t('modePayerBanner', 'Đại gia chầu này đã lộ diện!')
     },
     advance: {
-      title: t('modeAdvanceTitle', '💳 Ai ứng trước?'),
-      desc: t('modeAdvanceDesc', 'Người này quẹt thẻ/chuyển khoản trả trước, sau đó chia bill đều.'),
+      title: t('modeAdvanceLabel', 'Ai ứng trước'),
+      desc: t('modeAdvanceDesc', 'Người được chọn ứng tiền trước, sau đó cả nhóm chia bill.'),
       banner: t('modeAdvanceBanner', 'Thủ quỹ lâm thời được chọn!')
     },
     lucky_free: {
-      title: t('modeLuckyFreeTitle', '🎁 Ai được khao 0đ?'),
-      desc: t('modeLuckyFreeDesc', 'Cả nhóm chia tiền, riêng bạn này may mắn được khao miễn phí.'),
-      banner: t('modeLuckyFreeBanner', 'Số đỏ hôm nay: Được cả nhóm bao trọn 0đ!')
+      title: t('modeLuckyFreeLabel', 'Ai được khao'),
+      desc: t('modeLuckyFreeDesc', 'Người được chọn được miễn phần tiền của mình.'),
+      banner: t('modeLuckyFreeBanner', 'Hôm nay được cả nhóm khao!')
     }
+  };
+
+  useEffect(() => { soundRef.current = soundEnabled; }, [soundEnabled]);
+  useEffect(() => {
+    audioRef.current = makeAudioPlayer();
+    return () => audioRef.current?.close();
+  }, []);
+
+  // Cache images once. Cross-origin images are only drawn, never exported.
+  useEffect(() => {
+    if (!isOpen) return;
+    let disposed = false;
+    participants.forEach(({ photo }) => {
+      if (picturesRef.current.has(photo)) return;
+      picturesRef.current.set(photo, null);
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        if (disposed) return;
+        picturesRef.current.set(photo, img);
+        setImageVersion((v) => v + 1);
+      };
+      img.onerror = () => {
+        if (disposed) return;
+        picturesRef.current.set(photo, false);
+        setImageVersion((v) => v + 1);
+      };
+      img.src = photo;
+    });
+    return () => { disposed = true; };
+  }, [participants, isOpen]);
+
+  const drawWheel = useCallback((rotation) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, SIZE, SIZE);
+    const n = participants.length;
+    if (!n) return;
+    const slice = TAU / n;
+
+    // Black outer rim and shallow shadow.
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,.22)';
+    ctx.shadowBlur = 22;
+    ctx.shadowOffsetY = 12;
+    ctx.beginPath();
+    ctx.arc(CENTER, CENTER, RADIUS + 17, 0, TAU);
+    ctx.fillStyle = BLACK;
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(CENTER, CENTER);
+    ctx.rotate(rotation);
+    participants.forEach(({ member, name, photo }, i) => {
+      const from = i * slice;
+      const mid = from + slice / 2;
+      const to = from + slice;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, RADIUS - 5, from, to);
+      ctx.closePath();
+      ctx.fillStyle = i % 2 ? CREAM : WHITE;
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#e5e7eb';
+      ctx.stroke();
+
+      // Arrange the avatar and name along each segment's radius.
+      ctx.save();
+      ctx.rotate(mid);
+      const avatarX = RADIUS * 0.58;
+      const avatarSize = Math.max(39, Math.min(79, RADIUS * slice * 0.38));
+      const img = picturesRef.current.get(photo);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(avatarX, 0, avatarSize / 2 + 3, 0, TAU);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.clip();
+      if (img && img.complete && img.naturalWidth) {
+        const dim = Math.min(img.naturalWidth, img.naturalHeight);
+        const sx = (img.naturalWidth - dim) / 2;
+        const sy = (img.naturalHeight - dim) / 2;
+        ctx.drawImage(img, sx, sy, dim, dim, avatarX - avatarSize / 2, -avatarSize / 2, avatarSize, avatarSize);
+      } else {
+        ctx.fillStyle = '#dbeafe';
+        ctx.fillRect(avatarX - avatarSize / 2, -avatarSize / 2, avatarSize, avatarSize);
+        ctx.fillStyle = '#1e40af';
+        ctx.font = '800 26px system-ui';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(name[0]?.toUpperCase() || '?', avatarX, 1);
+      }
+      ctx.restore();
+
+      // Name is tangential to the circle, like the reference photo.
+      const textX = RADIUS * 0.83;
+      ctx.translate(textX, 0);
+      ctx.rotate(Math.PI / 2);
+      ctx.fillStyle = '#17191d';
+      const fontSize = Math.max(14, Math.min(25, n > 10 ? 16 : 23));
+      ctx.font = `800 ${fontSize}px system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const maxTextWidth = Math.max(48, 2 * Math.PI * textX / n * 0.86);
+      let label = name;
+      while (label.length > 2 && ctx.measureText(label).width > maxTextWidth) {
+        label = label.slice(0, -2).trimEnd() + '…';
+      }
+      ctx.fillText(label, 0, 0, maxTextWidth);
+      ctx.restore();
+    });
+    ctx.restore();
+
+    // Black border, secondary inner ring, metallic rivets.
+    ctx.beginPath();
+    ctx.arc(CENTER, CENTER, RADIUS + 8, 0, TAU);
+    ctx.lineWidth = 15;
+    ctx.strokeStyle = BLACK;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(CENTER, CENTER, RADIUS - 2, 0, TAU);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#ffffff';
+    ctx.stroke();
+    for (let i = 0; i < 12; i++) {
+      const a = (i * TAU) / 12;
+      const r = RADIUS + 8;
+      ctx.beginPath();
+      ctx.arc(CENTER + Math.cos(a) * r, CENTER + Math.sin(a) * r, 3.1, 0, TAU);
+      ctx.fillStyle = '#f9fafb';
+      ctx.fill();
+    }
+    // The center hub is fixed so it doesn't spin with the participants.
+    ctx.beginPath();
+    ctx.arc(CENTER, CENTER, 76, 0, TAU);
+    ctx.fillStyle = BLACK;
+    ctx.fill();
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = '#565c68';
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(CENTER, CENTER, 65, 0, TAU);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#facc15';
+    ctx.stroke();
+  }, [participants, imageVersion]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    mountedRef.current = true;
+    setWinner(null);
+    return () => {
+      mountedRef.current = false;
+      if (animationRef.current != null) cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+      spinningRef.current = false;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && !spinningRef.current) drawWheel(rotationRef.current);
+  }, [isOpen, drawWheel]);
+
+  const spinWheel = () => {
+    if (spinningRef.current || participants.length < 2) return;
+    spinningRef.current = true;
+    setSpinning(true);
+    setWinner(null);
+    const n = participants.length;
+    const slice = TAU / n;
+    const targetIndex = Math.floor(Math.random() * n);
+    // Pointer is fixed at 12 o'clock (-PI / 2).
+    const target = -Math.PI / 2 - (targetIndex + 0.5) * slice;
+    const start = rotationRef.current;
+    const additional = normalized(target - normalized(start));
+    const revolutions = 5 + Math.floor(Math.random() * 3);
+    const delta = revolutions * TAU + additional;
+    const duration = SPIN_DURATION;
+    const startTime = performance.now();
+    let priorIndex = -1;
+
+    const step = (now) => {
+      if (!mountedRef.current) return;
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 5);
+      const angle = start + delta * eased;
+      rotationRef.current = angle;
+      drawWheel(angle);
+
+      const underPointer = Math.floor(normalized(-Math.PI / 2 - angle) / slice);
+      if (underPointer !== priorIndex) {
+        priorIndex = underPointer;
+        audioRef.current?.tick(soundRef.current);
+      }
+
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(step);
+      } else {
+        rotationRef.current = normalized(target);
+        drawWheel(rotationRef.current);
+        animationRef.current = null;
+        spinningRef.current = false;
+        setSpinning(false);
+        setWinner(participants[targetIndex].member);
+        audioRef.current?.fanfare(soundRef.current);
+        confetti({ particleCount: 120, spread: 90, origin: { y: 0.57 } });
+      }
+    };
+    animationRef.current = requestAnimationFrame(step);
+  };
+
+  const handleUseWinner = () => {
+    if (!winner || spinningRef.current) return;
+    onPickWinnerForExpense?.(winner, gameMode);
+    onClose?.();
   };
 
   return (
     <Modal
       isOpen={isOpen}
-      onClose={spinning ? () => {} : onClose}
-      title={
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
-            <RotateCw className="w-3.5 h-3.5 stroke-[2.4]" />
-          </div>
-          <span className="font-extrabold text-[#18181b] dark:text-white">
-            {t('luckyWheelTitle', 'Vòng Xoay May Mắn')}
-          </span>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
-            🎡 {t('gameTag', 'Game')}
-          </span>
-        </div>
-      }
-      maxWidth="max-w-md"
+      onClose={spinning ? () => { } : onClose}
+      title={<span className="font-extrabold text-zinc-900 dark:text-white">🎡 {t('luckyWheelTitle', 'Vòng Xoay May Mắn')}</span>}
+      maxWidth="max-w-lg"
       footer={
-        <div className="flex items-center justify-between w-full">
-          <button
-            type="button"
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className="p-2 rounded-xl text-zinc-500 hover:text-zinc-800 dark:hover:text-white hover:bg-[#f4f3ec] dark:hover:bg-[#252530] transition-colors cursor-pointer"
-            title={soundEnabled ? t('soundOff', 'Tắt âm thanh') : t('soundOn', 'Bật âm thanh')}
-          >
-            {soundEnabled ? <Volume2 className="w-4 h-4 text-amber-500 stroke-[2.2]" /> : <VolumeX className="w-4 h-4 text-zinc-400 stroke-[2.2]" />}
+        <div className="flex w-full items-center justify-between gap-2">
+          <button type="button" onClick={() => setSoundEnabled((v) => !v)}
+            className="rounded-xl p-2 text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            aria-label={soundEnabled ? 'Tắt âm thanh' : 'Bật âm thanh'}>
+            {soundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </button>
-
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={spinning}
-              className="tactile-btn-pill text-xs px-4 py-2 cursor-pointer"
-            >
+            <button type="button" disabled={spinning} onClick={onClose}
+              className="rounded-full border border-zinc-300 px-4 py-2 text-xs font-bold dark:border-zinc-700">
               {t('close', 'Đóng')}
             </button>
-            {winner && (
-              <button
-                type="button"
-                onClick={handleUseWinner}
-                className="tactile-btn-dark text-xs px-4 py-2 flex items-center gap-1.5 font-bold cursor-pointer shadow-md"
-              >
-                <span>{t('createExpenseWithWinner', 'Tạo khoản chi với {name}').replace('{name}', winner.displayName)}</span>
-                <ArrowRight className="w-3.5 h-3.5 stroke-[2.2]" />
-              </button>
-            )}
+            {winner && <button type="button" onClick={handleUseWinner}
+              className="inline-flex items-center gap-1 rounded-full bg-zinc-900 px-4 py-2 text-xs font-bold text-white dark:bg-white dark:text-black">
+              {t('createExpenseWithWinner', 'Tạo khoản chi với {name}').replace('{name}', winner.displayName || '')}
+              <ArrowRight className="h-4 w-4" />
+            </button>}
           </div>
         </div>
       }
     >
       <div className="space-y-4">
-        {/* Bento Mode Selector (Matching Spliqo tactile tabs) */}
-        <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-[#f4f3ec] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2e2e38]">
+        <div className="grid grid-cols-3 gap-1 rounded-2xl bg-zinc-100 p-1 dark:bg-zinc-800">
           {[
-            { id: 'payer', label: t('modePayerLabel', 'Ai bao trọn'), icon: Crown },
-            { id: 'advance', label: t('modeAdvanceLabel', 'Ai ứng trước'), icon: CreditCard },
-            { id: 'lucky_free', label: t('modeLuckyFreeLabel', 'Ai được khao'), icon: Gift }
-          ].map((mode) => {
-            const Icon = mode.icon;
-            const active = gameMode === mode.id;
-            return (
-              <button
-                key={mode.id}
-                type="button"
-                disabled={spinning}
-                onClick={() => {
-                  setGameMode(mode.id);
-                  setWinner(null);
-                }}
-                className={`py-2 px-2 rounded-xl text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                  active
-                    ? 'bg-white dark:bg-[#2c2c36] text-[#18181b] dark:text-white shadow-xs'
-                    : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
-                }`}
-              >
-                <Icon className={`w-3.5 h-3.5 ${active ? 'text-amber-500' : ''}`} />
-                <span className="text-[11px] truncate w-full text-center tracking-tight">
-                  {mode.label}
-                </span>
-              </button>
-            );
-          })}
+            { id: 'payer', icon: Crown },
+            { id: 'advance', icon: CreditCard },
+            { id: 'lucky_free', icon: Gift }
+          ].map(({ id, icon: Icon }) => (
+            <button key={id} type="button" disabled={spinning} onClick={() => { setGameMode(id); setWinner(null); }}
+              className={`flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2 text-[11px] font-bold transition ${gameMode === id ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-white' : 'text-zinc-500 dark:text-zinc-400'}`}>
+              <Icon className="h-4 w-4" />{modeDescriptions[id].title}
+            </button>
+          ))}
         </div>
+        <p className="text-center text-xs text-zinc-500 dark:text-zinc-400">{modeDescriptions[gameMode].desc}</p>
 
-        {/* Subtitle helper */}
-        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 text-center">
-          {modeDescriptions[gameMode]?.desc}
-        </p>
-
-        {/* Wheel Container */}
-        <div className="relative flex flex-col items-center justify-center pt-2 pb-1 select-none">
-          {/* Top Amber Arrow Indicator */}
-          <div className="absolute top-0 z-20 flex flex-col items-center -translate-y-1">
-            <div className="w-0 h-0 border-l-[13px] border-l-transparent border-r-[13px] border-r-transparent border-t-[20px] border-t-amber-400 drop-shadow-md animate-bounce" />
-          </div>
-
-          {/* Canvas Wheel */}
-          <div className="relative w-64 h-64 sm:w-72 sm:h-72">
-            <canvas
-              ref={canvasRef}
-              width={288}
-              height={288}
-              className="w-full h-full drop-shadow-xl"
-            />
-          </div>
-
-          {/* Tactile Spin Button (Monochrome Black & White) */}
-          <button
-            type="button"
-            onClick={spinWheel}
-            disabled={spinning || members.length < 2}
-            className={`mt-4 px-8 py-3 rounded-full font-extrabold text-sm flex items-center gap-2 shadow-lg transition-all cursor-pointer ${
-              spinning
-                ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed shadow-none'
-                : 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] hover:bg-black dark:hover:bg-zinc-100 shadow-zinc-900/20 dark:shadow-white/10 hover:scale-105 active:scale-95 border border-black/10 dark:border-white/20'
-            }`}
-          >
-            <RotateCw className={`w-4 h-4 ${spinning ? 'animate-spin' : ''}`} />
-            <span>{spinning ? t('spinning', 'Đang quay...') : t('spinNow', 'QUAY NGAY')}</span>
-          </button>
-        </div>
-
-        {/* Winner Announcement Card (Matching Tactile Bento card) */}
-        {winner && (
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-emerald-500/10 border border-amber-500/30 text-center space-y-2 animate-fade-in">
-            <div className="flex items-center justify-center gap-1.5 text-amber-700 dark:text-amber-400 font-bold text-xs">
-              <PartyPopper className="w-4 h-4 text-amber-500" />
-              <span>{modeDescriptions[gameMode]?.banner}</span>
-            </div>
-
-            <div className="flex items-center justify-center gap-3 py-1">
-              <img
-                src={winner.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${winner.userId || winner.uid || winner.id}`}
-                alt=""
-                className="w-12 h-12 rounded-2xl bg-white shadow-md ring-2 ring-amber-400 object-cover"
-              />
-              <div className="text-left">
-                <div className="text-lg font-extrabold text-[#18181b] dark:text-white">
-                  {winner.displayName}
-                </div>
-                <div className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
-                  {gameMode === 'payer' ? t('winnerPayerNotice', 'Hôm nay được làm đại gia khao nhóm!') : gameMode === 'advance' ? t('winnerAdvanceNotice', 'Được chọn quẹt thẻ thanh toán trước!') : t('winnerLuckyNotice', 'Được cả nhóm bao trọn 0đ!')}
-                </div>
+        <div className="relative overflow-hidden rounded-3xl bg-[#4599f7] px-2 pb-5 pt-5 sm:px-4"
+          style={{ backgroundImage: 'repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,.09) 0deg 12deg, transparent 12deg 24deg)' }}>
+          <div className="relative mx-auto w-full max-w-[440px] select-none" style={{ aspectRatio: '1 / 1' }}>
+            <canvas ref={canvasRef} width={SIZE} height={SIZE} className="block h-full w-full" role="img" aria-label="Vòng quay chọn thành viên" />
+            {/* Fixed pointer at the top of the wheel. */}
+            <div className="pointer-events-none absolute left-1/2 top-[1.1%] z-20 -translate-x-1/2 -translate-y-[38%] drop-shadow-lg">
+              <div className="relative h-8 w-7 rounded-full bg-[#ef3b2d] shadow-[inset_-3px_-4px_0_rgba(0,0,0,.12)]">
+                <div className="absolute left-1/2 top-2 h-2 w-2 -translate-x-1/2 rounded-full bg-white" />
+                <div className="absolute left-1/2 top-[24px] h-0 w-0 -translate-x-1/2 border-x-[9px] border-t-[18px] border-x-transparent border-t-[#ef3b2d]" />
               </div>
+            </div>
+            <button type="button" onClick={spinWheel} disabled={spinning || participants.length < 2}
+              className="absolute left-1/2 top-1/2 z-10 flex h-[18%] w-[18%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full text-center font-black italic text-[#fde047] transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-70"
+              style={{ fontSize: 'clamp(12px, 4vw, 20px)' }}>
+              <span>{spinning ? '...' : 'START'}</span>
+              {!spinning && <span className="text-[10px] not-italic tracking-[.2em]">&gt;&gt;</span>}
+            </button>
+          </div>
+          <p className="mt-1 text-center text-[11px] font-bold uppercase tracking-widest text-white/95">
+            {spinning ? t('spinning', 'Đang quay...') : t('spinNow', 'Chạm START để quay')}
+          </p>
+        </div>
+
+        {winner && (
+          <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-center dark:border-amber-700 dark:bg-amber-950/30" aria-live="polite">
+            <div className="mb-2 flex items-center justify-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
+              <PartyPopper className="h-4 w-4" />{modeDescriptions[gameMode].banner}
+            </div>
+            <div className="flex items-center justify-center gap-3">
+              <img src={winner.photoURL || fallbackAvatar(winner)} alt="" className="h-14 w-14 rounded-full border-4 border-white object-cover shadow" />
+              <strong className="text-xl font-black text-zinc-900 dark:text-white">{winner.displayName || 'Thành viên'}</strong>
             </div>
           </div>
         )}
-
-        {members.length < 2 && (
-          <p className="text-xs text-rose-500 text-center font-medium">
-            {t('needAtLeastTwoMembers', 'Chuyến đi cần ít nhất 2 thành viên để bắt đầu vòng xoay.')}
+        {participants.length < 2 && (
+          <p className="text-center text-xs font-medium text-rose-500">
+            {t('needAtLeastTwoMembers', 'Cần ít nhất 2 thành viên để quay.')}
           </p>
         )}
       </div>

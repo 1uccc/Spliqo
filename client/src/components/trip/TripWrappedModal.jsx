@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { 
-  Download, 
-  Copy, 
-  Check, 
-  ChevronRight, 
-  ChevronLeft, 
-  Calendar, 
-  Receipt, 
-  Layers, 
-  X, 
-  Play, 
+import {
+  Download,
+  Copy,
+  Check,
+  ChevronRight,
+  ChevronLeft,
+  Calendar,
+  Receipt,
+  Layers,
+  X,
+  Play,
   Pause,
   Award
 } from 'lucide-react';
@@ -847,7 +847,7 @@ export default function TripWrappedModal({
       const cleanTripName = trip.name.replace(/[^a-zA-Z0-9\u00C0-\u024F\u1EA0-\u1EF9]/g, '_');
       const filename = `Spliqo_Wrapped_${cleanTripName}_Story${slideIndex + 1}.png`;
 
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
       if (isIOS) {
@@ -870,7 +870,7 @@ export default function TripWrappedModal({
       setExporting(true);
       showToast(isEn ? 'Preparing all 5 story slides...' : 'Đang xuất toàn bộ 5 ảnh...', 'info');
 
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
       if (isIOS) {
@@ -903,14 +903,14 @@ export default function TripWrappedModal({
   const truncName = trip.name.length > 20 ? trip.name.substring(0, 18) + '...' : trip.name;
 
   return createPortal(
-    <div 
+    <div
       className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-0 sm:p-4 select-none animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       {/* 9:16 Vertical Story Viewer Container */}
-      <div 
+      <div
         ref={storyContainerRef}
         className="relative w-full max-w-[440px] h-[100dvh] sm:h-[92dvh] max-h-[900px] flex flex-col justify-between overflow-hidden bg-[#050508] text-white sm:rounded-[2.5rem] border-0 sm:border-2 sm:border-[#00F0FF]/40 shadow-[0_0_60px_rgba(0,240,255,0.25)]"
       >
@@ -950,12 +950,12 @@ export default function TripWrappedModal({
                 currentSlide === 0
                   ? "M-40,180 C80,80 140,420 260,320 C380,220 360,650 480,560"
                   : currentSlide === 1
-                  ? "M-30,280 C120,180 160,520 280,420 C400,320 380,720 480,680"
-                  : currentSlide === 2
-                  ? "M-40,220 C100,320 180,180 300,450 C380,620 420,520 480,750"
-                  : currentSlide === 3
-                  ? "M-30,350 C80,200 160,580 300,400 C390,280 380,700 480,620"
-                  : "M-40,150 C120,250 180,120 280,380 C360,550 400,450 480,700"
+                    ? "M-30,280 C120,180 160,520 280,420 C400,320 380,720 480,680"
+                    : currentSlide === 2
+                      ? "M-40,220 C100,320 180,180 300,450 C380,620 420,520 480,750"
+                      : currentSlide === 3
+                        ? "M-30,350 C80,200 160,580 300,400 C390,280 380,700 480,620"
+                        : "M-40,150 C120,250 180,120 280,380 C360,550 400,450 480,700"
               }
               stroke="url(#cyberRibbonGrad)"
               strokeWidth="42"
@@ -970,12 +970,12 @@ export default function TripWrappedModal({
                 currentSlide === 0
                   ? "M-40,180 C80,80 140,420 260,320 C380,220 360,650 480,560"
                   : currentSlide === 1
-                  ? "M-30,280 C120,180 160,520 280,420 C400,320 380,720 480,680"
-                  : currentSlide === 2
-                  ? "M-40,220 C100,320 180,180 300,450 C380,620 420,520 480,750"
-                  : currentSlide === 3
-                  ? "M-30,350 C80,200 160,580 300,400 C390,280 380,700 480,620"
-                  : "M-40,150 C120,250 180,120 280,380 C360,550 400,450 480,700"
+                    ? "M-30,280 C120,180 160,520 280,420 C400,320 380,720 480,680"
+                    : currentSlide === 2
+                      ? "M-40,220 C100,320 180,180 300,450 C380,620 420,520 480,750"
+                      : currentSlide === 3
+                        ? "M-30,350 C80,200 160,580 300,400 C390,280 380,700 480,620"
+                        : "M-40,150 C120,250 180,120 280,380 C360,550 400,450 480,700"
               }
               stroke="rgba(255, 255, 255, 0.7)"
               strokeWidth="6"
@@ -1044,21 +1044,21 @@ export default function TripWrappedModal({
         </div>
 
         {/* TAP NAVIGATION ZONES (Left 30% = Prev, Right 70% = Next) */}
-        <div 
+        <div
           className="absolute inset-0 z-10 flex"
           onMouseDown={() => setIsPaused(true)}
           onMouseUp={() => setIsPaused(false)}
           onTouchStart={() => setIsPaused(true)}
           onTouchEnd={() => setIsPaused(false)}
         >
-          <div 
+          <div
             className="w-[28%] h-full cursor-w-resize"
             onClick={(e) => {
               e.stopPropagation();
               handlePrev();
             }}
           />
-          <div 
+          <div
             className="w-[72%] h-full cursor-e-resize"
             onClick={(e) => {
               e.stopPropagation();
@@ -1069,7 +1069,7 @@ export default function TripWrappedModal({
 
         {/* STORY SLIDE CONTENT CONTAINER */}
         <div className="relative z-10 flex-1 px-4 sm:px-5 flex flex-col justify-center overflow-y-auto custom-scrollbar my-auto py-2">
-          
+
           {/* SLIDE 0: CHAPTER 01 • THE EXPEDITION (BỨC TRANH TÀI CHÍNH) */}
           {currentSlide === 0 && (
             <div className="space-y-3 animate-fade-in">
@@ -1140,7 +1140,7 @@ export default function TripWrappedModal({
             <div className="space-y-3.5 animate-fade-in text-center">
               <div className="flex justify-center">
                 <span className="px-3 py-0.5 bg-[#FF0055] text-white font-mono font-black text-[10px] tracking-wider uppercase shadow-[2px_2px_0px_#FFE600]">
-                  👑 CHƯƠNG 02 // TOP SPENDER MVP 👑
+                  CHƯƠNG 02 // TOP SPENDER MVP
                 </span>
               </div>
 
@@ -1188,7 +1188,7 @@ export default function TripWrappedModal({
             <div className="space-y-3.5 animate-fade-in">
               <div className="flex justify-between items-center">
                 <span className="px-3 py-0.5 bg-[#00FF66] text-black font-mono font-black text-[10px] tracking-wider uppercase shadow-[2px_2px_0px_#00F0FF]">
-                  🥩 CHƯƠNG 03 // BIGGEST RECORD BILL 🥩
+                  CHƯƠNG 03 // BIGGEST RECORD BILL
                 </span>
                 <span className="text-[#00FF66] text-base font-black">✦</span>
               </div>
@@ -1266,12 +1266,12 @@ export default function TripWrappedModal({
                   <span>TIẾN ĐỘ ĐỐI SOÁT:</span>
                   <span className="text-[#FFE600]">100% COMPLETE</span>
                 </div>
-                
+
                 {/* Stepped Pixel Progress Bar */}
                 <div className="w-full bg-zinc-900 h-3 border border-white/20 p-0.5">
                   <div className="h-full w-full bg-gradient-to-r from-[#00F0FF] via-[#7B2CBF] to-[#FFE600] shadow-[0_0_8px_#00F0FF]" />
                 </div>
-                
+
                 <p className="text-[10px] text-zinc-300 font-bold">
                   Mọi khoản nợ được tất toán thần tốc và minh bạch chuẩn từng đồng qua VietQR!
                 </p>
@@ -1286,7 +1286,7 @@ export default function TripWrappedModal({
                   {fastestSettler?.displayName || (isEn ? 'Whole crew' : 'Cả nhóm')}
                 </div>
                 <p className="text-[10px] font-mono text-zinc-400">
-                  Quét mã VietQR nhanh như chớp, chuẩn 10/10 uy tín!
+                  Quét mã QR nhanh như chớp, chuẩn 10/10 uy tín!
                 </p>
               </div>
             </div>
@@ -1319,18 +1319,18 @@ export default function TripWrappedModal({
                 </div>
 
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-zinc-400">👑 Chi bạo nhất:</span>
+                  <span className="text-zinc-400">Chi bạo nhất:</span>
                   <strong className="text-[#00F0FF] truncate max-w-[150px]">{topPayer.displayName}</strong>
                 </div>
 
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-zinc-400">🥩 Bill đắt nhất:</span>
+                  <span className="text-zinc-400">Bill đắt nhất:</span>
                   <strong className="text-[#00FF66] truncate max-w-[150px]">{topExpense ? topExpense.title : 'Chưa có'}</strong>
                 </div>
 
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-zinc-400">⚡ Đối soát VietQR:</span>
-                  <strong className="text-[#FF0055]">100% Sòng phẳng</strong>
+                  <span className="text-zinc-400">Đối soát:</span>
+                  <strong className="text-[#FF0055]">100%</strong>
                 </div>
               </div>
 
@@ -1357,9 +1357,8 @@ export default function TripWrappedModal({
                 type="button"
                 onClick={handlePrev}
                 disabled={currentSlide === 0}
-                className={`p-2 rounded-lg border border-white/20 bg-white/5 text-white transition-all cursor-pointer ${
-                  currentSlide === 0 ? 'opacity-25 cursor-not-allowed' : 'hover:bg-white/15 active:scale-95'
-                }`}
+                className={`p-2 rounded-lg border border-white/20 bg-white/5 text-white transition-all cursor-pointer ${currentSlide === 0 ? 'opacity-25 cursor-not-allowed' : 'hover:bg-white/15 active:scale-95'
+                  }`}
                 title="Trang trước"
               >
                 <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
@@ -1368,9 +1367,8 @@ export default function TripWrappedModal({
                 type="button"
                 onClick={handleNext}
                 disabled={currentSlide === totalSlides - 1}
-                className={`p-2 rounded-lg border border-white/20 bg-white/5 text-white transition-all cursor-pointer ${
-                  currentSlide === totalSlides - 1 ? 'opacity-25 cursor-not-allowed' : 'hover:bg-white/15 active:scale-95'
-                }`}
+                className={`p-2 rounded-lg border border-white/20 bg-white/5 text-white transition-all cursor-pointer ${currentSlide === totalSlides - 1 ? 'opacity-25 cursor-not-allowed' : 'hover:bg-white/15 active:scale-95'
+                  }`}
                 title="Trang tiếp theo"
               >
                 <ChevronRight className="w-4 h-4 stroke-[2.5]" />
@@ -1419,11 +1417,11 @@ export default function TripWrappedModal({
 
       {/* iOS & Mobile Fallback Image Preview Modal */}
       {previewImage && (
-        <div 
+        <div
           className="fixed inset-0 z-[120] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-fade-in"
           onClick={() => setPreviewImage(null)}
         >
-          <div 
+          <div
             className="w-full max-w-sm bg-[#0a0a14] border-2 border-[#00F0FF] shadow-[0_0_30px_rgba(0,240,255,0.4)] p-4 space-y-3"
             onClick={(e) => e.stopPropagation()}
           >
