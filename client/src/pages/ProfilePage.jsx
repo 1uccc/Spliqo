@@ -184,14 +184,14 @@ export default function ProfilePage() {
                   title={isEn ? "Generate random avatar instantly" : "Đổi Avatar ngẫu nhiên ngay"}
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
-                  <span>{t('randomAvatar', 'Ngẫu nhiên 🎲')}</span>
+                  <span>{t('randomAvatar', 'Ngẫu nhiên')}</span>
                 </button>
               </div>
 
               {/* Quick 1-click Preset avatars */}
               <div className="pt-1">
                 <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider block mb-1.5">
-                  {t('popularAvatarSuggestions', 'Gợi ý mẫu phổ biến (chọn nhanh 1 chạm):')}
+                  {t('popularAvatarSuggestions', 'Gợi ý mẫu phổ biến:')}
                 </span>
                 <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
                   {['Felix', 'Aneka', 'Alexander', 'Molly', 'Jack', 'Sophie', 'Ninja', 'Mochi'].map((seed) => {
@@ -220,10 +220,6 @@ export default function ProfilePage() {
                   })}
                 </div>
               </div>
-
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                {t('avatarHint', '✨ Chọn trực tiếp từ Kho Avatar, không cần tải ảnh cá nhân lên máy chủ.')}
-              </p>
             </div>
           </div>
 
