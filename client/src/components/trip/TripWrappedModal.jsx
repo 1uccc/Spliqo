@@ -1,17 +1,17 @@
 import React, { useState, useRef } from 'react';
 import Modal from '../Modal';
-import { 
-  Sparkles, 
-  Crown, 
-  Zap, 
-  UtensilsCrossed, 
-  Download, 
-  Copy, 
-  Check, 
-  ChevronRight, 
-  ChevronLeft, 
-  Calendar, 
-  Users, 
+import {
+  Sparkles,
+  Crown,
+  Zap,
+  UtensilsCrossed,
+  Download,
+  Copy,
+  Check,
+  ChevronRight,
+  ChevronLeft,
+  Calendar,
+  Users,
   Receipt,
   Ticket,
   Flame,
@@ -98,13 +98,13 @@ export default function TripWrappedModal({
 ● Duration: ${totalDays} days • ${members.length} members • ${expenses.length} bills
 ● Average per person: ${formatVND(avgPerPerson)}/person
 
-👑 TOP SPENDER MVP:
+TOP SPENDER MVP:
   ${topPayer.displayName} (Paid upfront: ${formatVND(topPayer.totalPaid)} ~ ${topPayerPercent}%)
 
-🥩 MOST EXPENSIVE BILL:
+MOST EXPENSIVE BILL:
   "${topExpense ? topExpense.title : 'None'}" - ${topExpense ? formatVND(topExpense.amount) : '0đ'}
 
-⚡ TEAM SPIRIT & FAIRNESS:
+TEAM SPIRIT & FAIRNESS:
   100% group debts reconciled with zero hassle!
 ────────────────────────────────────
 ✦ Managed smartly with Spliqo App` : `┌──────────────────────────────────┐
@@ -115,14 +115,14 @@ export default function TripWrappedModal({
 ● Thời gian: ${totalDays} ngày • ${members.length} người • ${expenses.length} hóa đơn
 ● Chi phí bình quân: ${formatVND(avgPerPerson)}/người
 
-👑 ĐẠI GIA GÁNH TEAM:
+ĐẠI GIA GÁNH TEAM:
   ${topPayer.displayName} (Ứng trước: ${formatVND(topPayer.totalPaid)} ~ ${topPayerPercent}%)
 
-🥩 HÓA ĐƠN ĐẮT ĐỎ NHẤT:
+HÓA ĐƠN ĐẮT ĐỎ NHẤT:
   "${topExpense ? topExpense.title : 'Chưa có'}" - ${topExpense ? formatVND(topExpense.amount) : '0đ'}
 
-⚡ TINH THẦN SÒNG PHẲNG:
-  100% công nợ tất toán qua VietQR chuẩn từng đồng!
+SÒNG PHẲNG:
+  100% công nợ tất toán chuẩn từng đồng!
 ────────────────────────────────────
 ✦ Quản lý tài chính nhóm bởi Spliqo App`;
 
@@ -225,7 +225,7 @@ export default function TripWrappedModal({
 
       // 6. Giant Main Metric Card (Total Spent)
       drawBrutalistCard(80, 370, 920, 270, cardFill, 14);
-      
+
       // Orange Accent corner tag
       ctx.fillStyle = isDarkPoster ? '#ff5400' : '#18181b';
       ctx.fillRect(80, 370, 420, 50);
@@ -256,15 +256,15 @@ export default function TripWrappedModal({
       ctx.font = '900 52px sans-serif';
       ctx.fillText(isEn ? `${expenses.length} BILLS` : `${expenses.length} BILL`, 590, 795);
 
-      // 8. Card 1: Top Payer (👑 Đại gia chuyến đi)
+      // 8. Card 1: Top Payer (Đại gia chuyến đi)
       drawBrutalistCard(80, 885, 920, 260, cardFill, 14);
-      
+
       // Top orange tag
       ctx.fillStyle = '#ff5400';
       ctx.fillRect(80, 885, 440, 48);
       ctx.fillStyle = '#ffffff';
       ctx.font = '900 22px sans-serif';
-      ctx.fillText(isEn ? '👑 TOP SPENDER MVP' : '👑 ĐẠI GIA GÁNH TEAM TOÀN ĐOÀN', 105, 918);
+      ctx.fillText(isEn ? 'TOP SPENDER MVP' : 'ĐẠI GIA GÁNH TEAM TOÀN ĐOÀN', 105, 918);
 
       ctx.fillStyle = textPrimary;
       ctx.font = '900 56px sans-serif';
@@ -278,15 +278,15 @@ export default function TripWrappedModal({
       ctx.font = 'bold 26px sans-serif';
       ctx.fillText(isEn ? `Covered ${topPayerPercent}% of total trip budget.` : `Gánh ${topPayerPercent}% toàn bộ ngân sách chuyến đi.`, 115, 1105);
 
-      // 9. Card 2: Top Expense (🥩 Món ăn / Bill kỷ lục)
+      // 9. Card 2: Top Expense (Món ăn / Bill kỷ lục)
       if (topExpense) {
         drawBrutalistCard(80, 1185, 920, 240, cardFill, 14);
-        
+
         ctx.fillStyle = isDarkPoster ? '#ff5400' : '#18181b';
         ctx.fillRect(80, 1185, 420, 48);
         ctx.fillStyle = '#ffffff';
         ctx.font = '900 22px sans-serif';
-        ctx.fillText(isEn ? '🥩 MOST EXPENSIVE BILL' : '🥩 KHOẢN CHI KỶ LỤC NHẤT', 105, 1218);
+        ctx.fillText(isEn ? 'MOST EXPENSIVE BILL' : 'KHOẢN CHI KỶ LỤC NHẤT', 105, 1218);
 
         ctx.fillStyle = textPrimary;
         ctx.font = '900 48px sans-serif';
@@ -306,8 +306,8 @@ export default function TripWrappedModal({
       drawBrutalistCard(80, 1465, 920, 220, '#ff5400', 14);
       ctx.fillStyle = '#ffffff';
       ctx.font = '900 36px sans-serif';
-      ctx.fillText(isEn ? '⚡ TEAM SPIRIT: 100% RECONCILED' : '⚡ TINH THẦN SÒNG PHẲNG: 100% HOÀN TẤT', 120, 1530);
-      
+      ctx.fillText(isEn ? '⚡ TEAM SPIRIT: 100%' : '⚡ TINH THẦN SÒNG PHẲNG: 100%', 120, 1530);
+
       ctx.fillStyle = isDarkPoster ? '#ffffff' : '#18181b';
       ctx.font = 'bold 26px sans-serif';
       ctx.fillText(isEn ? 'All debts balanced & settled cleanly via VietQR!' : 'Mọi khoản nợ được cân bằng đối soát chuẩn từng đồng qua VietQR!', 120, 1585);
@@ -354,7 +354,7 @@ export default function TripWrappedModal({
       const file = new File([blob], filename, { type: 'image/png' });
 
       // Detect iOS (iPhone / iPad / iPod)
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
       // 1. Try Native Web Share API first (Native iOS Action Sheet with "Lưu hình ảnh" / Save Image)
@@ -398,449 +398,446 @@ export default function TripWrappedModal({
   return (
     <>
       <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={
-        <div className="flex items-center gap-2">
-          <span className="px-2.5 py-0.5 rounded-md bg-[#ff5400] text-white font-black text-xs tracking-wider uppercase">
-            NEO-RETRO
-          </span>
-          <span className="font-extrabold text-[#18181b] dark:text-white">
-            Spliqo Wrapped 📊
-          </span>
-        </div>
-      }
-      maxWidth="max-w-lg"
-      footer={
-        <div className="flex items-center justify-between w-full">
-          {/* Navigation Controls */}
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={handlePrev}
-              disabled={currentSlide === 0}
-              className={`p-2 rounded-xl text-xs font-black flex items-center justify-center transition-all cursor-pointer border-2 border-[#18181b] dark:border-zinc-700 ${
-                currentSlide === 0 
-                  ? 'opacity-30 cursor-not-allowed bg-zinc-200 dark:bg-zinc-800 text-zinc-400' 
-                  : 'bg-white dark:bg-[#202028] text-[#18181b] dark:text-white shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] hover:translate-x-[1px] hover:translate-y-[1px]'
-              }`}
-            >
-              <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
-            </button>
-            <span className="text-xs font-mono font-black px-2.5 py-1 bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] rounded-lg border border-[#18181b] dark:border-white">
-              {currentSlide + 1} / {totalSlides}
-            </span>
-            <button
-              type="button"
-              onClick={handleNext}
-              disabled={currentSlide === totalSlides - 1}
-              className={`p-2 rounded-xl text-xs font-black flex items-center justify-center transition-all cursor-pointer border-2 border-[#18181b] dark:border-zinc-700 ${
-                currentSlide === totalSlides - 1 
-                  ? 'opacity-30 cursor-not-allowed bg-zinc-200 dark:bg-zinc-800 text-zinc-400' 
-                  : 'bg-white dark:bg-[#202028] text-[#18181b] dark:text-white shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] hover:translate-x-[1px] hover:translate-y-[1px]'
-              }`}
-            >
-              <ChevronRight className="w-5 h-5 stroke-[2.5]" />
-            </button>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleDownloadImage}
-              disabled={exporting}
-              className="px-3.5 py-1.5 rounded-xl border-2 border-[#18181b] dark:border-zinc-700 bg-[#ff5400] hover:bg-[#ea580c] text-white font-black text-xs flex items-center gap-1.5 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
-              title={isEn ? "Download HD Neo-Retro Story Image" : "Tải ảnh Story Neo-Retro cực nét"}
-            >
-              <Download className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>{exporting ? (isEn ? 'Generating...' : 'Đang tạo...') : (isEn ? 'Save Story' : 'Lưu ảnh Story')}</span>
-            </button>
-          </div>
-        </div>
-      }
-    >
-      <div className="space-y-4">
-        {/* Chunky Brutalist Story Progress Bar */}
-        <div className="flex items-center gap-2 w-full">
-          {Array.from({ length: totalSlides }).map((_, idx) => (
-            <div
-              key={idx}
-              onClick={() => setCurrentSlide(idx)}
-              className="h-2 flex-1 rounded-md cursor-pointer overflow-hidden border border-[#18181b] dark:border-zinc-700 bg-[#edebe4] dark:bg-zinc-800 transition-all"
-            >
-              <div
-                className={`h-full transition-all duration-300 ${
-                  idx <= currentSlide ? 'bg-[#ff5400]' : 'bg-transparent'
-                }`}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Neo-Retro Brutalist Slide Container */}
-        <div 
-          ref={cardRef}
-          className="relative min-h-[440px] rounded-3xl p-6 sm:p-7 flex flex-col justify-between overflow-hidden border-[3px] border-[#18181b] dark:border-zinc-700 shadow-[6px_6px_0px_#18181b] dark:shadow-[6px_6px_0px_rgba(0,0,0,0.8)] bg-[#fbf9f3] dark:bg-[#1a1a24] text-[#18181b] dark:text-[#f4f4f5] select-none transition-all duration-300"
-          style={{
-            backgroundImage: isDark 
-              ? 'radial-gradient(rgba(255, 255, 255, 0.12) 1.5px, transparent 1.5px)' 
-              : 'radial-gradient(rgba(24, 24, 27, 0.18) 1.5px, transparent 1.5px)',
-            backgroundSize: '24px 24px'
-          }}
-        >
-          {/* Top Tape Sticker */}
-          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-5 py-1 bg-[#ff5400] border-2 border-[#18181b] dark:border-black shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] text-white text-[11px] font-black uppercase tracking-widest rotate-[-1deg]">
-            ★ SPLIQO VINTAGE TICKET ★
-          </div>
-
-          {/* SLIDE 0: RETRO INTRO & BIG METRICS */}
-          {currentSlide === 0 && (
-            <div className="space-y-5 animate-fade-in my-auto pt-2">
-              <div className="space-y-1">
-                <div className="inline-block px-2.5 py-0.5 rounded-md bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] text-[10px] font-mono font-bold tracking-widest uppercase">
-                  FINANCIAL OVERVIEW • #{trip.tripCode || 'SPLIQO'}
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-black text-[#18181b] dark:text-white tracking-tight uppercase">
-                  {trip.name}
-                </h2>
-                <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 font-mono">
-                  {totalDays} {isEn ? 'DAYS OF EXPLORING' : 'NGÀY KHÁM PHÁ'} • {members.length} {isEn ? 'MEMBERS' : 'THÀNH VIÊN'}
-                </p>
-              </div>
-
-              {/* Big Brutalist Number Card */}
-              <div className="p-5 rounded-2xl bg-white dark:bg-[#252532] border-2 border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000] space-y-1.5">
-                <span className="text-[11px] font-mono font-black uppercase text-zinc-500 dark:text-zinc-400 tracking-wider">
-                  {isEn ? 'TOTAL TRIP EXPENSES' : 'TỔNG CHI PHÍ TOÀN BỘ CHUYẾN ĐI'}
-                </span>
-                <div className="text-3xl sm:text-4xl font-black text-[#ff5400] font-mono tracking-tight">
-                  {formatVND(totalExpense)}
-                </div>
-                <div className="pt-2 border-t-2 border-dashed border-[#18181b]/20 dark:border-white/15 flex items-center justify-between text-xs font-bold">
-                  <span className="text-zinc-600 dark:text-zinc-400">{isEn ? 'Average quota:' : 'Định mức bình quân:'}</span>
-                  <span className="font-mono text-[#18181b] dark:text-white font-black">{formatVND(avgPerPerson)}/{isEn ? 'person' : 'người'}</span>
-                </div>
-              </div>
-
-              {/* Mini Stat Cards */}
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-xl bg-[#fef08a] dark:bg-[#2d2919] border-2 border-[#18181b] dark:border-amber-500/40 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000]">
-                  <div className="flex items-center gap-1.5 text-[10px] font-mono font-black text-[#18181b] dark:text-amber-300 mb-1">
-                    <Receipt className="w-3.5 h-3.5" />
-                    <span>{isEn ? 'BILLS' : 'HÓA ĐƠN'}</span>
-                  </div>
-                  <div className="text-lg font-black text-[#18181b] dark:text-amber-100">
-                    {expenses.length} {isEn ? 'EXPENSES' : 'KHOẢN CHI'}
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-[#fed7aa] dark:bg-[#2e2118] border-2 border-[#18181b] dark:border-orange-500/40 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000]">
-                  <div className="flex items-center gap-1.5 text-[10px] font-mono font-black text-[#18181b] dark:text-orange-300 mb-1">
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>{isEn ? 'JOURNEY' : 'HÀNH TRÌNH'}</span>
-                  </div>
-                  <div className="text-lg font-black text-[#18181b] dark:text-orange-100">
-                    {totalDays} {isEn ? 'DAYS TOGETHER' : 'NGÀY ĐỒNG HÀNH'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* SLIDE 1: TOP PAYER (👑 ĐẠI GIA CHI TIÊU BẠO NHẤT) */}
-          {currentSlide === 1 && (
-            <div className="space-y-5 animate-fade-in my-auto text-center pt-2">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#ff5400] text-white border-2 border-[#18181b] dark:border-black shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] text-xs font-black uppercase tracking-wider">
-                <Crown className="w-4 h-4 stroke-[2.5]" />
-                <span>{isEn ? 'TOP SPENDER MVP 👑' : 'CHỦ TỊCH GÁNH TEAM 👑'}</span>
-              </div>
-
-              <div className="relative inline-block mx-auto">
-                <div className="w-24 h-24 rounded-2xl bg-white dark:bg-[#252532] border-3 border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000] p-1 overflow-hidden">
-                  <img
-                    src={topPayer.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${topPayer.userId || topPayer.uid || topPayer.id}`}
-                    alt=""
-                    className="w-full h-full rounded-xl object-cover"
-                  />
-                </div>
-                <div className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-md bg-[#fef08a] dark:bg-amber-400 border-2 border-[#18181b] text-[10px] font-black text-[#18181b] shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000]">
-                  #1 MVP
-                </div>
-              </div>
-
-              <div className="space-y-0.5">
-                <h3 className="text-2xl font-black text-[#18181b] dark:text-white uppercase">
-                  {topPayer.displayName}
-                </h3>
-                <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 font-mono">
-                  {isEn ? 'MOST GENEROUS SPENDER OF THE TRIP' : 'NGƯỜI CHỊU CHI BẠO TAY NHẤT CHUYẾN ĐI'}
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-white dark:bg-[#252532] border-2 border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000] text-left space-y-1">
-                <div className="text-[10px] font-mono font-black uppercase text-zinc-500 dark:text-zinc-400">
-                  {isEn ? 'TOTAL PAID UPFRONT:' : 'SỐ TIỀN ĐÃ ỨNG TRƯỚC:'}
-                </div>
-                <div className="text-2xl sm:text-3xl font-black text-[#ff5400] font-mono">
-                  {formatVND(topPayer.totalPaid)}
-                </div>
-                <p className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 pt-1 border-t border-dashed border-[#18181b]/20 dark:border-white/15">
-                  {isEn ? 'Represents' : 'Chiếm tới'} <strong className="text-[#18181b] dark:text-white">{topPayerPercent}%</strong> {isEn ? 'of total trip expenses.' : 'toàn bộ chi phí cả đoàn.'}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* SLIDE 2: TOP EXPENSE (🥩 KHOẢN CHI KỶ LỤC) */}
-          {currentSlide === 2 && (
-            <div className="space-y-5 animate-fade-in my-auto pt-2">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] text-xs font-black uppercase tracking-wider">
-                <UtensilsCrossed className="w-4 h-4 text-[#ff5400] stroke-[2.5]" />
-                <span>{isEn ? 'MOST EXPENSIVE BILL 🥩' : 'KHOẢN CHI ĐẮT ĐỎ NHẤT 🥩'}</span>
-              </div>
-
-              {topExpense ? (
-                <div className="space-y-4">
-                  <div className="p-5 rounded-2xl bg-white dark:bg-[#252532] border-2 border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000] space-y-2">
-                    <span className="text-[10px] font-mono font-black uppercase text-zinc-500 dark:text-zinc-400">
-                      {isEn ? 'RECORD BILL OF THE TRIP' : 'BILL KỶ LỤC CỦA CHUYẾN ĐI'}
-                    </span>
-                    <h3 className="text-xl sm:text-2xl font-black text-[#18181b] dark:text-white uppercase">
-                      "{topExpense.title}"
-                    </h3>
-                    <div className="text-3xl font-black text-[#ff5400] font-mono">
-                      {formatVND(topExpense.amount)}
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-xl bg-[#fef08a] dark:bg-[#2d2919] border-2 border-[#18181b] dark:border-amber-500/40 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000] text-xs space-y-1 font-bold">
-                    <div className="flex items-center justify-between text-[#18181b] dark:text-amber-100">
-                      <span>{isEn ? 'Paid by:' : 'Người chi trả:'}</span>
-                      <strong className="font-black">{topExpensePayer?.displayName || (isEn ? 'Member' : 'Thành viên')}</strong>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-700 dark:text-amber-200/80">
-                      <span>{isEn ? 'Date logged:' : 'Ngày ghi nhận:'}</span>
-                      <span className="font-mono">{topExpense.date || (isEn ? 'During trip' : 'Trong chuyến đi')}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-700 dark:text-amber-200/80">
-                      <span>{isEn ? 'Split between:' : 'Số người chia bill:'}</span>
-                      <span>{topExpense.participants?.length || members.length} {isEn ? 'members' : 'thành viên'}</span>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-8 text-center bg-white dark:bg-[#252532] rounded-2xl border-2 border-[#18181b] dark:border-zinc-700 font-bold text-xs text-zinc-500 dark:text-zinc-400">
-                  {isEn ? 'No expenses recorded in this trip yet.' : 'Chưa có khoản chi nào được ghi nhận trong chuyến đi này.'}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* SLIDE 3: TEAM SPIRIT & FAST SETTLEMENT (⚡ SÒNG PHẲNG 100%) */}
-          {currentSlide === 3 && (
-            <div className="space-y-5 animate-fade-in my-auto text-center pt-2">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#ff5400] text-white border-2 border-[#18181b] dark:border-black shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] text-xs font-black uppercase tracking-wider">
-                <Zap className="w-4 h-4 stroke-[2.5]" />
-                <span>{isEn ? 'LIGHTNING-FAST SETTLEMENT ⚡' : 'SÒNG PHẲNG THẦN TỐC ⚡'}</span>
-              </div>
-
-              <div className="space-y-1">
-                <div className="w-16 h-16 rounded-2xl bg-[#18181b] dark:bg-[#252532] text-[#ff5400] border-2 border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000] flex items-center justify-center mx-auto">
-                  <Sparkles className="w-8 h-8 stroke-[2.5]" />
-                </div>
-                <h3 className="text-xl sm:text-2xl font-black text-[#18181b] dark:text-white uppercase tracking-tight">
-                  {isEn ? 'PLAY FAIR • SPLIT EVEN • BEST MATES' : 'CHƠI ĐẸP • CHIA ĐỀU • TRỌN TÌNH BẠN'}
-                </h3>
-                <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 font-mono">
-                  {isEn ? '100% RECONCILED TRANSPARENTLY' : '100% CÔNG NỢ ĐÃ TẤT TOÁN MINH BẠCH'}
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-white dark:bg-[#252532] border-2 border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000] text-left space-y-2">
-                <div className="flex items-center justify-between text-xs font-black text-[#18181b] dark:text-white">
-                  <span>{isEn ? 'RECONCILIATION PROGRESS:' : 'TIẾN ĐỘ ĐỐI SOÁT:'}</span>
-                  <span className="text-[#ff5400] font-mono">{isEn ? '100% COMPLETE' : '100% HOÀN TẤT'}</span>
-                </div>
-                <div className="w-full bg-[#edebe4] dark:bg-[#1a1a24] h-3 rounded-md border border-[#18181b] dark:border-zinc-600 overflow-hidden">
-                  <div className="bg-[#ff5400] h-full w-full" />
-                </div>
-                <p className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 pt-1 border-t border-dashed border-[#18181b]/20 dark:border-white/15">
-                  ⚡ {isEn ? 'Fastest payer:' : 'Thành viên thanh toán thần tốc:'} <strong className="text-[#18181b] dark:text-white font-black">{fastestSettler?.displayName || (isEn ? 'Whole crew' : 'Cả nhóm')}</strong>!
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* SLIDE 4: FULL RETRO SHAREABLE TICKET CARD */}
-          {currentSlide === 4 && (
-            <div className="space-y-4 animate-fade-in my-auto pt-2">
-              <div className="flex items-center justify-between border-b-2 border-[#18181b] dark:border-zinc-700 pb-2">
-                <div>
-                  <span className="px-2 py-0.5 rounded bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] text-[9px] font-mono font-bold uppercase">
-                    SPLIQO TICKET
-                  </span>
-                  <h3 className="text-lg font-black text-[#18181b] dark:text-white uppercase truncate max-w-[200px]">
-                    {trip.name}
-                  </h3>
-                </div>
-                <span className="text-[11px] font-mono font-black text-zinc-600 dark:text-zinc-400">
-                  {trip.startDate}
-                </span>
-              </div>
-
-              {/* Ticket Breakdown Card */}
-              <div className="p-4 rounded-2xl bg-white dark:bg-[#252532] border-2 border-[#18181b] dark:border-zinc-700 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000] space-y-2 text-xs">
-                <div className="flex items-center justify-between pb-1.5 border-b border-dashed border-[#18181b]/20 dark:border-white/15 font-bold">
-                  <span className="text-zinc-600 dark:text-zinc-400">{isEn ? 'Total spent:' : 'Tổng chi:'}</span>
-                  <strong className="text-[#ff5400] font-mono font-black text-sm">
-                    {formatVND(totalExpense)}
-                  </strong>
-                </div>
-
-                <div className="flex items-center justify-between font-bold">
-                  <span className="text-zinc-600 dark:text-zinc-400">{isEn ? '👑 Top spender:' : '👑 Chi bạo nhất:'}</span>
-                  <strong className="text-[#18181b] dark:text-white font-black">{topPayer.displayName} ({formatVND(topPayer.totalPaid)})</strong>
-                </div>
-
-                <div className="flex items-center justify-between font-bold">
-                  <span className="text-zinc-600 dark:text-zinc-400">{isEn ? '🥩 Biggest bill:' : '🥩 Bill đắt nhất:'}</span>
-                  <strong className="text-[#18181b] dark:text-white font-black truncate max-w-[140px]">
-                    {topExpense ? `${topExpense.title}` : (isEn ? 'None' : 'Chưa có')}
-                  </strong>
-                </div>
-
-                <div className="flex items-center justify-between font-bold">
-                  <span className="text-zinc-600 dark:text-zinc-400">{isEn ? '⚡ Settlement:' : '⚡ Đối soát:'}</span>
-                  <strong className="text-emerald-600 dark:text-emerald-400 font-black">{isEn ? '100% Fair & Settled' : '100% Sòng phẳng'}</strong>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="pt-1 flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={handleDownloadImage}
-                  disabled={exporting}
-                  className="w-full py-3 rounded-2xl border-2 border-[#18181b] dark:border-zinc-700 bg-[#ff5400] hover:bg-[#ea580c] text-white font-black text-xs flex items-center justify-center gap-2 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
-                >
-                  <Download className="w-4 h-4 stroke-[2.5]" />
-                  <span>{exporting ? (isEn ? 'Exporting...' : 'Đang xuất ảnh...') : (isEn ? 'Save Neo-Retro Story (PNG)' : 'Lưu ảnh Story Neo-Retro (PNG)')}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleCopyRecap}
-                  className="w-full py-2.5 rounded-2xl border-2 border-[#18181b] dark:border-zinc-700 bg-white hover:bg-zinc-50 dark:bg-[#252532] dark:hover:bg-[#2c2c3b] text-[#18181b] dark:text-white font-black text-xs flex items-center justify-center gap-2 shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
-                >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copied ? (isEn ? 'Copied to clipboard!' : 'Đã copy vào bộ nhớ tạm!') : (isEn ? 'Copy Retro text recap' : 'Copy văn bản định dạng Retro')}</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Bottom Neo-Retro Barcode & Step footer */}
-          <div className="flex items-center justify-between text-[11px] font-mono font-bold text-zinc-600 dark:text-zinc-400 pt-3 border-t-2 border-[#18181b]/20 dark:border-white/20">
-            <span className="tracking-widest">||| | |||| | |||</span>
-            <span 
-              onClick={handleNext}
-              className="font-black text-[#ff5400] hover:underline cursor-pointer flex items-center gap-1"
-            >
-              {currentSlide < totalSlides - 1 ? (
-                <>
-                  <span>{isEn ? 'NEXT' : 'TIẾP THEO'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </>
-              ) : (
-                isEn ? 'FINISH ★' : 'KẾT THÚC ★'
-              )}
-            </span>
-          </div>
-        </div>
-      </div>
-    </Modal>
-
-    {/* iOS & Mobile Fallback Image Preview Modal */}
-    {previewImage && (
-      <Modal
-        isOpen={!!previewImage}
-        onClose={() => setPreviewImage(null)}
+        isOpen={isOpen}
+        onClose={onClose}
         title={
           <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-md bg-[#ff5400] text-white font-black text-xs tracking-wider uppercase">
+              NEO-RETRO
+            </span>
             <span className="font-extrabold text-[#18181b] dark:text-white">
-              {isEn ? 'Save Wrapped Photo 📸' : 'Lưu ảnh Wrapped 📸'}
+              Spliqo Wrapped 📊
             </span>
           </div>
         }
-        maxWidth="max-w-md"
+        maxWidth="max-w-lg"
         footer={
-          <div className="flex items-center justify-between w-full gap-2">
-            <button
-              type="button"
-              onClick={() => setPreviewImage(null)}
-              className="tactile-btn-pill px-4 py-2 text-xs font-bold cursor-pointer"
-            >
-              {isEn ? 'Close' : 'Đóng'}
-            </button>
-            {navigator.share && (
+          <div className="flex items-center justify-between w-full">
+            {/* Navigation Controls */}
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
-                onClick={async () => {
-                  try {
-                    const arr = previewImage.split(',');
-                    const mime = arr[0].match(/:(.*?);/)[1];
-                    const bstr = atob(arr[1]);
-                    let n = bstr.length;
-                    const u8arr = new Uint8Array(n);
-                    while (n--) {
-                      u8arr[n] = bstr.charCodeAt(n);
-                    }
-                    const blob = new Blob([u8arr], { type: mime });
-                    const file = new File([blob], `Spliqo_RetroWrapped_${trip.name.replace(/\s+/g, '_')}.png`, { type: 'image/png' });
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                      await navigator.share({
-                        files: [file],
-                        title: `Spliqo Wrapped - ${trip.name}`
-                      });
-                    }
-                  } catch (err) {
-                    if (err.name !== 'AbortError') console.warn(err);
-                  }
-                }}
-                className="tactile-btn-dark px-4 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                onClick={handlePrev}
+                disabled={currentSlide === 0}
+                className={`p-2 rounded-xl text-xs font-black flex items-center justify-center transition-all cursor-pointer border-2 border-[#18181b] dark:border-zinc-700 ${currentSlide === 0
+                  ? 'opacity-30 cursor-not-allowed bg-zinc-200 dark:bg-zinc-800 text-zinc-400'
+                  : 'bg-white dark:bg-[#202028] text-[#18181b] dark:text-white shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] hover:translate-x-[1px] hover:translate-y-[1px]'
+                  }`}
               >
-                <Download className="w-4 h-4" />
-                <span>{isEn ? 'Share / Save Photo' : 'Chia sẻ / Lưu ảnh'}</span>
+                <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
               </button>
-            )}
+              <span className="text-xs font-mono font-black px-2.5 py-1 bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] rounded-lg border border-[#18181b] dark:border-white">
+                {currentSlide + 1} / {totalSlides}
+              </span>
+              <button
+                type="button"
+                onClick={handleNext}
+                disabled={currentSlide === totalSlides - 1}
+                className={`p-2 rounded-xl text-xs font-black flex items-center justify-center transition-all cursor-pointer border-2 border-[#18181b] dark:border-zinc-700 ${currentSlide === totalSlides - 1
+                  ? 'opacity-30 cursor-not-allowed bg-zinc-200 dark:bg-zinc-800 text-zinc-400'
+                  : 'bg-white dark:bg-[#202028] text-[#18181b] dark:text-white shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] hover:translate-x-[1px] hover:translate-y-[1px]'
+                  }`}
+              >
+                <ChevronRight className="w-5 h-5 stroke-[2.5]" />
+              </button>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleDownloadImage}
+                disabled={exporting}
+                className="px-3.5 py-1.5 rounded-xl border-2 border-[#18181b] dark:border-zinc-700 bg-[#ff5400] hover:bg-[#ea580c] text-white font-black text-xs flex items-center gap-1.5 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
+                title={isEn ? "Download HD Neo-Retro Story Image" : "Tải ảnh Story Neo-Retro cực nét"}
+              >
+                <Download className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>{exporting ? (isEn ? 'Generating...' : 'Đang tạo...') : (isEn ? 'Save Story' : 'Lưu ảnh Story')}</span>
+              </button>
+            </div>
           </div>
         }
       >
-        <div className="space-y-3">
-          <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 text-xs text-amber-900 dark:text-amber-200">
-            <p className="font-bold flex items-center gap-1.5 text-xs text-amber-800 dark:text-amber-300">
-              <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-              {isEn ? 'How to save photo on iPhone:' : 'Hướng dẫn lưu ảnh trên iPhone:'}
-            </p>
-            <p className="mt-1 text-[11px] leading-relaxed text-amber-950 dark:text-amber-100">
-              {isEn 
-                ? <>Press and hold the image below for <strong>1 second</strong>, then select <strong>"Save to Photos"</strong> to download.</>
-                : <>Nhấn giữ vào ảnh bên dưới trong <strong>1 giây</strong>, sau đó chọn <strong>"Lưu vào Ảnh" (Save to Photos)</strong> để tải về máy.</>}
-            </p>
+        <div className="space-y-4">
+          {/* Chunky Brutalist Story Progress Bar */}
+          <div className="flex items-center gap-2 w-full">
+            {Array.from({ length: totalSlides }).map((_, idx) => (
+              <div
+                key={idx}
+                onClick={() => setCurrentSlide(idx)}
+                className="h-2 flex-1 rounded-md cursor-pointer overflow-hidden border border-[#18181b] dark:border-zinc-700 bg-[#edebe4] dark:bg-zinc-800 transition-all"
+              >
+                <div
+                  className={`h-full transition-all duration-300 ${idx <= currentSlide ? 'bg-[#ff5400]' : 'bg-transparent'
+                    }`}
+                />
+              </div>
+            ))}
           </div>
 
-          <div className="max-h-[60vh] overflow-y-auto rounded-2xl border-2 border-[#18181b] dark:border-zinc-700 shadow-md flex justify-center bg-zinc-100 dark:bg-zinc-900 p-2">
-            <img
-              src={previewImage}
-              alt="Spliqo Wrapped"
-              className="w-full h-auto object-contain rounded-xl select-auto"
-              style={{ WebkitTouchCallout: 'default' }}
-            />
+          {/* Neo-Retro Brutalist Slide Container */}
+          <div
+            ref={cardRef}
+            className="relative min-h-[440px] rounded-3xl p-6 sm:p-7 flex flex-col justify-between overflow-hidden border-[3px] border-[#18181b] dark:border-zinc-700 shadow-[6px_6px_0px_#18181b] dark:shadow-[6px_6px_0px_rgba(0,0,0,0.8)] bg-[#fbf9f3] dark:bg-[#1a1a24] text-[#18181b] dark:text-[#f4f4f5] select-none transition-all duration-300"
+            style={{
+              backgroundImage: isDark
+                ? 'radial-gradient(rgba(255, 255, 255, 0.12) 1.5px, transparent 1.5px)'
+                : 'radial-gradient(rgba(24, 24, 27, 0.18) 1.5px, transparent 1.5px)',
+              backgroundSize: '24px 24px'
+            }}
+          >
+            {/* Top Tape Sticker */}
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-5 py-1 bg-[#ff5400] border-2 border-[#18181b] dark:border-black shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] text-white text-[11px] font-black uppercase tracking-widest rotate-[-1deg]">
+              ★ SPLIQO VINTAGE TICKET ★
+            </div>
+
+            {/* SLIDE 0: RETRO INTRO & BIG METRICS */}
+            {currentSlide === 0 && (
+              <div className="space-y-5 animate-fade-in my-auto pt-2">
+                <div className="space-y-1">
+                  <div className="inline-block px-2.5 py-0.5 rounded-md bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] text-[10px] font-mono font-bold tracking-widest uppercase">
+                    FINANCIAL OVERVIEW • #{trip.tripCode || 'SPLIQO'}
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-[#18181b] dark:text-white tracking-tight uppercase">
+                    {trip.name}
+                  </h2>
+                  <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 font-mono">
+                    {totalDays} {isEn ? 'DAYS OF EXPLORING' : 'NGÀY KHÁM PHÁ'} • {members.length} {isEn ? 'MEMBERS' : 'THÀNH VIÊN'}
+                  </p>
+                </div>
+
+                {/* Big Brutalist Number Card */}
+                <div className="p-5 rounded-2xl bg-white dark:bg-[#252532] border-2 border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000] space-y-1.5">
+                  <span className="text-[11px] font-mono font-black uppercase text-zinc-500 dark:text-zinc-400 tracking-wider">
+                    {isEn ? 'TOTAL TRIP EXPENSES' : 'TỔNG CHI PHÍ TOÀN BỘ CHUYẾN ĐI'}
+                  </span>
+                  <div className="text-3xl sm:text-4xl font-black text-[#ff5400] font-mono tracking-tight">
+                    {formatVND(totalExpense)}
+                  </div>
+                  <div className="pt-2 border-t-2 border-dashed border-[#18181b]/20 dark:border-white/15 flex items-center justify-between text-xs font-bold">
+                    <span className="text-zinc-600 dark:text-zinc-400">{isEn ? 'Average quota:' : 'Định mức bình quân:'}</span>
+                    <span className="font-mono text-[#18181b] dark:text-white font-black">{formatVND(avgPerPerson)}/{isEn ? 'person' : 'người'}</span>
+                  </div>
+                </div>
+
+                {/* Mini Stat Cards */}
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 rounded-xl bg-[#fef08a] dark:bg-[#2d2919] border-2 border-[#18181b] dark:border-amber-500/40 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000]">
+                    <div className="flex items-center gap-1.5 text-[10px] font-mono font-black text-[#18181b] dark:text-amber-300 mb-1">
+                      <Receipt className="w-3.5 h-3.5" />
+                      <span>{isEn ? 'BILLS' : 'HÓA ĐƠN'}</span>
+                    </div>
+                    <div className="text-lg font-black text-[#18181b] dark:text-amber-100">
+                      {expenses.length} {isEn ? 'EXPENSES' : 'KHOẢN CHI'}
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-[#fed7aa] dark:bg-[#2e2118] border-2 border-[#18181b] dark:border-orange-500/40 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000]">
+                    <div className="flex items-center gap-1.5 text-[10px] font-mono font-black text-[#18181b] dark:text-orange-300 mb-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>{isEn ? 'JOURNEY' : 'HÀNH TRÌNH'}</span>
+                    </div>
+                    <div className="text-lg font-black text-[#18181b] dark:text-orange-100">
+                      {totalDays} {isEn ? 'DAYS TOGETHER' : 'NGÀY ĐỒNG HÀNH'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SLIDE 1: TOP PAYER (ĐẠI GIA CHI TIÊU BẠO NHẤT) */}
+            {currentSlide === 1 && (
+              <div className="space-y-5 animate-fade-in my-auto text-center pt-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#ff5400] text-white border-2 border-[#18181b] dark:border-black shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] text-xs font-black uppercase tracking-wider">
+                  <Crown className="w-4 h-4 stroke-[2.5]" />
+                  <span>{isEn ? 'TOP SPENDER MVP ' : 'CHỦ TỊCH GÁNH TEAM '}</span>
+                </div>
+
+                <div className="relative inline-block mx-auto">
+                  <div className="w-24 h-24 rounded-2xl bg-white dark:bg-[#252532] border-3 border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000] p-1 overflow-hidden">
+                    <img
+                      src={topPayer.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${topPayer.userId || topPayer.uid || topPayer.id}`}
+                      alt=""
+                      className="w-full h-full rounded-xl object-cover"
+                    />
+                  </div>
+                  <div className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-md bg-[#fef08a] dark:bg-amber-400 border-2 border-[#18181b] text-[10px] font-black text-[#18181b] shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000]">
+                    #1 MVP
+                  </div>
+                </div>
+
+                <div className="space-y-0.5">
+                  <h3 className="text-2xl font-black text-[#18181b] dark:text-white uppercase">
+                    {topPayer.displayName}
+                  </h3>
+                  <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 font-mono">
+                    {isEn ? 'MOST GENEROUS SPENDER OF THE TRIP' : 'NGƯỜI CHỊU CHI BẠO TAY NHẤT CHUYẾN ĐI'}
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-white dark:bg-[#252532] border-2 border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000] text-left space-y-1">
+                  <div className="text-[10px] font-mono font-black uppercase text-zinc-500 dark:text-zinc-400">
+                    {isEn ? 'TOTAL PAID UPFRONT:' : 'SỐ TIỀN ĐÃ ỨNG TRƯỚC:'}
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-black text-[#ff5400] font-mono">
+                    {formatVND(topPayer.totalPaid)}
+                  </div>
+                  <p className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 pt-1 border-t border-dashed border-[#18181b]/20 dark:border-white/15">
+                    {isEn ? 'Represents' : 'Chiếm tới'} <strong className="text-[#18181b] dark:text-white">{topPayerPercent}%</strong> {isEn ? 'of total trip expenses.' : 'toàn bộ chi phí cả đoàn.'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* SLIDE 2: TOP EXPENSE (KHOẢN CHI KỶ LỤC) */}
+            {currentSlide === 2 && (
+              <div className="space-y-5 animate-fade-in my-auto pt-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] text-xs font-black uppercase tracking-wider">
+                  <UtensilsCrossed className="w-4 h-4 text-[#ff5400] stroke-[2.5]" />
+                  <span>{isEn ? 'MOST EXPENSIVE BILL ' : 'KHOẢN CHI ĐẮT ĐỎ NHẤT '}</span>
+                </div>
+
+                {topExpense ? (
+                  <div className="space-y-4">
+                    <div className="p-5 rounded-2xl bg-white dark:bg-[#252532] border-2 border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000] space-y-2">
+                      <span className="text-[10px] font-mono font-black uppercase text-zinc-500 dark:text-zinc-400">
+                        {isEn ? 'RECORD BILL OF THE TRIP' : 'BILL KỶ LỤC CỦA CHUYẾN ĐI'}
+                      </span>
+                      <h3 className="text-xl sm:text-2xl font-black text-[#18181b] dark:text-white uppercase">
+                        "{topExpense.title}"
+                      </h3>
+                      <div className="text-3xl font-black text-[#ff5400] font-mono">
+                        {formatVND(topExpense.amount)}
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl bg-[#fef08a] dark:bg-[#2d2919] border-2 border-[#18181b] dark:border-amber-500/40 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000] text-xs space-y-1 font-bold">
+                      <div className="flex items-center justify-between text-[#18181b] dark:text-amber-100">
+                        <span>{isEn ? 'Paid by:' : 'Người chi trả:'}</span>
+                        <strong className="font-black">{topExpensePayer?.displayName || (isEn ? 'Member' : 'Thành viên')}</strong>
+                      </div>
+                      <div className="flex items-center justify-between text-zinc-700 dark:text-amber-200/80">
+                        <span>{isEn ? 'Date logged:' : 'Ngày ghi nhận:'}</span>
+                        <span className="font-mono">{topExpense.date || (isEn ? 'During trip' : 'Trong chuyến đi')}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-zinc-700 dark:text-amber-200/80">
+                        <span>{isEn ? 'Split between:' : 'Số người chia bill:'}</span>
+                        <span>{topExpense.participants?.length || members.length} {isEn ? 'members' : 'thành viên'}</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center bg-white dark:bg-[#252532] rounded-2xl border-2 border-[#18181b] dark:border-zinc-700 font-bold text-xs text-zinc-500 dark:text-zinc-400">
+                    {isEn ? 'No expenses recorded in this trip yet.' : 'Chưa có khoản chi nào được ghi nhận trong chuyến đi này.'}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* SLIDE 3: TEAM SPIRIT & FAST SETTLEMENT ( SÒNG PHẲNG 100%) */}
+            {currentSlide === 3 && (
+              <div className="space-y-5 animate-fade-in my-auto text-center pt-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#ff5400] text-white border-2 border-[#18181b] dark:border-black shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] text-xs font-black uppercase tracking-wider">
+                  <Zap className="w-4 h-4 stroke-[2.5]" />
+                  <span>{isEn ? 'LIGHTNING-FAST SETTLEMENT ' : 'SÒNG PHẲNG THẦN TỐC '}</span>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="w-16 h-16 rounded-2xl bg-[#18181b] dark:bg-[#252532] text-[#ff5400] border-2 border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000] flex items-center justify-center mx-auto">
+                    <Sparkles className="w-8 h-8 stroke-[2.5]" />
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-[#18181b] dark:text-white uppercase tracking-tight">
+                    {isEn ? 'PLAY FAIR • SPLIT EVEN • BEST MATES' : 'CHƠI ĐẸP • CHIA ĐỀU • TRỌN TÌNH BẠN'}
+                  </h3>
+                  <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 font-mono">
+                    {isEn ? '100% RECONCILED TRANSPARENTLY' : '100% CÔNG NỢ ĐÃ TẤT TOÁN MINH BẠCH'}
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-white dark:bg-[#252532] border-2 border-[#18181b] dark:border-zinc-700 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000] text-left space-y-2">
+                  <div className="flex items-center justify-between text-xs font-black text-[#18181b] dark:text-white">
+                    <span>{isEn ? 'RECONCILIATION PROGRESS:' : 'TIẾN ĐỘ ĐỐI SOÁT:'}</span>
+                    <span className="text-[#ff5400] font-mono">{isEn ? '100% COMPLETE' : '100% HOÀN TẤT'}</span>
+                  </div>
+                  <div className="w-full bg-[#edebe4] dark:bg-[#1a1a24] h-3 rounded-md border border-[#18181b] dark:border-zinc-600 overflow-hidden">
+                    <div className="bg-[#ff5400] h-full w-full" />
+                  </div>
+                  <p className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 pt-1 border-t border-dashed border-[#18181b]/20 dark:border-white/15">
+                    ⚡ {isEn ? 'Fastest payer:' : 'Thành viên thanh toán thần tốc:'} <strong className="text-[#18181b] dark:text-white font-black">{fastestSettler?.displayName || (isEn ? 'Whole crew' : 'Cả nhóm')}</strong>!
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* SLIDE 4: FULL RETRO SHAREABLE TICKET CARD */}
+            {currentSlide === 4 && (
+              <div className="space-y-4 animate-fade-in my-auto pt-2">
+                <div className="flex items-center justify-between border-b-2 border-[#18181b] dark:border-zinc-700 pb-2">
+                  <div>
+                    <span className="px-2 py-0.5 rounded bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] text-[9px] font-mono font-bold uppercase">
+                      SPLIQO TICKET
+                    </span>
+                    <h3 className="text-lg font-black text-[#18181b] dark:text-white uppercase truncate max-w-[200px]">
+                      {trip.name}
+                    </h3>
+                  </div>
+                  <span className="text-[11px] font-mono font-black text-zinc-600 dark:text-zinc-400">
+                    {trip.startDate}
+                  </span>
+                </div>
+
+                {/* Ticket Breakdown Card */}
+                <div className="p-4 rounded-2xl bg-white dark:bg-[#252532] border-2 border-[#18181b] dark:border-zinc-700 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000] space-y-2 text-xs">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-dashed border-[#18181b]/20 dark:border-white/15 font-bold">
+                    <span className="text-zinc-600 dark:text-zinc-400">{isEn ? 'Total spent:' : 'Tổng chi:'}</span>
+                    <strong className="text-[#ff5400] font-mono font-black text-sm">
+                      {formatVND(totalExpense)}
+                    </strong>
+                  </div>
+
+                  <div className="flex items-center justify-between font-bold">
+                    <span className="text-zinc-600 dark:text-zinc-400">{isEn ? 'Top spender:' : 'Chi bạo nhất:'}</span>
+                    <strong className="text-[#18181b] dark:text-white font-black">{topPayer.displayName} ({formatVND(topPayer.totalPaid)})</strong>
+                  </div>
+
+                  <div className="flex items-center justify-between font-bold">
+                    <span className="text-zinc-600 dark:text-zinc-400">{isEn ? 'Biggest bill:' : 'Bill đắt nhất:'}</span>
+                    <strong className="text-[#18181b] dark:text-white font-black truncate max-w-[140px]">
+                      {topExpense ? `${topExpense.title}` : (isEn ? 'None' : 'Chưa có')}
+                    </strong>
+                  </div>
+
+                  <div className="flex items-center justify-between font-bold">
+                    <span className="text-zinc-600 dark:text-zinc-400">{isEn ? '⚡ Settlement:' : '⚡ Đối soát:'}</span>
+                    <strong className="text-emerald-600 dark:text-emerald-400 font-black">{isEn ? '100% Fair & Settled' : '100% Sòng phẳng'}</strong>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="pt-1 flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={handleDownloadImage}
+                    disabled={exporting}
+                    className="w-full py-3 rounded-2xl border-2 border-[#18181b] dark:border-zinc-700 bg-[#ff5400] hover:bg-[#ea580c] text-white font-black text-xs flex items-center justify-center gap-2 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
+                  >
+                    <Download className="w-4 h-4 stroke-[2.5]" />
+                    <span>{exporting ? (isEn ? 'Exporting...' : 'Đang xuất ảnh...') : (isEn ? 'Save Neo-Retro Story (PNG)' : 'Lưu ảnh Story Neo-Retro (PNG)')}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyRecap}
+                    className="w-full py-2.5 rounded-2xl border-2 border-[#18181b] dark:border-zinc-700 bg-white hover:bg-zinc-50 dark:bg-[#252532] dark:hover:bg-[#2c2c3b] text-[#18181b] dark:text-white font-black text-xs flex items-center justify-center gap-2 shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copied ? (isEn ? 'Copied to clipboard!' : 'Đã copy vào bộ nhớ tạm!') : (isEn ? 'Copy Retro text recap' : 'Copy văn bản định dạng Retro')}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Bottom Neo-Retro Barcode & Step footer */}
+            <div className="flex items-center justify-between text-[11px] font-mono font-bold text-zinc-600 dark:text-zinc-400 pt-3 border-t-2 border-[#18181b]/20 dark:border-white/20">
+              <span className="tracking-widest">||| | |||| | |||</span>
+              <span
+                onClick={handleNext}
+                className="font-black text-[#ff5400] hover:underline cursor-pointer flex items-center gap-1"
+              >
+                {currentSlide < totalSlides - 1 ? (
+                  <>
+                    <span>{isEn ? 'NEXT' : 'TIẾP THEO'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </>
+                ) : (
+                  isEn ? 'FINISH ★' : 'KẾT THÚC ★'
+                )}
+              </span>
+            </div>
           </div>
         </div>
       </Modal>
-    )}
+
+      {/* iOS & Mobile Fallback Image Preview Modal */}
+      {previewImage && (
+        <Modal
+          isOpen={!!previewImage}
+          onClose={() => setPreviewImage(null)}
+          title={
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-[#18181b] dark:text-white">
+                {isEn ? 'Save Wrapped Photo' : 'Lưu ảnh Wrapped'}
+              </span>
+            </div>
+          }
+          maxWidth="max-w-md"
+          footer={
+            <div className="flex items-center justify-between w-full gap-2">
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="tactile-btn-pill px-4 py-2 text-xs font-bold cursor-pointer"
+              >
+                {isEn ? 'Close' : 'Đóng'}
+              </button>
+              {navigator.share && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const arr = previewImage.split(',');
+                      const mime = arr[0].match(/:(.*?);/)[1];
+                      const bstr = atob(arr[1]);
+                      let n = bstr.length;
+                      const u8arr = new Uint8Array(n);
+                      while (n--) {
+                        u8arr[n] = bstr.charCodeAt(n);
+                      }
+                      const blob = new Blob([u8arr], { type: mime });
+                      const file = new File([blob], `Spliqo_RetroWrapped_${trip.name.replace(/\s+/g, '_')}.png`, { type: 'image/png' });
+                      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                          files: [file],
+                          title: `Spliqo Wrapped - ${trip.name}`
+                        });
+                      }
+                    } catch (err) {
+                      if (err.name !== 'AbortError') console.warn(err);
+                    }
+                  }}
+                  className="tactile-btn-dark px-4 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>{isEn ? 'Share / Save Photo' : 'Chia sẻ / Lưu ảnh'}</span>
+                </button>
+              )}
+            </div>
+          }
+        >
+          <div className="space-y-3">
+            <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 text-xs text-amber-900 dark:text-amber-200">
+              <p className="font-bold flex items-center gap-1.5 text-xs text-amber-800 dark:text-amber-300">
+                <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                {isEn ? 'How to save photo on iPhone:' : 'Hướng dẫn lưu ảnh trên iPhone:'}
+              </p>
+              <p className="mt-1 text-[11px] leading-relaxed text-amber-950 dark:text-amber-100">
+                {isEn
+                  ? <>Press and hold the image below for <strong>1 second</strong>, then select <strong>"Save to Photos"</strong> to download.</>
+                  : <>Nhấn giữ vào ảnh bên dưới trong <strong>1 giây</strong>, sau đó chọn <strong>"Lưu vào Ảnh" (Save to Photos)</strong> để tải về máy.</>}
+              </p>
+            </div>
+
+            <div className="max-h-[60vh] overflow-y-auto rounded-2xl border-2 border-[#18181b] dark:border-zinc-700 shadow-md flex justify-center bg-zinc-100 dark:bg-zinc-900 p-2">
+              <img
+                src={previewImage}
+                alt="Spliqo Wrapped"
+                className="w-full h-auto object-contain rounded-xl select-auto"
+                style={{ WebkitTouchCallout: 'default' }}
+              />
+            </div>
+          </div>
+        </Modal>
+      )}
     </>
   );
 }
