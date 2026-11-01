@@ -448,16 +448,6 @@ export default function TripWrappedModal({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleCopyRecap}
-              className="px-3 py-1.5 rounded-xl border-2 border-[#18181b] dark:border-zinc-700 bg-white dark:bg-[#252530] text-[#18181b] dark:text-white font-bold text-xs flex items-center gap-1.5 shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
-              title={isEn ? "Copy retro recap text" : "Sao chép tóm tắt định dạng Retro"}
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? (isEn ? 'Copied!' : 'Đã copy!') : (isEn ? 'Copy recap' : 'Copy recap')}</span>
-            </button>
-
-            <button
-              type="button"
               onClick={handleDownloadImage}
               disabled={exporting}
               className="px-3.5 py-1.5 rounded-xl border-2 border-[#18181b] dark:border-zinc-700 bg-[#ff5400] hover:bg-[#ea580c] text-white font-black text-xs flex items-center gap-1.5 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
