@@ -211,7 +211,7 @@ export default function TripDetailPage() {
         setBalances(cached.balances || null);
         setSettlements(cached.settlements || []);
         setIsOfflineMode(true);
-        showToast('📶 Đang hiển thị dữ liệu chuyến đi từ bộ nhớ ngoại tuyến.', 'info');
+        showToast('Đang hiển thị dữ liệu chuyến đi từ bộ nhớ ngoại tuyến.', 'info');
       } else {
         showToast(err.message || 'Lỗi khi tải thông tin chuyến đi', 'error');
       }
@@ -672,10 +672,10 @@ export default function TripDetailPage() {
     setEditingExpense(null);
     setExpTitle(
       mode === 'payer' 
-        ? 'Chầu ăn uống / Cafe (Bao trọn) 👑' 
+        ? 'Chầu ăn uống / Cafe (Bao trọn) ' 
         : mode === 'lucky_free' 
-        ? 'Chầu ăn uống (Được khao 0đ) 🎁' 
-        : 'Chầu cafe / trà sữa 🧋'
+        ? 'Chầu ăn uống (Được khao)' 
+        : 'Chầu cafe / trà sữa '
     );
     setExpAmount('');
     setExpCurrency('VND');
@@ -704,7 +704,7 @@ export default function TripDetailPage() {
     setExpIndividualAmounts({});
     setExpBillImageUrl('');
     setExpDate(new Date().toISOString().split('T')[0]);
-    setExpNote(`Quay từ Vòng xoay may mắn 🎲: ${winnerMember.displayName} được chọn (${mode === 'lucky_free' ? 'Được khao 0đ' : mode === 'payer' ? 'Bao trọn chầu' : 'Ứng tiền trước'})!`);
+    setExpNote(`Quay từ Vòng xoay may mắn : ${winnerMember.displayName} được chọn (${mode === 'lucky_free' ? 'Được khao 0đ' : mode === 'payer' ? 'Bao trọn chầu' : 'Ứng tiền trước'})!`);
     setLuckyWheelModalOpen(false);
     setAddExpenseModalOpen(true);
   };
@@ -850,7 +850,7 @@ export default function TripDetailPage() {
                 title={t('luckyWheelHeaderPrompt', 'Vòng xoay may mắn - Ai trả chầu này?')}
               >
                 <RotateCw className="w-3.5 h-3.5 text-amber-500" />
-                <span>{t('luckyWheelBtn', 'Vòng xoay 🎡')}</span>
+                <span>{t('luckyWheelBtn', 'Vòng xoay ')}</span>
               </button>
 
               {/* Spliqo Wrapped Quick Trigger (Neo-Retro) */}
@@ -861,7 +861,7 @@ export default function TripDetailPage() {
                 title={t('wrappedTitle', 'Spliqo Wrapped - Thẻ ký ức Neo-Retro')}
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#ff5400]" />
-                <span>{t('wrappedBtn', 'Wrapped 📊')}</span>
+                <span>{t('wrappedBtn', 'Wrapped ')}</span>
               </button>
             </div>
 
