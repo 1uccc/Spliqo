@@ -60,16 +60,3 @@ npm install
 npm run dev
 # Mở trình duyệt tại: http://localhost:5173
 ```
-
----
-
-## 📱 Dữ liệu mẫu khởi tạo sẵn để test ngay
-
-Hệ thống đã có sẵn kịch bản mẫu **Đà Lạt 3 ngày 2 đêm** (Trip Code: **`DL26A8`**) với 5 thành viên:
-1. **Nguyễn Văn A** (Creator, VCB)
-2. **Trần Thị B** (Member, MB Bank)
-3. **Lê Văn C** (Member, Techcombank)
-4. **Phạm Minh D** (Member, ACB)
-5. **Hoàng Thị E** (Member, VPBank)
-
-> **Mẹo:** Trên thanh điều hướng Navbar trên cùng có sẵn thanh **Chuyển đổi người dùng nhanh (Quick User Switcher)** để bạn dễ dàng đóng vai A, B, C, D hoặc E kiểm tra luồng thanh toán và xác nhận tiền mà không cần mở nhiều trình duyệt khác nhau!
