@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../../services/api';
-import { Loader2, Sparkles, X, RotateCw, Server } from 'lucide-react';
+import { Loader2, Sparkles, X, RotateCw } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const WAKE_ESTIMATE_SECONDS = 45;
 
 export default function ServerWakeBanner() {
+  const { t } = useLanguage();
   const [isWaking, setIsWaking] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [countdown, setCountdown] = useState(WAKE_ESTIMATE_SECONDS);
@@ -14,21 +16,18 @@ export default function ServerWakeBanner() {
   const countdownIntervalRef = useRef(null);
   const pollIntervalRef = useRef(null);
   const wakingTimeoutRef = useRef(null);
+  const isWakingRef = useRef(false);
+  const isReadyRef = useRef(false);
 
-  // Ping health endpoint
-  const pingServer = async () => {
-    try {
-      setIsPinging(true);
-      await api.get('/health', { timeout: 60000 });
-      handleServerAwake();
-    } catch {
-      // Still waking or failed
-    } finally {
-      setIsPinging(false);
-    }
-  };
+  useEffect(() => {
+    isWakingRef.current = isWaking;
+  }, [isWaking]);
 
-  const handleServerAwake = () => {
+  useEffect(() => {
+    isReadyRef.current = isReady;
+  }, [isReady]);
+
+  const handleServerAwake = useCallback(() => {
     if (wakingTimeoutRef.current) {
       clearTimeout(wakingTimeoutRef.current);
       wakingTimeoutRef.current = null;
@@ -54,21 +53,28 @@ export default function ServerWakeBanner() {
       }
       return false;
     });
-  };
+  }, []);
 
-  const startWakingCountdown = () => {
+  const pingServer = useCallback(async () => {
+    try {
+      setIsPinging(true);
+      await api.get('/health', { timeout: 60000 });
+      handleServerAwake();
+    } catch {
+      // Still waking or failed
+    } finally {
+      setIsPinging(false);
+    }
+  }, [handleServerAwake]);
+
+  const startWakingCountdown = useCallback(() => {
     setDismissed(false);
     setIsWaking(true);
     setCountdown(WAKE_ESTIMATE_SECONDS);
 
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     countdownIntervalRef.current = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          return 0;
-        }
-        return prev - 1;
-      });
+      setCountdown((prev) => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
 
     // Poll every 3.5 seconds while waking up
@@ -76,7 +82,7 @@ export default function ServerWakeBanner() {
     pollIntervalRef.current = setInterval(() => {
       pingServer();
     }, 3500);
-  };
+  }, [pingServer]);
 
   useEffect(() => {
     // Only check if online
@@ -85,16 +91,14 @@ export default function ServerWakeBanner() {
     }
 
     // Set a 2.0s timer. If server is already running, ping resolves in ~150ms and clears this timer.
-    // If server is sleeping on Render free tier, request hangs > 2s -> trigger waking notification.
     wakingTimeoutRef.current = setTimeout(() => {
       startWakingCountdown();
     }, 2000);
 
     pingServer();
 
-    // Listen to custom events from axios interceptor
     const onWakingEvent = () => {
-      if (!isWaking && !isReady) {
+      if (!isWakingRef.current && !isReadyRef.current) {
         startWakingCountdown();
       }
     };
@@ -120,7 +124,7 @@ export default function ServerWakeBanner() {
       window.removeEventListener('spliqo:server-waking', onWakingEvent);
       window.removeEventListener('spliqo:server-ready', onReadyEvent);
     };
-  }, []);
+  }, [handleServerAwake, pingServer, startWakingCountdown]);
 
   // If server is already running and never slept, don't show anything!
   if (!isWaking && !isReady) {
@@ -176,22 +180,22 @@ export default function ServerWakeBanner() {
           <div className="flex-1 min-w-0 pr-1">
             <div className="flex items-center justify-between gap-2">
               <span className="text-xs sm:text-sm font-extrabold tracking-tight">
-                {isReady ? '✨ Máy chủ đã sẵn sàng!' : 'Hệ thống đang khởi động...'}
+                {isReady ? `✨ ${t('serverReadyTitle', 'Máy chủ đã sẵn sàng!')}` : t('serverWakingTitle', 'Hệ thống đang khởi động...')}
               </span>
 
               {!isReady && (
                 <span className="font-mono text-[11px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
-                  {countdown > 0 ? `~${countdown}s` : 'Sắp xong...'}
+                  {countdown > 0 ? `~${countdown}s` : t('almostDone', 'Sắp xong...')}
                 </span>
               )}
             </div>
 
-            <p className="text-[11px] sm:text-xs text-zinc-300 mt-1 leading-snug">
+            <p className="text-xs text-zinc-200 mt-1 leading-snug">
               {isReady
-                ? 'Đã kết nối thành công tới dịch vụ đám mây Spliqo. Đang tải dữ liệu...'
+                ? t('serverReadyDesc', 'Đã kết nối thành công tới dịch vụ đám mây Spliqo. Đang tải dữ liệu...')
                 : countdown > 0
-                ? `Máy chủ mệt quá ngủ nên ngủ quên. Chờ xíu nhaaa ${countdown} giây...`
-                : 'Dậy rồi nèee, đợi thêm chút nhé...'}
+                ? t('serverWakingDesc', 'Máy chủ đám mây đang khởi động lại sau thời gian nghỉ. Vui lòng đợi khoảng {seconds} giây...').replace('{seconds}', countdown)
+                : t('serverStillWakingDesc', 'Hệ thống sắp hoàn tất khởi động, vui lòng đợi thêm giây lát...')}
             </p>
 
             {/* Progress Bar (Visible while waking) */}
@@ -212,19 +216,21 @@ export default function ServerWakeBanner() {
                 type="button"
                 onClick={pingServer}
                 disabled={isPinging}
-                title="Kiểm tra lại ngay"
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer disabled:opacity-50"
+                aria-label={t('retryPingTooltip', 'Kiểm tra lại ngay')}
+                title={t('retryPingTooltip', 'Kiểm tra lại ngay')}
+                className="w-9 h-9 rounded-lg text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50"
               >
-                <RotateCw className={`w-3.5 h-3.5 ${isPinging ? 'animate-spin' : ''}`} />
+                <RotateCw className={`w-4 h-4 ${isPinging ? 'animate-spin' : ''}`} />
               </button>
             )}
             <button
               type="button"
               onClick={() => setDismissed(true)}
-              title="Đóng thông báo"
-              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              aria-label={t('dismissBannerTooltip', 'Đóng thông báo')}
+              title={t('dismissBannerTooltip', 'Đóng thông báo')}
+              className="w-9 h-9 rounded-lg text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>

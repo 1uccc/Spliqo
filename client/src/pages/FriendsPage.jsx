@@ -58,11 +58,11 @@ export default function FriendsPage() {
       setUserTrips(tripsRes || []);
     } catch (err) {
       console.error('[fetchFriendsAndTrips] Error:', err);
-      showToast(err.message || 'Lỗi khi tải dữ liệu bạn bè', 'error');
+      showToast(err.message || (language === 'en' ? 'Error loading friends data' : 'Lỗi khi tải dữ liệu bạn bè'), 'error');
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, [showToast, language]);
 
   useEffect(() => {
     fetchFriendsAndTrips();
@@ -72,10 +72,13 @@ export default function FriendsPage() {
   const handleSendRequest = async (targetUserId, targetName) => {
     try {
       const res = await api.post('/friends/request', { targetUserId });
-      showToast(res.message || `Đã gửi lời mời kết bạn đến ${targetName}!`, 'success');
+      showToast(
+        res.message || (language === 'en' ? `Sent friend request to ${targetName}!` : `Đã gửi lời mời kết bạn đến ${targetName}!`),
+        'success'
+      );
       fetchFriendsAndTrips();
     } catch (err) {
-      showToast(err.message || 'Lỗi khi gửi lời mời kết bạn', 'error');
+      showToast(err.message || (language === 'en' ? 'Error sending friend request' : 'Lỗi khi gửi lời mời kết bạn'), 'error');
     }
   };
 
@@ -83,10 +86,10 @@ export default function FriendsPage() {
   const handleCancelRequest = async (targetUserId, requestId, _targetName) => {
     try {
       const res = await api.post('/friends/cancel', { targetUserId, requestId });
-      showToast(res.message || 'Đã hủy lời mời kết bạn', 'info');
+      showToast(res.message || (language === 'en' ? 'Cancelled friend request' : 'Đã hủy lời mời kết bạn'), 'info');
       fetchFriendsAndTrips();
     } catch (err) {
-      showToast(err.message || 'Lỗi khi hủy lời mời kết bạn', 'error');
+      showToast(err.message || (language === 'en' ? 'Error cancelling request' : 'Lỗi khi hủy lời mời kết bạn'), 'error');
     }
   };
 
@@ -94,10 +97,13 @@ export default function FriendsPage() {
   const handleAcceptRequest = async (fromUserId, requestId, fromName) => {
     try {
       const res = await api.post('/friends/accept', { fromUserId, requestId });
-      showToast(res.message || `Đã chấp nhận kết bạn với ${fromName || 'thành viên'}!`, 'success');
+      showToast(
+        res.message || (language === 'en' ? `You are now friends with ${fromName || 'member'}!` : `Đã chấp nhận kết bạn với ${fromName || 'thành viên'}!`),
+        'success'
+      );
       fetchFriendsAndTrips();
     } catch (err) {
-      showToast(err.message || 'Lỗi khi chấp nhận lời mời', 'error');
+      showToast(err.message || (language === 'en' ? 'Error accepting request' : 'Lỗi khi chấp nhận lời mời'), 'error');
     }
   };
 
@@ -105,30 +111,32 @@ export default function FriendsPage() {
   const handleRejectRequest = async (fromUserId, requestId, _fromName) => {
     try {
       const res = await api.post('/friends/reject', { fromUserId, requestId });
-      showToast(res.message || 'Đã từ chối lời mời kết bạn', 'info');
+      showToast(res.message || (language === 'en' ? 'Declined friend request' : 'Đã từ chối lời mời kết bạn'), 'info');
       fetchFriendsAndTrips();
     } catch (err) {
-      showToast(err.message || 'Lỗi khi từ chối lời mời', 'error');
+      showToast(err.message || (language === 'en' ? 'Error declining request' : 'Lỗi khi từ chối lời mời'), 'error');
     }
   };
 
   // 5. Hủy kết bạn
   const handleRemoveFriend = async (friendId, friendName) => {
     const isConfirmed = await confirm({
-      title: 'Hủy kết bạn?',
-      message: `Bạn có chắc muốn hủy kết bạn với "${friendName}"? Bạn có thể gửi lại lời mời kết bạn sau.`,
-      confirmText: 'Hủy kết bạn',
-      cancelText: 'Giữ lại',
+      title: language === 'en' ? 'Remove friend?' : 'Hủy kết bạn?',
+      message: language === 'en'
+        ? `Are you sure you want to unfriend "${friendName}"? You can send a friend request again later.`
+        : `Bạn có chắc muốn hủy kết bạn với "${friendName}"? Bạn có thể gửi lại lời mời kết bạn sau.`,
+      confirmText: language === 'en' ? 'Unfriend' : 'Hủy kết bạn',
+      cancelText: language === 'en' ? 'Keep' : 'Giữ lại',
       type: 'danger'
     });
     if (!isConfirmed) return;
 
     try {
       const res = await api.delete(`/friends/${friendId}`);
-      showToast(res.message || 'Đã hủy kết bạn', 'info');
+      showToast(res.message || (language === 'en' ? 'Removed friend' : 'Đã hủy kết bạn'), 'info');
       fetchFriendsAndTrips();
     } catch (err) {
-      showToast(err.message || 'Lỗi khi hủy kết bạn', 'error');
+      showToast(err.message || (language === 'en' ? 'Error removing friend' : 'Lỗi khi hủy kết bạn'), 'error');
     }
   };
 
@@ -147,10 +155,13 @@ export default function FriendsPage() {
         friendId: selectedFriend.uid,
         tripId
       });
-      showToast(res.message || `Đã mời ${selectedFriend.displayName} vào chuyến đi!`, 'success');
+      showToast(
+        res.message || (language === 'en' ? `Invited ${selectedFriend.displayName} to the trip!` : `Đã mời ${selectedFriend.displayName} vào chuyến đi!`),
+        'success'
+      );
       fetchFriendsAndTrips();
     } catch (err) {
-      showToast(err.message || 'Lỗi khi mời bạn bè vào chuyến đi', 'error');
+      showToast(err.message || (language === 'en' ? 'Error inviting friend to trip' : 'Lỗi khi mời bạn bè vào chuyến đi'), 'error');
     } finally {
       setInvitingTripId(null);
     }
@@ -229,14 +240,14 @@ export default function FriendsPage() {
               <h4 className="text-sm font-bold text-[#18181b] dark:text-white truncate">
                 {friend.displayName}
               </h4>
-              <div className="flex items-center gap-1.5 text-[11px] text-zinc-400 dark:text-zinc-400 truncate">
+              <div className="flex items-center gap-1.5 text-[11px] text-zinc-600 dark:text-zinc-400 truncate">
                 <Mail className="w-3 h-3 shrink-0" />
                 <span className="truncate">{friend.email}</span>
               </div>
             </div>
           </div>
 
-          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 shrink-0">
+          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 shrink-0">
             {t('friendBadge', 'Bạn bè')}
           </span>
         </div>
@@ -245,35 +256,35 @@ export default function FriendsPage() {
         <div className="grid grid-cols-2 gap-2.5 mb-4">
           {/* Box 1: Bank Account info */}
           <div className="tactile-chip p-2.5 flex flex-col justify-between min-h-[56px]">
-            <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1">
+            <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1">
               <CreditCard className="w-3 h-3" /> {t('bankHeader', 'NGÂN HÀNG')}
             </span>
             <div className="truncate">
               {(friend.bankName || friend.bankAccountNumber) ? (
                 <>
                   <span className="text-xs font-bold text-[#18181b] dark:text-white block truncate">
-                    {friend.bankName || 'Ngân hàng'}
+                    {friend.bankName || t('bank', 'Ngân hàng')}
                   </span>
-                  <span className="text-[10px] font-mono font-semibold text-zinc-700 dark:text-zinc-300 block truncate">
-                    STK: {friend.bankAccountNumber || friend.accountNumber || 'Chưa cập nhật'}
+                  <span className="text-[11px] font-mono font-semibold text-zinc-700 dark:text-zinc-300 block truncate">
+                    {t('accountNumber', 'STK')}: {friend.bankAccountNumber || friend.accountNumber || t('notUpdated', 'Chưa cập nhật')}
                   </span>
                 </>
               ) : (
-                <span className="text-[11px] text-zinc-400 dark:text-zinc-400 italic">{t('notUpdated', 'Chưa cập nhật')}</span>
+                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 italic">{t('notUpdated', 'Chưa cập nhật')}</span>
               )}
             </div>
           </div>
 
           {/* Box 2: Mutual trips */}
           <div className="tactile-chip p-2.5 flex flex-col justify-between min-h-[56px]">
-            <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1">
+            <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1">
               <Compass className="w-3 h-3" /> {t('mutualTripsHeader', 'CHUYẾN ĐI CHUNG')}
             </span>
             <div>
               <span className="text-xs font-bold text-[#18181b] dark:text-white">
                 {friend.mutualTripsCount || 0} {t('tripsUnit', 'chuyến đi')}
               </span>
-              <span className="text-[10px] text-zinc-400 dark:text-zinc-400 block truncate">
+              <span className="text-[11px] text-zinc-600 dark:text-zinc-400 block truncate">
                 {friend.mutualTripsCount > 0 ? t('activeCompanion', 'Đang đồng hành') : t('noMutualTrips', 'Chưa có chung')}
               </span>
             </div>
@@ -284,6 +295,7 @@ export default function FriendsPage() {
       {/* Card Actions: Primary Button "Mời vào chuyến đi" + Secondary "Hủy kết bạn" */}
       <div className="flex items-center gap-2 pt-2 border-t border-[#dedbd0]/50 dark:border-[#2e2e38]">
         <button
+          type="button"
           onClick={() => openInviteModal(friend)}
           className="flex-1 tactile-btn-dark py-2 text-xs flex items-center justify-center gap-1.5 shadow-xs"
           title={language === 'en' ? `Invite ${friend.displayName} to join a trip` : `Mời ${friend.displayName} tham gia một chuyến đi của bạn`}
@@ -293,9 +305,11 @@ export default function FriendsPage() {
         </button>
 
         <button
+          type="button"
           onClick={() => handleRemoveFriend(friend.uid, friend.displayName)}
-          className="p-2 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+          className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 text-zinc-600 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
           title={t('unfriendTitle', 'Hủy kết bạn')}
+          aria-label={`${t('unfriendTitle', 'Hủy kết bạn')} ${friend.displayName}`}
         >
           <UserX className="w-4 h-4" />
         </button>
@@ -325,31 +339,35 @@ export default function FriendsPage() {
                 <h4 className="text-sm font-bold text-[#18181b] dark:text-white truncate">
                   {user.displayName}
                 </h4>
-                <p className="text-[11px] text-zinc-400 dark:text-zinc-400 truncate">{user.email}</p>
+                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate">{user.email}</p>
               </div>
             </div>
 
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
               isIncoming
-                ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/40'
+                ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40'
                 : isOutgoing
-                ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40'
-                : 'bg-[#edebe4] dark:bg-[#252530] text-zinc-600 dark:text-zinc-300 border border-[#dedbd0] dark:border-[#32323e]'
+                ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40'
+                : 'bg-[#edebe4] dark:bg-[#252530] text-zinc-700 dark:text-zinc-300 border border-[#dedbd0] dark:border-[#32323e]'
             }`}>
-              {isIncoming ? 'Đã gửi lời mời cho bạn' : isOutgoing ? 'Đã gửi lời mời' : t('suggestedBadge', 'Gợi ý')}
+              {isIncoming
+                ? (language === 'en' ? 'Sent you request' : 'Đã gửi lời mời cho bạn')
+                : isOutgoing
+                ? (language === 'en' ? 'Request sent' : 'Đã gửi lời mời')
+                : t('suggestedBadge', 'Gợi ý')}
             </span>
           </div>
 
           {(user.bankName || user.bankAccountNumber || user.accountNumber) ? (
             <div className="tactile-chip p-2.5 text-xs mb-3 flex items-center gap-2">
-              <CreditCard className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+              <CreditCard className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400 shrink-0" />
               <span className="text-zinc-700 dark:text-zinc-300 font-medium truncate">
-                {user.bankName ? `${user.bankName} • ` : ''}STK: {user.bankAccountNumber || user.accountNumber}
+                {user.bankName ? `${user.bankName} • ` : ''}{t('accountNumber', 'STK')}: {user.bankAccountNumber || user.accountNumber}
               </span>
             </div>
           ) : (
-            <div className="tactile-chip p-2.5 text-xs mb-3 text-zinc-400 dark:text-zinc-500 italic">
-              Chưa cập nhật STK ngân hàng
+            <div className="tactile-chip p-2.5 text-xs mb-3 text-zinc-600 dark:text-zinc-400 italic">
+              {t('noBankAccountYet', 'Chưa cập nhật STK ngân hàng')}
             </div>
           )}
         </div>
@@ -357,41 +375,45 @@ export default function FriendsPage() {
         {isIncoming ? (
           <div className="flex items-center gap-2 pt-1">
             <button
+              type="button"
               onClick={() => handleAcceptRequest(user.uid, isIncoming.id, user.displayName)}
               className="flex-1 tactile-btn-dark py-2 text-xs flex items-center justify-center gap-1.5 shadow-xs bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Chấp nhận</span>
+              <span>{t('accept', 'Chấp nhận')}</span>
             </button>
             <button
+              type="button"
               onClick={() => handleRejectRequest(user.uid, isIncoming.id, user.displayName)}
-              className="px-3 py-2 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold border border-[#dedbd0] dark:border-[#32323e] transition-colors"
-              title="Từ chối lời mời"
+              className="px-3 py-2 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 text-zinc-600 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold border border-[#dedbd0] dark:border-[#32323e] transition-colors"
+              title={t('decline', 'Từ chối lời mời')}
             >
-              Từ chối
+              {t('decline', 'Từ chối')}
             </button>
           </div>
         ) : isOutgoing ? (
           <div className="flex items-center gap-2 pt-1">
-            <div className="flex-1 py-1.5 px-3 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 text-xs font-semibold flex items-center justify-center gap-1.5 border border-amber-200 dark:border-amber-800/40">
-              <Clock className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
-              <span>Chờ chấp nhận</span>
+            <div className="flex-1 py-1.5 px-3 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 text-xs font-semibold flex items-center justify-center gap-1.5 border border-amber-200 dark:border-amber-800/40">
+              <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 animate-pulse" />
+              <span>{language === 'en' ? 'Pending approval' : 'Chờ chấp nhận'}</span>
             </div>
             <button
+              type="button"
               onClick={() => handleCancelRequest(user.uid, isOutgoing.id, user.displayName)}
-              className="px-3 py-1.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold border border-[#dedbd0] dark:border-[#32323e] transition-colors"
-              title="Hủy lời mời kết bạn"
+              className="px-3 py-1.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 text-zinc-600 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold border border-[#dedbd0] dark:border-[#32323e] transition-colors"
+              title={t('cancelRequestTitle', 'Hủy lời mời kết bạn')}
             >
-              Hủy
+              {t('cancel', 'Hủy')}
             </button>
           </div>
         ) : (
           <button
+            type="button"
             onClick={() => handleSendRequest(user.uid, user.displayName)}
             className="w-full tactile-btn-dark py-2 text-xs flex items-center justify-center gap-1.5 shadow-xs hover:scale-[1.01] active:scale-[0.99] transition-all"
           >
             <UserPlus className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>Kết bạn</span>
+            <span>{t('addFriendNow', 'Kết bạn')}</span>
           </button>
         )}
       </div>
@@ -408,7 +430,7 @@ export default function FriendsPage() {
             <Users className="w-6 h-6 text-[#18181b] dark:text-white shrink-0" />
             <span className="whitespace-nowrap">{t('friendsHeader', 'Bạn bè & Kết nối')}</span>
           </h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+          <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">
             {t('friendsSubtitle', 'Kết nối cùng bạn bè, quản lý số tài khoản và mời tham gia các chuyến du lịch dễ dàng')}
           </p>
         </div>
@@ -416,10 +438,11 @@ export default function FriendsPage() {
         {/* Tactile Tab Bar */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 w-full md:w-auto shrink-0 flex-nowrap">
           <button
+            type="button"
             onClick={() => setActiveTab('ALL')}
-            className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'ALL' ? 'active-purple' : ''}`}
+            className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'ALL' ? 'active-emerald' : ''}`}
           >
-            <UserCheck className="w-4 h-4 text-zinc-500 shrink-0" />
+            <UserCheck className="w-4 h-4 text-zinc-600 dark:text-zinc-400 shrink-0" />
             <span className="whitespace-nowrap shrink-0">{t('myFriendsTab', 'Bạn bè của tôi')}</span>
             <span className="tactile-badge w-5 h-5 rounded-full bg-white/80 dark:bg-white/15 dark:text-white text-[11px] font-bold flex items-center justify-center shrink-0 border border-black/5 dark:border-white/10 leading-none">
               {searchQuery.trim() ? filteredFriends.length : friends.length}
@@ -427,10 +450,11 @@ export default function FriendsPage() {
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab('SUGGESTED')}
-            className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'SUGGESTED' ? 'active-purple' : ''}`}
+            className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'SUGGESTED' ? 'active-emerald' : ''}`}
           >
-            <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
             <span className="whitespace-nowrap shrink-0">{t('suggestedFriendsTab', 'Gợi ý kết bạn')}</span>
             <span className="tactile-badge w-5 h-5 rounded-full bg-white/80 dark:bg-white/15 dark:text-white text-[11px] font-bold flex items-center justify-center shrink-0 border border-black/5 dark:border-white/10 leading-none">
               {searchQuery.trim() ? filteredSuggested.length : suggested.length}
@@ -438,13 +462,14 @@ export default function FriendsPage() {
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab('REQUESTS')}
-            className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'REQUESTS' ? 'active-purple' : ''}`}
+            className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'REQUESTS' ? 'active-emerald' : ''}`}
           >
-            <Send className="w-4 h-4 text-purple-600 shrink-0" />
-            <span className="whitespace-nowrap shrink-0">Lời mời kết bạn</span>
+            <Send className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="whitespace-nowrap shrink-0">{t('invitationsTab', 'Lời mời kết bạn')}</span>
             {requests.incoming?.length > 0 && (
-              <span className="tactile-badge w-5 h-5 rounded-full bg-purple-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 leading-none">
+              <span className="tactile-badge w-5 h-5 rounded-full bg-emerald-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0 leading-none">
                 {requests.incoming.length}
               </span>
             )}
@@ -455,20 +480,22 @@ export default function FriendsPage() {
       {/* 2. Search Bar & Summary Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-600 dark:text-zinc-400" />
           <input
             type="text"
+            aria-label={t('searchFriendsPlaceholder', 'Tìm theo tên, email, ngân hàng, STK...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('searchFriendsPlaceholder', 'Tìm theo tên, email, ngân hàng, STK...')}
-            className="w-full pl-10 pr-9 py-2 bg-white dark:bg-[#1f1f26] rounded-full border border-[#dedbd0] dark:border-[#2e2e38] text-xs font-medium text-[#18181b] dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-900 dark:focus:border-white shadow-xs transition-all"
+            className="w-full pl-10 pr-10 py-2 bg-white dark:bg-[#1f1f26] rounded-full border border-[#dedbd0] dark:border-[#2e2e38] text-xs font-medium text-[#18181b] dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus:border-zinc-900 dark:focus:border-white shadow-xs transition-all"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-300 flex items-center justify-center text-[10px] hover:bg-zinc-300 dark:hover:bg-zinc-600 transition-colors cursor-pointer"
-              title="Xóa tìm kiếm"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 flex items-center justify-center text-xs hover:bg-zinc-300 dark:hover:bg-zinc-600 transition-colors cursor-pointer"
+              title={t('clearSearch', 'Xóa tìm kiếm')}
+              aria-label={t('clearSearch', 'Xóa tìm kiếm')}
             >
               ✕
             </button>
@@ -494,21 +521,23 @@ export default function FriendsPage() {
           /* Khi người dùng gõ tìm kiếm */
           filteredFriends.length === 0 && filteredSuggested.length === 0 ? (
             <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#1a1a20] border border-[#dedbd0] dark:border-[#2e2e38] shadow-xs space-y-3">
-              <div className="w-14 h-14 rounded-full bg-[#edebe4] dark:bg-[#252530] text-zinc-500 dark:text-zinc-400 mx-auto flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-[#edebe4] dark:bg-[#252530] text-zinc-600 dark:text-zinc-400 mx-auto flex items-center justify-center">
                 <Search className="w-7 h-7 stroke-[1.8]" />
               </div>
               <h3 className="font-bold text-[#18181b] dark:text-white text-base">
-                Không tìm thấy kết quả cho "{searchQuery}"
+                {language === 'en' ? `No results found for "${searchQuery}"` : `Không tìm thấy kết quả cho "${searchQuery}"`}
               </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
-                Không tìm thấy bạn bè hoặc thành viên nào khớp với tên, email hoặc số tài khoản (STK) này.
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-sm mx-auto">
+                {language === 'en'
+                  ? 'No friends or members matched that name, email, or bank account number.'
+                  : 'Không tìm thấy bạn bè hoặc thành viên nào khớp với tên, email hoặc số tài khoản (STK) này.'}
               </p>
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
                 className="tactile-btn-pill text-xs font-semibold px-4 py-2 mt-2"
               >
-                Xóa từ khóa tìm kiếm
+                {t('clearSearch', 'Xóa từ khóa tìm kiếm')}
               </button>
             </div>
           ) : (
@@ -519,7 +548,7 @@ export default function FriendsPage() {
                   <div className="flex items-center gap-2">
                     <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <h3 className="text-sm font-bold text-[#18181b] dark:text-white">
-                      Bạn bè của bạn ({filteredFriends.length})
+                      {t('myFriendsTab', 'Bạn bè của bạn')} ({filteredFriends.length})
                     </h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -535,10 +564,12 @@ export default function FriendsPage() {
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-amber-500" />
                       <h3 className="text-sm font-bold text-[#18181b] dark:text-white">
-                        {filteredFriends.length > 0 ? 'Thành viên khác tìm thấy' : 'Thành viên tìm thấy trong hệ thống'} ({filteredSuggested.length})
+                        {filteredFriends.length > 0
+                          ? (language === 'en' ? 'Other members found' : 'Thành viên khác tìm thấy')
+                          : (language === 'en' ? 'Members found' : 'Thành viên tìm thấy trong hệ thống')} ({filteredSuggested.length})
                       </h3>
                     </div>
-                    <span className="text-[11px] font-semibold text-zinc-400">Chưa kết bạn</span>
+                    <span className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">{language === 'en' ? 'Not friends' : 'Chưa kết bạn'}</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {filteredSuggested.map((user) => renderSuggestedCard(user))}
@@ -557,10 +588,11 @@ export default function FriendsPage() {
               <h3 className="font-bold text-[#18181b] dark:text-white text-base">
                 {t('noFriendsYet', 'Bạn chưa có người bạn nào trong danh sách')}
               </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-sm mx-auto">
                 {t('exploreSuggested', 'Khám phá các thành viên trong mục Gợi ý kết bạn để cùng lập chuyến đi và chia tiền!')}
               </p>
               <button
+                type="button"
                 onClick={() => setActiveTab('SUGGESTED')}
                 className="tactile-btn-dark mt-2"
               >
@@ -581,11 +613,13 @@ export default function FriendsPage() {
               {searchQuery.trim() ? <Search className="w-7 h-7 stroke-[1.8]" /> : <CheckCircle2 className="w-7 h-7 stroke-[1.8]" />}
             </div>
             <h3 className="font-bold text-[#18181b] dark:text-white text-base">
-              {searchQuery.trim() ? `Không tìm thấy thành viên nào khớp với "${searchQuery}"` : t('friendedAll', 'Bạn đã kết bạn với tất cả mọi người!')}
-            </h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
               {searchQuery.trim()
-                ? 'Vui lòng kiểm tra lại Tên, Email hoặc Số tài khoản ngân hàng (STK).'
+                ? (language === 'en' ? `No members found matching "${searchQuery}"` : `Không tìm thấy thành viên nào khớp với "${searchQuery}"`)
+                : t('friendedAll', 'Bạn đã kết bạn với tất cả mọi người!')}
+            </h3>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-sm mx-auto">
+              {searchQuery.trim()
+                ? (language === 'en' ? 'Please check the name, email, or bank account number again.' : 'Vui lòng kiểm tra lại Tên, Email hoặc Số tài khoản ngân hàng (STK).')
                 : t('noMoreSuggested', 'Không còn thành viên gợi ý mới nào. Bạn có thể mời họ vào các chuyến đi của mình bất cứ lúc nào!')}
             </p>
             {searchQuery.trim() ? (
@@ -594,10 +628,11 @@ export default function FriendsPage() {
                 onClick={() => setSearchQuery('')}
                 className="tactile-btn-pill text-xs font-semibold px-4 py-2 mt-2"
               >
-                Xóa từ khóa tìm kiếm
+                {t('clearSearch', 'Xóa từ khóa tìm kiếm')}
               </button>
             ) : (
               <button
+                type="button"
                 onClick={() => setActiveTab('ALL')}
                 className="tactile-btn-dark mt-2"
               >
@@ -617,21 +652,21 @@ export default function FriendsPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-[#18181b] dark:text-white flex items-center gap-2">
-                <Send className="w-4 h-4 text-purple-600 rotate-180" />
-                <span>Lời mời nhận được ({filteredRequests.length})</span>
+                <Send className="w-4 h-4 text-emerald-600 dark:text-emerald-400 rotate-180" />
+                <span>{language === 'en' ? 'Received requests' : 'Lời mời nhận được'} ({filteredRequests.length})</span>
               </h3>
               {filteredRequests.length > 0 && (
-                <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400">
-                  Cần phản hồi
+                <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+                  {language === 'en' ? 'Action needed' : 'Cần phản hồi'}
                 </span>
               )}
             </div>
 
             {filteredRequests.length === 0 ? (
-              <div className="p-6 text-center rounded-2xl bg-white dark:bg-[#1a1a20] border border-[#dedbd0] dark:border-[#2e2e38] text-xs text-zinc-400 dark:text-zinc-500">
+              <div className="p-6 text-center rounded-2xl bg-white dark:bg-[#1a1a20] border border-[#dedbd0] dark:border-[#2e2e38] text-xs text-zinc-600 dark:text-zinc-400">
                 {searchQuery.trim()
-                  ? `Không có lời mời nhận được nào khớp với "${searchQuery}".`
-                  : 'Bạn không có lời mời kết bạn nào đang chờ chấp nhận.'}
+                  ? (language === 'en' ? `No incoming requests match "${searchQuery}".` : `Không có lời mời nhận được nào khớp với "${searchQuery}".`)
+                  : t('noIncomingRequests', 'Bạn không có lời mời kết bạn nào đang chờ chấp nhận.')}
               </div>
             ) : (
               <div className="space-y-3">
@@ -648,12 +683,12 @@ export default function FriendsPage() {
                       />
                       <div className="min-w-0 flex-1">
                         <h4 className="text-sm font-bold text-[#18181b] dark:text-white truncate">
-                          {req.fromUser?.displayName || 'Người dùng'}
+                          {req.fromUser?.displayName || (language === 'en' ? 'User' : 'Người dùng')}
                         </h4>
-                        <p className="text-[11px] text-zinc-400 dark:text-zinc-400 truncate">{req.fromUser?.email}</p>
+                        <p className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate">{req.fromUser?.email}</p>
                         {(req.fromUser?.bankName || req.fromUser?.bankAccountNumber) && (
-                          <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-0.5 truncate">
-                            <CreditCard className="w-3 h-3 text-zinc-400 shrink-0" />
+                          <div className="flex items-center gap-1.5 text-[11px] text-zinc-600 dark:text-zinc-400 font-mono mt-0.5 truncate">
+                            <CreditCard className="w-3 h-3 text-zinc-600 dark:text-zinc-400 shrink-0" />
                             <span>{req.fromUser?.bankName} • {req.fromUser?.bankAccountNumber}</span>
                           </div>
                         )}
@@ -662,17 +697,19 @@ export default function FriendsPage() {
 
                     <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
                       <button
+                        type="button"
                         onClick={() => handleAcceptRequest(req.fromUserId, req.id, req.fromUser?.displayName)}
                         className="tactile-btn-dark py-1.5 px-3.5 text-xs flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
                       >
                         <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                        <span>Chấp nhận</span>
+                        <span>{t('accept', 'Chấp nhận')}</span>
                       </button>
                       <button
+                        type="button"
                         onClick={() => handleRejectRequest(req.fromUserId, req.id, req.fromUser?.displayName)}
-                        className="py-1.5 px-3 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold border border-[#dedbd0] dark:border-[#32323e] transition-colors"
+                        className="py-1.5 px-3 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 text-zinc-600 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold border border-[#dedbd0] dark:border-[#32323e] transition-colors"
                       >
-                        Từ chối
+                        {t('decline', 'Từ chối')}
                       </button>
                     </div>
                   </div>
@@ -686,15 +723,15 @@ export default function FriendsPage() {
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-[#18181b] dark:text-white flex items-center gap-2">
                 <Clock className="w-4 h-4 text-amber-500" />
-                <span>Lời mời đã gửi ({filteredOutgoingRequests.length})</span>
+                <span>{language === 'en' ? 'Sent requests' : 'Lời mời đã gửi'} ({filteredOutgoingRequests.length})</span>
               </h3>
             </div>
 
             {filteredOutgoingRequests.length === 0 ? (
-              <div className="p-6 text-center rounded-2xl bg-white dark:bg-[#1a1a20] border border-[#dedbd0] dark:border-[#2e2e38] text-xs text-zinc-400 dark:text-zinc-500">
+              <div className="p-6 text-center rounded-2xl bg-white dark:bg-[#1a1a20] border border-[#dedbd0] dark:border-[#2e2e38] text-xs text-zinc-600 dark:text-zinc-400">
                 {searchQuery.trim()
-                  ? `Không có lời mời đã gửi nào khớp với "${searchQuery}".`
-                  : 'Bạn chưa gửi lời mời kết bạn nào đang chờ xử lý.'}
+                  ? (language === 'en' ? `No sent requests match "${searchQuery}".` : `Không có lời mời đã gửi nào khớp với "${searchQuery}".`)
+                  : (language === 'en' ? 'No pending friend requests sent.' : 'Bạn chưa gửi lời mời kết bạn nào đang chờ xử lý.')}
               </div>
             ) : (
               <div className="space-y-3">
@@ -711,12 +748,12 @@ export default function FriendsPage() {
                       />
                       <div className="min-w-0 flex-1">
                         <h4 className="text-sm font-bold text-[#18181b] dark:text-white truncate">
-                          {req.toUser?.displayName || 'Người dùng'}
+                          {req.toUser?.displayName || (language === 'en' ? 'User' : 'Người dùng')}
                         </h4>
-                        <p className="text-[11px] text-zinc-400 dark:text-zinc-400 truncate">{req.toUser?.email}</p>
+                        <p className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate">{req.toUser?.email}</p>
                         {(req.toUser?.bankName || req.toUser?.bankAccountNumber) && (
-                          <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-0.5 truncate">
-                            <CreditCard className="w-3 h-3 text-zinc-400 shrink-0" />
+                          <div className="flex items-center gap-1.5 text-[11px] text-zinc-600 dark:text-zinc-400 font-mono mt-0.5 truncate">
+                            <CreditCard className="w-3 h-3 text-zinc-600 dark:text-zinc-400 shrink-0" />
                             <span>{req.toUser?.bankName} • {req.toUser?.bankAccountNumber}</span>
                           </div>
                         )}
@@ -724,14 +761,15 @@ export default function FriendsPage() {
                     </div>
 
                     <div className="flex items-center gap-2.5 self-end sm:self-center shrink-0">
-                      <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                        <Clock className="w-3 h-3 animate-pulse" /> Chờ chấp nhận
+                      <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                        <Clock className="w-3 h-3 animate-pulse" /> {language === 'en' ? 'Pending' : 'Chờ chấp nhận'}
                       </span>
                       <button
+                        type="button"
                         onClick={() => handleCancelRequest(req.toUserId, req.id, req.toUser?.displayName)}
-                        className="py-1 px-3 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold border border-[#dedbd0] dark:border-[#32323e] transition-colors"
+                        className="py-1 px-3 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 text-zinc-600 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold border border-[#dedbd0] dark:border-[#32323e] transition-colors"
                       >
-                        Hủy
+                        {t('cancel', 'Hủy')}
                       </button>
                     </div>
                   </div>
@@ -754,6 +792,7 @@ export default function FriendsPage() {
         footer={
           <div className="flex justify-end w-full">
             <button
+              type="button"
               onClick={() => {
                 setInviteModalOpen(false);
                 setSelectedFriend(null);
@@ -774,9 +813,9 @@ export default function FriendsPage() {
             />
             <div className="min-w-0 flex-1">
               <h4 className="text-xs font-bold text-[#18181b] dark:text-white truncate">{selectedFriend?.displayName}</h4>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">{selectedFriend?.email}</p>
+              <p className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate">{selectedFriend?.email}</p>
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white dark:bg-[#1a1a20] text-zinc-700 dark:text-zinc-300 border border-[#dedbd0] dark:border-[#32323e]">
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white dark:bg-[#1a1a20] text-zinc-700 dark:text-zinc-300 border border-[#dedbd0] dark:border-[#32323e]">
               {t('friendBadge', 'Bạn bè')}
             </span>
           </div>
@@ -787,7 +826,7 @@ export default function FriendsPage() {
             </h4>
 
             {userTrips.length === 0 ? (
-              <div className="p-6 text-center rounded-2xl bg-zinc-50 dark:bg-[#1a1a20] border border-zinc-200 dark:border-[#32323e] text-xs text-zinc-500 dark:text-zinc-400">
+              <div className="p-6 text-center rounded-2xl bg-zinc-50 dark:bg-[#1a1a20] border border-zinc-200 dark:border-[#32323e] text-xs text-zinc-600 dark:text-zinc-400">
                 {t('noTripsToInvite', 'Bạn chưa tham gia chuyến đi nào. Hãy tạo chuyến đi mới trước nhé!')}
               </div>
             ) : (
@@ -807,11 +846,11 @@ export default function FriendsPage() {
                           <span className="text-xs font-bold text-[#18181b] dark:text-white truncate block">
                             {trip.name}
                           </span>
-                          <span className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-[#2a2a35] px-1.5 py-0.2 rounded">
+                          <span className="text-[11px] font-mono text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-[#2a2a35] px-1.5 py-0.2 rounded">
                             #{trip.tripCode}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3 text-[11px] text-zinc-400 mt-0.5">
+                        <div className="flex items-center gap-3 text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" /> {trip.startDate}
                           </span>
@@ -829,6 +868,7 @@ export default function FriendsPage() {
                           </span>
                         ) : (
                           <button
+                            type="button"
                             onClick={() => handleInviteToTrip(trip.id)}
                             disabled={isInvitingThis}
                             className="tactile-btn-dark py-1.5 px-3.5 text-xs flex items-center gap-1.5"

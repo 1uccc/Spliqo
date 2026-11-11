@@ -24,9 +24,6 @@ export function unlockBodyScroll() {
   activeModalsCount = Math.max(0, activeModalsCount - 1);
   if (activeModalsCount === 0) {
     if (typeof document !== 'undefined') {
-      if (document.activeElement && typeof document.activeElement.blur === 'function') {
-        document.activeElement.blur();
-      }
       document.body.style.removeProperty('overflow');
       document.documentElement.style.removeProperty('overflow');
       document.body.style.overflow = '';
@@ -41,9 +38,6 @@ export function unlockBodyScroll() {
 export function forceUnlockBodyScroll() {
   activeModalsCount = 0;
   if (typeof document !== 'undefined') {
-    if (document.activeElement && typeof document.activeElement.blur === 'function') {
-      document.activeElement.blur();
-    }
     document.body.style.removeProperty('overflow');
     document.documentElement.style.removeProperty('overflow');
     document.body.style.overflow = '';

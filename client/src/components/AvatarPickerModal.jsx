@@ -158,7 +158,7 @@ export default function AvatarPickerModal({ isOpen, onClose, currentPhotoURL, on
           <div className="flex-1 min-w-0 space-y-2 w-full text-center sm:text-left">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div>
-                <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider block">
+                <span className="text-[11px] uppercase font-bold text-zinc-600 dark:text-zinc-400 tracking-wider block">
                   {t('selectedAvatarLabel', 'Avatar đang chọn')}
                 </span>
                 <span className="font-mono text-xs sm:text-sm font-extrabold text-zinc-900 dark:text-white truncate block max-w-[200px]">
@@ -180,10 +180,11 @@ export default function AvatarPickerModal({ isOpen, onClose, currentPhotoURL, on
             <form onSubmit={handleApplyCustomSeed} className="flex items-center gap-2">
               <input
                 type="text"
+                aria-label={t('customAvatarPlaceholder', 'Gõ tên/biệt danh để tự tạo...')}
                 value={customSeed}
                 onChange={(e) => setCustomSeed(e.target.value)}
                 placeholder={t('customAvatarPlaceholder', 'Gõ tên/biệt danh để tự tạo...')}
-                className="flex-1 px-3 py-1.5 rounded-xl bg-white dark:bg-[#18181f] border border-[#dedbd0] dark:border-[#2e2e38] text-xs text-zinc-800 dark:text-zinc-200 outline-none focus:border-amber-500 transition-colors font-medium placeholder:text-zinc-400"
+                className="flex-1 px-3 py-1.5 rounded-xl bg-white dark:bg-[#18181f] border border-[#dedbd0] dark:border-[#2e2e38] text-xs text-zinc-800 dark:text-zinc-200 focus:border-amber-500 transition-colors font-medium placeholder:text-zinc-500 dark:placeholder:text-zinc-400"
               />
               <button
                 type="submit"
@@ -248,7 +249,7 @@ export default function AvatarPickerModal({ isOpen, onClose, currentPhotoURL, on
                   className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover bg-zinc-100 dark:bg-zinc-800 transition-transform group-hover:scale-105"
                   loading="lazy"
                 />
-                <span className="text-[10px] font-semibold text-zinc-700 dark:text-zinc-300 truncate w-full text-center">
+                <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 truncate w-full text-center">
                   {seed}
                 </span>
 

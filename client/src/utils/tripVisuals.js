@@ -21,8 +21,8 @@ export const TRIP_VISUAL_THEMES = [
     Icon: Laptop,
     emoji: '💻',
     label: 'Học tập & Công nghệ',
-    gradient: 'from-blue-500 to-indigo-600',
-    lightBg: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-800/40',
+    gradient: 'from-sky-600 to-slate-700',
+    lightBg: 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800/40',
     keywords: ['tin học', 'code', 'it', 'dev', 'cntt', 'lập trình', 'tech', 'bài tập', 'dự án', 'máy tính']
   },
   {
@@ -30,8 +30,8 @@ export const TRIP_VISUAL_THEMES = [
     Icon: GraduationCap,
     emoji: '🎓',
     label: 'Học tập & Nghiên cứu',
-    gradient: 'from-indigo-500 to-blue-700',
-    lightBg: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/40',
+    gradient: 'from-slate-600 to-emerald-700',
+    lightBg: 'bg-slate-100 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/50',
     keywords: ['học', 'lớp', 'khoá', 'học nhóm', 'ôn thi', 'đồ án', 'luận văn', 'trường', 'đại học']
   },
   {
@@ -102,8 +102,8 @@ export const TRIP_VISUAL_THEMES = [
     Icon: Bike,
     emoji: '🛵',
     label: 'Dạo phố & Xe máy',
-    gradient: 'from-violet-500 to-purple-700',
-    lightBg: 'bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 border-purple-200 dark:border-purple-800/40',
+    gradient: 'from-amber-500 to-rose-600',
+    lightBg: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/40',
     keywords: ['xe máy', 'dạo phố', 'vi vu', 'tuk', 'lượn']
   },
   {
@@ -129,8 +129,8 @@ export const TRIP_VISUAL_THEMES = [
     Icon: Camera,
     emoji: '📸',
     label: 'Nhiếp ảnh & Kỷ niệm',
-    gradient: 'from-purple-500 to-indigo-600',
-    lightBg: 'bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 border-purple-200 dark:border-purple-800/40',
+    gradient: 'from-teal-500 to-emerald-700',
+    lightBg: 'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800/40',
     keywords: ['ảnh', 'chụp', 'photo', 'studio', 'kỷ yếu', 'sống ảo']
   },
   {

@@ -20,6 +20,7 @@ export function ConfirmProvider({ children }) {
   });
 
   const resolverRef = useRef(null);
+  const dialogRef = useRef(null);
 
   const confirm = useCallback((options = {}) => {
     return new Promise((resolve) => {
@@ -60,15 +61,32 @@ export function ConfirmProvider({ children }) {
     handleCancelRef.current = handleCancel;
   });
 
-  // Keyboard accessibility (Escape key to cancel) & coordinated scroll lock
+  // Keyboard accessibility (Escape + focus trap/restoration) & coordinated scroll lock
   useEffect(() => {
     if (!config.isOpen) return;
 
+    const previousFocus = document.activeElement;
     lockBodyScroll();
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         handleCancelRef.current?.();
+        return;
+      }
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusables = Array.from(
+          dialogRef.current.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])')
+        ).filter((el) => el instanceof HTMLElement && el.offsetParent !== null);
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && (document.activeElement === first || !dialogRef.current.contains(document.activeElement))) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
 
@@ -76,6 +94,9 @@ export function ConfirmProvider({ children }) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       unlockBodyScroll();
+      if (previousFocus instanceof HTMLElement && typeof previousFocus.focus === 'function') {
+        previousFocus.focus({ preventScroll: true });
+      }
     };
   }, [config.isOpen]);
 
@@ -109,6 +130,7 @@ export function ConfirmProvider({ children }) {
 
       {/* Modal Dialog Card */}
       <div
+        ref={dialogRef}
         className="relative w-full max-w-sm rounded-3xl bg-[#faf9f6] dark:bg-[#181820] border border-[#dedbd0] dark:border-[#2e2e38] shadow-2xl p-6 text-center transform transition-all animate-modal-pop z-10"
         onClick={(e) => e.stopPropagation()}
       >
@@ -116,8 +138,8 @@ export function ConfirmProvider({ children }) {
         <button
           type="button"
           onClick={handleCancel}
-          className="absolute top-4 right-4 p-1.5 rounded-full text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-          aria-label="Đóng"
+          className="absolute top-3.5 right-3.5 w-9 h-9 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+          aria-label={isEn ? 'Close' : 'Đóng'}
         >
           <X className="w-4 h-4" />
         </button>

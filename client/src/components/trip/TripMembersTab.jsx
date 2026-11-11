@@ -15,15 +15,15 @@ export default function TripMembersTab({
   return (
     <div className="space-y-6">
       {/* Invite Code & Friends Box */}
-      <div className="tactile-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#f4f3ec] dark:bg-[#1a1a22]">
+      <div className="tactile-card p-4 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#f4f3ec] dark:bg-[#1a1a22]">
         <div>
-          <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+          <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
             {t('addMember', 'Thêm thành viên')}
           </span>
           <h3 className="text-lg font-bold text-[#18181b] dark:text-white mt-0.5">
             {t('inviteFriendsOrShareCode', 'Mời bạn bè hoặc chia sẻ mã chuyến đi')}
           </h3>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+          <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
             {t('inviteFriendsDesc', 'Mời trực tiếp bạn bè trong danh bạ hoặc gửi mã Trip Code để họ tự tham gia.')}
           </p>
         </div>
@@ -52,9 +52,11 @@ export default function TripMembersTab({
               {trip?.tripCode}
             </span>
             <button
+              type="button"
               onClick={onCopyCode}
               className="tactile-btn-pill py-1.5 px-3 text-xs"
               title={t('copyCode', 'Sao chép mã')}
+              aria-label={t('copyCode', 'Sao chép mã')}
             >
               {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copiedCode ? t('copied', 'Đã chép') : t('copy', 'Sao chép')}</span>
@@ -65,7 +67,7 @@ export default function TripMembersTab({
 
       {/* Members List */}
       <div className="tactile-card overflow-hidden">
-        <div className="px-6 py-4 border-b border-[#e6e4dc] dark:border-[#272732] bg-[#f4f3ec] dark:bg-[#1a1a22] flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[#e6e4dc] dark:border-[#272732] bg-[#f4f3ec] dark:bg-[#1a1a22] flex items-center justify-between">
           <h3 className="text-sm font-bold text-[#18181b] dark:text-white">
             {t('membersList', 'Danh sách thành viên')} ({members.length})
           </h3>
@@ -77,36 +79,36 @@ export default function TripMembersTab({
             const isMemberCreator = m.role === 'Creator' || memberId === trip?.createdBy;
 
             return (
-              <div key={memberId} className="p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-[#f4f3ec]/50 dark:hover:bg-white/5 transition-colors">
-                <div className="flex items-center gap-3.5">
+              <div key={memberId} className="p-4 sm:p-5 flex items-center justify-between gap-3 hover:bg-[#f4f3ec]/50 dark:hover:bg-white/5 transition-colors">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   <img
                     src={m.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${memberId}`}
                     alt=""
-                    className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 object-cover border border-[#e6e4dc] dark:border-[#2e2e38]"
+                    className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 object-cover border border-[#e6e4dc] dark:border-[#2e2e38] shrink-0"
                   />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-[#18181b] dark:text-white text-sm">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="font-bold text-[#18181b] dark:text-white text-sm truncate">
                         {m.displayName}
                       </h4>
                       <span
-                        className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${
+                        className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full shrink-0 ${
                           isMemberCreator
                             ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
-                            : 'bg-[#f4f3ec] dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-[#e6e4dc] dark:border-zinc-700/60'
+                            : 'bg-[#f4f3ec] dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-[#e6e4dc] dark:border-zinc-700/60'
                         }`}
                       >
                         {isMemberCreator ? t('creator', 'Người tạo') : t('memberRole', 'Thành viên')}
                       </span>
                     </div>
 
-                    <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    <div className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5 break-words">
                       {m.bankName ? (
                         <span className="text-zinc-700 dark:text-zinc-300 font-medium">
                           {t('bank', 'Ngân hàng')}: {m.bankName} • {m.bankAccountNumber} ({m.bankAccountHolder || m.displayName})
                         </span>
                       ) : (
-                        <span className="text-zinc-400 dark:text-zinc-500">
+                        <span className="text-zinc-600 dark:text-zinc-400">
                           {t('noBankAccountYet', 'Chưa cập nhật tài khoản ngân hàng')}
                         </span>
                       )}
@@ -117,8 +119,9 @@ export default function TripMembersTab({
                 {/* Actions: remove member if creator */}
                 {isCreator && !isMemberCreator && (
                   <button
+                    type="button"
                     onClick={() => onRemoveMember(m)}
-                    className="text-xs text-rose-600 hover:text-rose-700 font-semibold p-2 rounded-full hover:bg-rose-50 transition-all cursor-pointer"
+                    className="shrink-0 text-xs text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 font-semibold px-3 py-1.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer"
                   >
                     {t('remove', 'Xóa')}
                   </button>

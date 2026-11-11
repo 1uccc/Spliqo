@@ -4,7 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import api from '../services/api';
-import { formatVND } from '../services/calculation';
 import { createRealtimeStream } from '../services/realtime';
 import VietQRModal from '../components/VietQRModal';
 import SmartNudgeModal from '../components/SmartNudgeModal';
@@ -28,7 +27,7 @@ import {
 export default function SettlementsPage() {
   const { currentUser } = useAuth();
   const { showToast } = useToast();
-  const { t } = useLanguage();
+  const { t, isEn, formatMoney } = useLanguage();
 
   const [settlementOverview, setSettlementOverview] = useState({
     totalSpent: 0,
@@ -162,10 +161,15 @@ export default function SettlementsPage() {
         toUserId: debt.toUserId,
         amount: debt.amount
       });
-      showToast(`Đã xác nhận đã chuyển tiền cho ${debt.toUser?.displayName || 'thành viên'}!`, 'success');
+      showToast(
+        isEn
+          ? `Confirmed transfer to ${debt.toUser?.displayName || 'member'}!`
+          : `Đã xác nhận đã chuyển tiền cho ${debt.toUser?.displayName || 'thành viên'}!`,
+        'success'
+      );
       await fetchOverviewData();
     } catch (err) {
-      showToast(err.message || 'Lỗi khi xác nhận chuyển tiền', 'error');
+      showToast(err.message || t('confirmTransferError', 'Lỗi khi xác nhận chuyển tiền'), 'error');
     } finally {
       setProcessingId(null);
     }
@@ -178,10 +182,15 @@ export default function SettlementsPage() {
       await api.post(`/trips/${credit.tripId}/settlements/${credit.id}/confirm`, {
         toUserId: currentUser?.uid
       });
-      showToast(`Đã xác nhận nhận tiền thành công từ ${credit.fromUser?.displayName || 'thành viên'}!`, 'success');
+      showToast(
+        isEn
+          ? `Confirmed payment receipt from ${credit.fromUser?.displayName || 'member'}!`
+          : `Đã xác nhận nhận tiền thành công từ ${credit.fromUser?.displayName || 'thành viên'}!`,
+        'success'
+      );
       await fetchOverviewData();
     } catch (err) {
-      showToast(err.message || 'Lỗi khi xác nhận thanh toán', 'error');
+      showToast(err.message || t('confirmPaymentError', 'Lỗi khi xác nhận thanh toán'), 'error');
     } finally {
       setProcessingId(null);
     }
@@ -191,7 +200,7 @@ export default function SettlementsPage() {
     if (!text) return;
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
-    showToast(`Đã sao chép ${label || 'thông tin'}!`, 'success');
+    showToast(isEn ? `Copied ${label || 'info'}!` : `Đã sao chép ${label || 'thông tin'}!`, 'success');
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
@@ -217,7 +226,8 @@ export default function SettlementsPage() {
             onClick={() => fetchOverviewData()}
             disabled={overviewLoading}
             className="tactile-btn-pill text-xs flex items-center gap-1.5"
-            title="Làm mới dữ liệu"
+            title={t('refreshData', 'Làm mới dữ liệu')}
+            aria-label={t('refreshData', 'Làm mới dữ liệu')}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${overviewLoading ? 'animate-spin' : ''}`} />
             <span>{t('refresh', 'Cập nhật')}</span>
@@ -230,7 +240,7 @@ export default function SettlementsPage() {
         {/* Card 1: Đang nợ (You Owe) */}
         <div className="tactile-card p-5 sm:p-6 bg-[#f4f3ec] dark:bg-[#1a1a20] border border-[#e6e4dc] dark:border-[#2e2e38] relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
               <ArrowUpRight className="w-4 h-4 text-rose-500" /> {t('youOwe', 'Đang nợ (Cần trả)')}
             </span>
             <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400">
@@ -238,7 +248,7 @@ export default function SettlementsPage() {
             </span>
           </div>
           <div className="text-2xl sm:text-3xl font-extrabold text-[#18181b] dark:text-white mt-2 tracking-tight">
-            {formatVND(settlementOverview.totalDebt)}
+            {formatMoney(settlementOverview.totalDebt)}
           </div>
           <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
             {t('totalDebtDesc', 'Tổng số tiền bạn cần chuyển khoản cho các thành viên')}
@@ -248,7 +258,7 @@ export default function SettlementsPage() {
         {/* Card 2: Đã chi (You Paid) */}
         <div className="tactile-card p-5 sm:p-6 bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] border border-zinc-900 dark:border-white shadow-md">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
               <Wallet className="w-4 h-4 text-emerald-400 dark:text-emerald-600" /> {t('youPaid', 'Đã chi (Bạn ứng trước)')}
             </span>
             <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/10 dark:bg-black/10 text-emerald-300 dark:text-emerald-700">
@@ -256,9 +266,9 @@ export default function SettlementsPage() {
             </span>
           </div>
           <div className="text-2xl sm:text-3xl font-extrabold text-white dark:text-[#18181b] mt-2 tracking-tight">
-            {formatVND(settlementOverview.totalSpent)}
+            {formatMoney(settlementOverview.totalSpent)}
           </div>
-          <p className="text-[11px] text-zinc-400 dark:text-zinc-600 mt-1">
+          <p className="text-[11px] text-zinc-300 mt-1">
             {t('totalSpentDesc', 'Tổng tiền túi bạn đã chi trả cho các hoạt động và chuyến đi')}
           </p>
         </div>
@@ -266,7 +276,7 @@ export default function SettlementsPage() {
         {/* Card 3: Cần thu hồi (Owed to You) */}
         <div className="tactile-card p-5 sm:p-6 bg-[#f4f3ec] dark:bg-[#1a1a20] border border-[#e6e4dc] dark:border-[#2e2e38]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
               <ArrowDownLeft className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> {t('owedToYou', 'Cần thu hồi (Được trả)')}
             </span>
             <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400">
@@ -274,7 +284,7 @@ export default function SettlementsPage() {
             </span>
           </div>
           <div className="text-2xl sm:text-3xl font-extrabold text-[#18181b] dark:text-white mt-2 tracking-tight">
-            {formatVND(settlementOverview.totalReceivable)}
+            {formatMoney(settlementOverview.totalReceivable)}
           </div>
           <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
             {t('totalReceivableDesc', 'Số tiền các thành viên khác đang nợ và cần chuyển cho bạn')}
@@ -290,7 +300,7 @@ export default function SettlementsPage() {
               <CreditCard className="w-5 h-5 text-rose-600" />
               {t('debtsToPay', 'Các khoản bạn đang nợ (Cần chuyển khoản)')}
             </h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">
               {t('debtsToPayDesc', 'Danh sách người bạn đang nợ tiền ở các chuyến đi kèm thông tin tài khoản ngân hàng để chuyển khoản.')}
             </p>
           </div>
@@ -306,7 +316,7 @@ export default function SettlementsPage() {
               <ShieldCheck className="w-7 h-7" />
             </div>
             <h4 className="font-bold text-[#18181b] dark:text-white text-base">{t('noDebts', 'Tuyệt vời! Bạn không nợ ai cả')}</h4>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-sm mx-auto">
               {t('noDebtsDesc', 'Toàn bộ các khoản chi tiêu của bạn ở tất cả các chuyến đi đều đã được thanh toán hoặc cân bằng hoàn hảo.')}
             </p>
           </div>
@@ -323,40 +333,40 @@ export default function SettlementsPage() {
               return (
                 <div
                   key={debt.id}
-                  className="p-5 sm:p-6 hover:bg-[#f4f3ec]/40 dark:hover:bg-[#1f1f26] transition-colors space-y-4"
+                  className="p-4 sm:p-6 hover:bg-[#f4f3ec]/40 dark:hover:bg-[#1f1f26] transition-colors space-y-4"
                 >
                   {/* Top Row: User info, Trip tag, Amount & Status */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-3.5">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <img
                         src={recipient.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${debt.toUserId}`}
                         alt=""
-                        className="w-11 h-11 rounded-full bg-zinc-100 object-cover border border-[#e6e4dc] dark:border-[#2e2e38]"
+                        className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-zinc-100 object-cover border border-[#e6e4dc] dark:border-[#2e2e38] shrink-0"
                       />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-[#18181b] dark:text-white text-sm sm:text-base">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-bold text-[#18181b] dark:text-white text-sm sm:text-base truncate">
                             {recipient.displayName || 'Người nhận'}
                           </h4>
                           <Link
                             to={`/trips/${debt.tripId}?tab=settlement`}
-                            className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-white dark:bg-[#2a2a32] border border-[#dedbd0] dark:border-[#3a3a44] text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:border-black transition-colors"
+                            className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-white dark:bg-[#2a2a32] border border-[#dedbd0] dark:border-[#3a3a44] text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:border-black transition-colors truncate max-w-[180px]"
                           >
                             {debt.tripName} #{debt.tripCode}
                           </Link>
                         </div>
-                        <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
+                        <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium">
                           {t('debtRecipientDesc', 'Người bạn cần chuyển tiền tất toán')}
                         </span>
                       </div>
                     </div>
 
                     {/* Amount & Status Badge */}
-                    <div className="flex items-center gap-3 self-end sm:self-center">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
                       <div className="text-right">
-                        <span className="text-[11px] text-zinc-400 font-semibold block">{t('amountOwed', 'Số tiền nợ')}</span>
+                        <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-semibold block">{t('amountOwed', 'Số tiền nợ')}</span>
                         <span className="text-lg sm:text-xl font-extrabold text-rose-700 dark:text-rose-400">
-                          {formatVND(debt.amount)}
+                          {formatMoney(debt.amount)}
                         </span>
                       </div>
 
@@ -392,8 +402,8 @@ export default function SettlementsPage() {
                   <div className="p-4 rounded-2xl bg-[#f4f3ec] dark:bg-[#1a1a20] border border-[#e6e4dc] dark:border-[#2e2e38] grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                     {/* Ngân hàng */}
                     <div className="flex items-center justify-between sm:justify-start gap-2">
-                      <span className="text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 font-medium">
-                        <Building className="w-3.5 h-3.5 text-zinc-400" /> {t('bank', 'Ngân hàng')}:
+                      <span className="text-zinc-600 dark:text-zinc-400 flex items-center gap-1.5 font-medium">
+                        <Building className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" /> {t('bank', 'Ngân hàng')}:
                       </span>
                       <span className="font-bold text-[#18181b] dark:text-white bg-white dark:bg-[#2a2a32] px-2 py-0.5 rounded-lg border border-[#e6e4dc] dark:border-[#3a3a44]">
                         {recipient.bankName || 'VCB'}
@@ -402,8 +412,8 @@ export default function SettlementsPage() {
 
                     {/* Số tài khoản & Copy */}
                     <div className="flex items-center justify-between sm:justify-start gap-2">
-                      <span className="text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 font-medium">
-                        <CreditCard className="w-3.5 h-3.5 text-zinc-400" /> {t('accountNumber', 'Số TK')}:
+                      <span className="text-zinc-600 dark:text-zinc-400 flex items-center gap-1.5 font-medium">
+                        <CreditCard className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" /> {t('accountNumber', 'Số TK')}:
                       </span>
                       <div className="flex items-center gap-1.5">
                         <span className="font-mono font-extrabold text-[#18181b] dark:text-white">
@@ -411,9 +421,11 @@ export default function SettlementsPage() {
                         </span>
                         {recipient.bankAccountNumber && (
                           <button
+                            type="button"
                             onClick={() => handleCopyText(recipient.bankAccountNumber, `acc_${debt.id}`, t('accountNumber', 'Số tài khoản'))}
-                            className="p-1 rounded-full hover:bg-white dark:hover:bg-[#2a2a32] text-zinc-600 dark:text-zinc-300 border border-transparent hover:border-[#dedbd0] transition-colors"
+                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white dark:hover:bg-[#2a2a32] text-zinc-600 dark:text-zinc-300 border border-transparent hover:border-[#dedbd0] transition-colors"
                             title={t('copy', 'Sao chép')}
+                            aria-label={t('copyAccountNumber', 'Sao chép số tài khoản')}
                           >
                             {copiedKey === `acc_${debt.id}` ? (
                               <Check className="w-3.5 h-3.5 text-emerald-600" />
@@ -427,8 +439,8 @@ export default function SettlementsPage() {
 
                     {/* Chủ tài khoản */}
                     <div className="flex items-center justify-between sm:justify-start gap-2">
-                      <span className="text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 font-medium">
-                        <User className="w-3.5 h-3.5 text-zinc-400" /> {t('accountHolder', 'Chủ TK')}:
+                      <span className="text-zinc-600 dark:text-zinc-400 flex items-center gap-1.5 font-medium">
+                        <User className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" /> {t('accountHolder', 'Chủ TK')}:
                       </span>
                       <span className="font-bold text-[#18181b] dark:text-white uppercase">
                         {recipient.bankAccountHolder || recipient.displayName}
@@ -438,27 +450,30 @@ export default function SettlementsPage() {
 
                   {/* Action Buttons: Xem VietQR & Xác nhận đã chuyển */}
                   <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                    <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+                    <div className="text-[11px] text-zinc-600 dark:text-zinc-400 flex items-center gap-1.5">
                       <span>{t('transferContent', 'Nội dung CK')}:</span>
                       <span className="font-mono font-bold text-[#18181b] dark:text-white bg-white dark:bg-[#2a2a32] px-2 py-0.5 rounded-lg border border-[#e6e4dc] dark:border-[#3a3a44]">
                         {transferContent}
                       </span>
                       <button
+                        type="button"
                         onClick={() => handleCopyText(transferContent, `msg_${debt.id}`, t('transferContent', 'Nội dung CK'))}
-                        className="p-1 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500"
+                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300"
                         title={t('copy', 'Sao chép')}
+                        aria-label={t('copyTransferContent', 'Sao chép nội dung chuyển khoản')}
                       >
                         {copiedKey === `msg_${debt.id}` ? (
-                          <Check className="w-3 h-3 text-emerald-600" />
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
                         ) : (
-                          <Copy className="w-3 h-3" />
+                          <Copy className="w-3.5 h-3.5" />
                         )}
                       </button>
                     </div>
 
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center flex-wrap gap-2.5">
                       {/* Button 1: Xem VietQR Modal */}
                       <button
+                        type="button"
                         onClick={() => {
                           setSelectedSettlement(debt);
                           setVietQrModalOpen(true);
@@ -511,7 +526,7 @@ export default function SettlementsPage() {
               <ArrowDownLeft className="w-5 h-5 text-emerald-600" />
               {t('debtsToReceive', 'Các khoản người khác đang nợ bạn (Cần thu hồi)')}
             </h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">
               {t('debtsToReceiveDesc', 'Các thành viên cần chuyển khoản lại cho bạn. Khi nhận được tiền, hãy bấm "Xác nhận đã nhận" để chốt sổ.')}
             </p>
           </div>
@@ -522,7 +537,7 @@ export default function SettlementsPage() {
         </div>
 
         {settlementOverview.owedToMe.length === 0 ? (
-          <div className="p-8 text-center text-zinc-400 text-xs">
+          <div className="p-8 text-center text-zinc-600 dark:text-zinc-400 text-xs">
             {t('noReceivables', 'Hiện tại không có thành viên nào đang nợ tiền bạn.')}
           </div>
         ) : (
@@ -536,34 +551,34 @@ export default function SettlementsPage() {
               return (
                 <div
                   key={credit.id}
-                  className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#f4f3ec]/40 dark:hover:bg-[#1f1f26] transition-colors"
+                  className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#f4f3ec]/40 dark:hover:bg-[#1f1f26] transition-colors"
                 >
-                  <div className="flex items-center gap-3.5">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <img
                       src={debtor.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${credit.fromUserId}`}
                       alt=""
-                      className="w-10 h-10 rounded-full bg-zinc-100 object-cover border border-[#e6e4dc] dark:border-[#2e2e38]"
+                      className="w-10 h-10 rounded-full bg-zinc-100 object-cover border border-[#e6e4dc] dark:border-[#2e2e38] shrink-0"
                     />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-[#18181b] dark:text-white text-sm">
-                          {debtor.displayName || 'Thành viên'}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-bold text-[#18181b] dark:text-white text-sm truncate">
+                          {debtor.displayName || (isEn ? 'Member' : 'Thành viên')}
                         </h4>
-                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-[#2a2a32] border border-[#dedbd0] dark:border-[#3a3a44] text-zinc-600 dark:text-zinc-300">
+                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-[#2a2a32] border border-[#dedbd0] dark:border-[#3a3a44] text-zinc-700 dark:text-zinc-300 truncate max-w-[160px]">
                           {credit.tripName}
                         </span>
                       </div>
-                      <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                      <span className="text-[11px] text-zinc-600 dark:text-zinc-400">
                         {t('owesYouFromTrip', 'Nợ bạn từ chuyến đi')}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 self-end sm:self-center">
-                    <div className="text-right">
-                      <span className="text-[11px] text-zinc-400 font-semibold block">{t('amountToReceive', 'Cần nhận')}</span>
-                      <span className="text-base font-extrabold text-emerald-700 dark:text-emerald-400">
-                        +{formatVND(credit.amount)}
+                  <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto flex-wrap">
+                    <div className="text-left sm:text-right">
+                      <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-semibold block">{t('amountToReceive', 'Cần nhận')}</span>
+                      <span className="text-base font-extrabold font-mono text-emerald-700 dark:text-emerald-400">
+                        +{formatMoney(credit.amount)}
                       </span>
                     </div>
 
@@ -574,6 +589,7 @@ export default function SettlementsPage() {
                       </span>
                     ) : isPaid ? (
                       <button
+                        type="button"
                         onClick={() => handleConfirmPayment(credit)}
                         disabled={isProcessing}
                         className="tactile-btn-dark text-xs flex items-center gap-1.5 shadow-xs"
@@ -582,20 +598,21 @@ export default function SettlementsPage() {
                         <span>{isProcessing ? t('loading', 'Đang lưu...') : t('confirmReceipt', 'Xác nhận đã nhận tiền')}</span>
                       </button>
                     ) : (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center flex-wrap gap-2">
                         <button
+                          type="button"
                           onClick={() => {
                             setNudgeSettlement(credit);
                             setNudgeModalOpen(true);
                           }}
                           className="tactile-btn-pill text-xs flex items-center gap-1.5 border border-amber-300 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 cursor-pointer shadow-xs"
-                          title="Gửi tin nhắn hoặc thông báo nhắc chuyển khoản khéo léo"
+                          title={t('smartNudgeDesc', 'Gửi tin nhắn hoặc thông báo nhắc chuyển khoản khéo léo')}
                         >
                           <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                           <span>{t('nudgeDebtor', 'Nhắc nhẹ')}</span>
                         </button>
-                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#f4f3ec] dark:bg-[#24242b] text-zinc-500 dark:text-zinc-400 border border-[#e6e4dc] dark:border-[#32323c] flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-zinc-400" /> {t('waitingForMember', 'Chờ chuyển')}
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#f4f3ec] dark:bg-[#24242b] text-zinc-600 dark:text-zinc-400 border border-[#e6e4dc] dark:border-[#32323c] flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-zinc-600 dark:text-zinc-400" /> {t('waitingForMember', 'Chờ chuyển')}
                         </span>
                       </div>
                     )}

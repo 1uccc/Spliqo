@@ -1,6 +1,6 @@
 import React from 'react';
 import { Sparkles, CheckCircle2, Clock, AlertCircle, QrCode, Check } from 'lucide-react';
-import { formatVND } from '../../services/calculation';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function TripSettlementsTab({
   trip,
@@ -21,6 +21,7 @@ export default function TripSettlementsTab({
   onConfirmPayment,
   t
 }) {
+  const { formatMoney } = useLanguage();
   return (
     <div className="space-y-6">
       {/* Settlement Summary Header */}
@@ -31,19 +32,19 @@ export default function TripSettlementsTab({
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
           <div className="p-4 rounded-2xl bg-white/10 border border-white/10">
-            <span className="text-xs text-zinc-400 font-medium">{t('totalTripCost', 'Tổng tiền chuyến đi')}</span>
+            <span className="text-xs text-zinc-300 font-medium">{t('totalTripCost', 'Tổng tiền chuyến đi')}</span>
             <div className="text-2xl font-extrabold text-emerald-400 mt-1">
-              {formatVND(balances?.totalExpense || 0)}
+              {formatMoney(balances?.totalExpense || 0)}
             </div>
           </div>
           <div className="p-4 rounded-2xl bg-white/10 border border-white/10">
-            <span className="text-xs text-zinc-400 font-medium">{t('membersCount', 'Số thành viên')}</span>
+            <span className="text-xs text-zinc-300 font-medium">{t('membersCount', 'Số thành viên')}</span>
             <div className="text-2xl font-extrabold text-white mt-1">
               {members.length} {t('peopleUnit', 'người')}
             </div>
           </div>
           <div className="p-4 rounded-2xl bg-white/10 border border-white/10">
-            <span className="text-xs text-zinc-400 font-medium">{t('requiredTransfers', 'Giao dịch cần thực hiện')}</span>
+            <span className="text-xs text-zinc-300 font-medium">{t('requiredTransfers', 'Giao dịch cần thực hiện')}</span>
             <div className="text-2xl font-extrabold text-teal-300 mt-1">
               {settlements.length} {t('transfersUnit', 'chuyển khoản')}
             </div>
@@ -147,7 +148,7 @@ export default function TripSettlementsTab({
         </div>
 
         {settlements.length === 0 ? (
-          <div className="p-12 text-center text-zinc-400 dark:text-zinc-500 text-xs">
+          <div className="p-12 text-center text-zinc-600 dark:text-zinc-400 text-xs">
             {t('noDebtsAllBalanced', 'Không có khoản nợ nào cần giải quyết. Tất cả đã cân bằng!')}
           </div>
         ) : (
@@ -163,19 +164,19 @@ export default function TripSettlementsTab({
               return (
                 <div
                   key={s.id}
-                  className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-[#f4f3ec]/50 dark:hover:bg-white/5 transition-colors"
+                  className="p-4 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-[#f4f3ec]/50 dark:hover:bg-white/5 transition-colors"
                 >
                   {/* Transaction Path */}
-                  <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+                  <div className="flex items-center gap-3 sm:gap-4 flex-wrap min-w-0">
                     {/* Payer */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       <img
                         src={s.fromUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${s.fromUserId}`}
                         alt=""
-                        className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 object-cover border border-[#e6e4dc] dark:border-[#2e2e38]"
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 object-cover border border-[#e6e4dc] dark:border-[#2e2e38] shrink-0"
                       />
-                      <div>
-                        <div className="text-sm font-bold text-[#18181b] dark:text-white">
+                      <div className="min-w-0">
+                        <div className="text-sm font-bold text-[#18181b] dark:text-white truncate">
                           {s.fromUser?.displayName}
                         </div>
                         <span className="text-[11px] text-rose-700 dark:text-rose-400 font-semibold">
@@ -185,25 +186,25 @@ export default function TripSettlementsTab({
                     </div>
 
                     {/* Arrow */}
-                    <div className="flex flex-col items-center px-2">
-                      <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-3.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/40">
-                        {t('transferAmount', 'chuyển')} {formatVND(s.amount)} →
+                    <div className="flex flex-col items-center">
+                      <span className="text-xs font-bold font-mono text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/40 whitespace-nowrap">
+                        {t('transferAmount', 'chuyển')} {formatMoney(s.amount)} →
                       </span>
                     </div>
 
                     {/* Receiver */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       <img
                         src={s.toUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${s.toUserId}`}
                         alt=""
-                        className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 object-cover border border-[#e6e4dc] dark:border-[#2e2e38]"
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 object-cover border border-[#e6e4dc] dark:border-[#2e2e38] shrink-0"
                       />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-[#18181b] dark:text-white">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-bold text-[#18181b] dark:text-white truncate">
                             {s.toUser?.displayName}
                           </span>
-                          <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40">
+                          <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40 shrink-0">
                             {t('receiverRole', 'Người nhận tiền')}
                           </span>
                         </div>
@@ -212,15 +213,15 @@ export default function TripSettlementsTab({
                             <span className="font-bold bg-[#f4f3ec] dark:bg-[#212129] px-1.5 py-0.5 rounded border border-[#e6e4dc] dark:border-[#32323e] text-zinc-800 dark:text-zinc-200">
                               {s.toUser.bankName}
                             </span>
-                            <span className="font-mono font-bold text-[#18181b] dark:text-white">
+                            <span className="font-mono font-bold text-[#18181b] dark:text-white break-all">
                               {s.toUser.bankAccountNumber}
                             </span>
-                            <span className="text-zinc-500 dark:text-zinc-400">
+                            <span className="text-zinc-600 dark:text-zinc-400">
                               ({s.toUser.bankAccountHolder || s.toUser.displayName})
                             </span>
                           </div>
                         ) : (
-                          <span className="text-[10px] text-zinc-400 dark:text-zinc-500 block mt-0.5">
+                          <span className="text-[11px] text-zinc-600 dark:text-zinc-400 block mt-0.5">
                             {t('noBankAccountYet', 'Chưa cập nhật tài khoản ngân hàng')}
                           </span>
                         )}
@@ -229,7 +230,7 @@ export default function TripSettlementsTab({
                   </div>
 
                   {/* Status & Action */}
-                  <div className="flex items-center gap-2.5 self-end md:self-center flex-wrap">
+                  <div className="flex items-center justify-between md:justify-end gap-2 w-full md:w-auto flex-wrap pt-1 md:pt-0">
                     {/* Status Badge */}
                     <span
                       className={`text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 ${
@@ -261,9 +262,10 @@ export default function TripSettlementsTab({
                     {/* Button 0: Nhắc nhẹ - Hiển thị cho người nhận tiền hoặc trưởng nhóm khi chưa thanh toán */}
                     {(isReceiver || isCreator) && s.status !== 'CONFIRMED' && s.status !== 'PAID' && onOpenSmartNudge && (
                       <button
+                        type="button"
                         onClick={() => onOpenSmartNudge(s)}
                         className="tactile-btn-pill text-xs border border-amber-300 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 flex items-center gap-1.5 cursor-pointer shadow-xs"
-                        title="Gửi tin nhắn hoặc thông báo nhắc chuyển khoản khéo léo"
+                        title={t('smartNudgeDesc', 'Gửi tin nhắn hoặc thông báo nhắc chuyển khoản khéo léo')}
                       >
                         <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                         <span>{t('nudgeDebtor', 'Nhắc nhẹ')}</span>
@@ -272,6 +274,7 @@ export default function TripSettlementsTab({
 
                     {/* Button 1: QR Modal (Mọi thành viên đều có thể mở xem) */}
                     <button
+                      type="button"
                       onClick={() => onOpenVietQR(s)}
                       className="tactile-btn-pill text-xs border border-[#e6e4dc] dark:border-[#2e2e38] flex items-center gap-1.5 cursor-pointer"
                     >
@@ -282,6 +285,7 @@ export default function TripSettlementsTab({
                     {/* Button 2: XÁC NHẬN ĐÃ CHUYỂN - Chỉ người nợ tiền (s.fromUserId) mới thấy */}
                     {isPayer && s.status !== 'CONFIRMED' && s.status !== 'PAID' && (
                       <button
+                        type="button"
                         onClick={() => onMarkAsPaid(s)}
                         className="tactile-btn-dark text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
                       >
@@ -293,6 +297,7 @@ export default function TripSettlementsTab({
                     {/* Button 3: XÁC NHẬN ĐÃ NHẬN TIỀN - Chỉ người nhận tiền (s.toUserId) mới thấy khi người nợ đã bấm chuyển */}
                     {isReceiver && s.status === 'PAID' && (
                       <button
+                        type="button"
                         onClick={() => onConfirmPayment(s)}
                         className="tactile-btn-dark text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
                       >

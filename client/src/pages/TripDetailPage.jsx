@@ -1,29 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import api from '../services/api';
-import { formatVND, calculateLiveShares } from '../services/calculation';
+import { calculateLiveShares } from '../services/calculation';
 import { createRealtimeStream } from '../services/realtime';
 import { offlineSyncService } from '../services/offlineSyncService';
 import { refreshExchangeRates } from '../services/currencyService';
-import CameraModal from '../components/CameraModal';
-import VietQRModal from '../components/VietQRModal';
-import InviteTripModal from '../components/InviteTripModal';
 import TripOverviewTab from '../components/trip/TripOverviewTab';
 import TripExpensesTab from '../components/trip/TripExpensesTab';
 import TripMembersTab from '../components/trip/TripMembersTab';
 import TripSettlementsTab from '../components/trip/TripSettlementsTab';
-import ExpenseFormModal from '../components/trip/ExpenseFormModal';
-import ExpenseDetailModal from '../components/trip/ExpenseDetailModal';
-import CompleteTripModal from '../components/trip/CompleteTripModal';
-import InviteFriendsModal from '../components/trip/InviteFriendsModal';
-import SmartNudgeModal from '../components/SmartNudgeModal';
-import LuckyWheelModal from '../components/trip/LuckyWheelModal';
-import TripWrappedModal from '../components/trip/TripWrappedModal';
-import TripHistoryModal from '../components/trip/TripHistoryModal';
 import confetti from 'canvas-confetti';
 import { getTripVisual } from '../utils/tripVisuals';
 import { 
@@ -40,16 +29,29 @@ import {
   Share2,
   AlertCircle,
   WifiOff,
-  RotateCw,
   History
 } from 'lucide-react';
+
+const CameraModal = lazy(() => import('../components/CameraModal'));
+const VietQRModal = lazy(() => import('../components/VietQRModal'));
+const InviteTripModal = lazy(() => import('../components/InviteTripModal'));
+const ExpenseFormModal = lazy(() => import('../components/trip/ExpenseFormModal'));
+const ExpenseDetailModal = lazy(() => import('../components/trip/ExpenseDetailModal'));
+const CompleteTripModal = lazy(() => import('../components/trip/CompleteTripModal'));
+const InviteFriendsModal = lazy(() => import('../components/trip/InviteFriendsModal'));
+const SmartNudgeModal = lazy(() => import('../components/SmartNudgeModal'));
+const LuckyWheelModal = lazy(() => import('../components/trip/LuckyWheelModal'));
+const TripWrappedModal = lazy(() => import('../components/trip/TripWrappedModal'));
+const TripHistoryModal = lazy(() => import('../components/trip/TripHistoryModal'));
+
+const VALID_TABS = ['overview', 'expenses', 'members', 'settlement', 'history'];
 
 export default function TripDetailPage() {
   const { tripId } = useParams();
   const { currentUser } = useAuth();
   const { showToast } = useToast();
   const confirm = useConfirm();
-  const { t } = useLanguage();
+  const { t, isEn, formatMoney } = useLanguage();
 
   const [trip, setTrip] = useState(null);
   const [members, setMembers] = useState([]);
@@ -60,12 +62,11 @@ export default function TripDetailPage() {
   const [isOfflineMode, setIsOfflineMode] = useState(!navigator.onLine);
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const validTabs = ['overview', 'expenses', 'members', 'settlement', 'history'];
   const tabFromUrl = searchParams.get('tab');
 
   // Active Tab: overview | expenses | members | settlement (sync with URL ?tab=...)
   const [activeTab, setActiveTab] = useState(() => {
-    return tabFromUrl && validTabs.includes(tabFromUrl) && tabFromUrl !== 'history' ? tabFromUrl : 'overview';
+    return tabFromUrl && VALID_TABS.includes(tabFromUrl) && tabFromUrl !== 'history' ? tabFromUrl : 'overview';
   });
 
   // Trip History Modal State
@@ -78,7 +79,7 @@ export default function TripDetailPage() {
     const tabParam = searchParams.get('tab');
     if (tabParam === 'history') {
       setTripHistoryModalOpen(true);
-    } else if (tabParam && validTabs.includes(tabParam)) {
+    } else if (tabParam && VALID_TABS.includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -188,7 +189,8 @@ export default function TripDetailPage() {
         confetti({
           particleCount: 80,
           spread: 70,
-          origin: { y: 0.6 }
+          origin: { y: 0.6 },
+          disableForReducedMotion: true
         });
       }
 
@@ -211,14 +213,14 @@ export default function TripDetailPage() {
         setBalances(cached.balances || null);
         setSettlements(cached.settlements || []);
         setIsOfflineMode(true);
-        showToast('Đang hiển thị dữ liệu chuyến đi từ bộ nhớ ngoại tuyến.', 'info');
+        showToast(t('offlineCachedNotice', 'Đang hiển thị dữ liệu chuyến đi từ bộ nhớ ngoại tuyến.'), 'info');
       } else {
-        showToast(err.message || 'Lỗi khi tải thông tin chuyến đi', 'error');
+        showToast(err.message || t('loadTripError', 'Lỗi khi tải thông tin chuyến đi'), 'error');
       }
     } finally {
       setLoading(false);
     }
-  }, [tripId, showToast]);
+  }, [tripId, showToast, t]);
 
   const fetchTripActivities = useCallback(async () => {
     if (!tripId) return;
@@ -251,9 +253,14 @@ export default function TripDetailPage() {
       try {
         const data = JSON.parse(event.data);
         if (data.actor?.uid !== currentUser?.uid) {
-          const friendName = data.actor?.displayName || 'Bạn bè';
-          const title = data.expense?.title || 'Khoản chi mới';
-          showToast(`✨ ${friendName} vừa thêm khoản chi "${title}"!`, 'info');
+          const friendName = data.actor?.displayName || t('friendFallback', 'Bạn bè');
+          const title = data.expense?.title || t('newExpenseFallback', 'Khoản chi mới');
+          showToast(
+            t('sseExpenseAdded', '✨ {name} vừa thêm khoản chi "{title}"!')
+              .replace('{name}', friendName)
+              .replace('{title}', title),
+            'info'
+          );
         }
         loadTripData();
       } catch (err) {
@@ -266,9 +273,14 @@ export default function TripDetailPage() {
       try {
         const data = JSON.parse(event.data);
         if (data.actor?.uid !== currentUser?.uid) {
-          const friendName = data.actor?.displayName || 'Bạn bè';
-          const title = data.expense?.title || 'Khoản chi';
-          showToast(`📝 ${friendName} vừa cập nhật khoản chi "${title}".`, 'info');
+          const friendName = data.actor?.displayName || t('friendFallback', 'Bạn bè');
+          const title = data.expense?.title || t('expenseFallback', 'Khoản chi');
+          showToast(
+            t('sseExpenseUpdated', '📝 {name} vừa cập nhật khoản chi "{title}".')
+              .replace('{name}', friendName)
+              .replace('{title}', title),
+            'info'
+          );
         }
         loadTripData();
       } catch (err) {
@@ -278,7 +290,7 @@ export default function TripDetailPage() {
 
     // 3. An expense was deleted
     eventSource.addEventListener('EXPENSE_DELETED', () => {
-      showToast('🗑️ Một khoản chi trong nhóm vừa được xóa.', 'info');
+      showToast(t('sseExpenseDeleted', '🗑️ Một khoản chi trong nhóm vừa được xóa.'), 'info');
       loadTripData();
     });
 
@@ -286,11 +298,17 @@ export default function TripDetailPage() {
     eventSource.addEventListener('SETTLEMENT_UPDATED', (event) => {
       try {
         const data = JSON.parse(event.data);
-        const actorName = data.actor?.displayName || 'Thành viên';
+        const actorName = data.actor?.displayName || t('memberRole', 'Thành viên');
         if (data.status === 'CONFIRMED') {
-          showToast(`🎉 ${actorName} đã xác nhận nhận tiền thành công!`, 'success');
+          showToast(
+            t('sseSettlementConfirmed', '🎉 {name} đã xác nhận nhận tiền thành công!').replace('{name}', actorName),
+            'success'
+          );
         } else if (data.status === 'PAID') {
-          showToast(`💳 ${actorName} đã đánh dấu chuyển khoản thanh toán nợ.`, 'info');
+          showToast(
+            t('sseSettlementPaid', '💳 {name} đã đánh dấu chuyển khoản thanh toán nợ.').replace('{name}', actorName),
+            'info'
+          );
         }
         loadTripData();
       } catch (err) {
@@ -303,7 +321,10 @@ export default function TripDetailPage() {
       try {
         const data = JSON.parse(event.data);
         if (data.action === 'JOINED') {
-          showToast(`👋 ${data.user?.displayName || 'Thành viên mới'} đã tham gia nhóm!`, 'info');
+          showToast(
+            t('sseMemberJoined', '👋 {name} đã tham gia nhóm!').replace('{name}', data.user?.displayName || t('newMemberFallback', 'Thành viên mới')),
+            'info'
+          );
         }
         loadTripData();
       } catch (err) {
@@ -319,14 +340,17 @@ export default function TripDetailPage() {
     return () => {
       eventSource.close();
     };
-  }, [tripId, currentUser?.uid, loadTripData, showToast]);
+  }, [tripId, currentUser?.uid, loadTripData, showToast, t]);
 
   // Offline sync event listeners
   useEffect(() => {
     const handleSyncCompleted = (e) => {
       const count = e.detail?.syncedCount;
       if (count > 0) {
-        showToast(`⚡ Đã tự động đồng bộ ${count} khoản chi ngoại tuyến lên hệ thống!`, 'success');
+        showToast(
+          t('offlineSyncedToast', '⚡ Đã tự động đồng bộ {count} khoản chi ngoại tuyến lên hệ thống!').replace('{count}', count),
+          'success'
+        );
         loadTripData();
       }
     };
@@ -349,7 +373,7 @@ export default function TripDetailPage() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [loadTripData, showToast]);
+  }, [loadTripData, showToast, t]);
 
   const openInviteFriendsModal = async () => {
     setInviteFriendsModalOpen(true);
@@ -358,7 +382,7 @@ export default function TripDetailPage() {
       const res = await api.get('/friends');
       setFriendsList(res.friends || []);
     } catch (err) {
-      showToast(err.message || 'Lỗi khi tải danh sách bạn bè', 'error');
+      showToast(err.message || t('loadFriendsError', 'Lỗi khi tải danh sách bạn bè'), 'error');
     } finally {
       setLoadingFriends(false);
     }
@@ -371,10 +395,13 @@ export default function TripDetailPage() {
         friendId: friend.uid,
         tripId
       });
-      showToast(res.message || `Đã thêm ${friend.displayName} vào chuyến đi!`, 'success');
+      showToast(
+        res.message || t('addedFriendToTripToast', 'Đã thêm {name} vào chuyến đi!').replace('{name}', friend.displayName),
+        'success'
+      );
       loadTripData();
     } catch (err) {
-      showToast(err.message || 'Lỗi khi thêm bạn bè vào chuyến đi', 'error');
+      showToast(err.message || t('addFriendToTripError', 'Lỗi khi thêm bạn bè vào chuyến đi'), 'error');
     } finally {
       setInvitingFriendId(null);
     }
@@ -385,7 +412,7 @@ export default function TripDetailPage() {
     if (!trip?.tripCode) return;
     navigator.clipboard.writeText(trip.tripCode);
     setCopiedCode(true);
-    showToast(`Đã sao chép mã ${trip.tripCode} vào bộ nhớ tạm!`, 'success');
+    showToast(t('copiedCodeToastWithCode', 'Đã sao chép mã {code} vào bộ nhớ tạm!').replace('{code}', trip.tripCode), 'success');
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
@@ -407,6 +434,20 @@ export default function TripDetailPage() {
     setExpNote('');
     setAddExpenseModalOpen(true);
   };
+
+  // Allow mobile BottomNav quick (+) action to open Add Expense inside trip detail
+  const openAddExpenseRef = useRef(null);
+  useEffect(() => {
+    openAddExpenseRef.current = () => {
+      if (trip) handleOpenAddExpense();
+    };
+  });
+
+  useEffect(() => {
+    const onOpenAdd = () => openAddExpenseRef.current?.();
+    window.addEventListener('spliqo:open-add-expense', onOpenAdd);
+    return () => window.removeEventListener('spliqo:open-add-expense', onOpenAdd);
+  }, []);
 
   // Open Edit Expense modal
   const handleOpenEditExpense = (expense) => {
@@ -460,19 +501,19 @@ export default function TripDetailPage() {
 
     const numAmount = Math.round(Number(expAmount) || 0);
     if (!expTitle.trim()) {
-      showToast('Vui lòng nhập tên khoản chi', 'error');
+      showToast(t('enterExpenseTitleError', 'Vui lòng nhập tên khoản chi'), 'error');
       return;
     }
     if (numAmount <= 0) {
-      showToast('Số tiền chi tiêu phải lớn hơn 0', 'error');
+      showToast(t('invalidExpenseAmountError', 'Số tiền chi tiêu phải lớn hơn 0'), 'error');
       return;
     }
     if (!expPaidBy) {
-      showToast('Vui lòng chọn người thanh toán', 'error');
+      showToast(t('selectPayerError', 'Vui lòng chọn người thanh toán'), 'error');
       return;
     }
     if (expParticipants.length === 0) {
-      showToast('Vui lòng chọn ít nhất một người tham gia', 'error');
+      showToast(t('selectParticipantsError', 'Vui lòng chọn ít nhất một người tham gia'), 'error');
       return;
     }
 
@@ -480,8 +521,12 @@ export default function TripDetailPage() {
       if (!liveShares.isValid) {
         showToast(
           liveShares.remaining > 0
-            ? `Tổng tiền chia còn thiếu ${formatVND(liveShares.remaining)}`
-            : `Tổng tiền chia đã vượt quá ${formatVND(Math.abs(liveShares.remaining))}`,
+            ? (isEn
+                ? `Split total is short by ${formatMoney(liveShares.remaining)}`
+                : `Tổng tiền chia còn thiếu ${formatMoney(liveShares.remaining)}`)
+            : (isEn
+                ? `Split total exceeded by ${formatMoney(Math.abs(liveShares.remaining))}`
+                : `Tổng tiền chia đã vượt quá ${formatMoney(Math.abs(liveShares.remaining))}`),
           'error'
         );
         return;
@@ -513,7 +558,7 @@ export default function TripDetailPage() {
         createdAt: new Date().toISOString()
       };
       setExpenses((prev) => [tempExpense, ...prev]);
-      showToast('📶 Đang ngoại tuyến. Khoản chi đã được lưu tạm và sẽ tự động đồng bộ khi có mạng!', 'success');
+      showToast(t('offlineExpenseSavedToast', '📶 Đang ngoại tuyến. Khoản chi đã được lưu tạm và sẽ tự động đồng bộ khi có mạng!'), 'success');
       setAddExpenseModalOpen(false);
       return;
     }
@@ -522,11 +567,11 @@ export default function TripDetailPage() {
       setSubmitting(true);
       if (editingExpense) {
         await api.put(`/trips/${tripId}/expenses/${editingExpense.id}`, payload);
-        showToast('Cập nhật khoản chi thành công!', 'success');
+        showToast(t('expenseUpdatedSuccess', 'Cập nhật khoản chi thành công!'), 'success');
       } else {
         try {
           await api.post(`/trips/${tripId}/expenses`, payload);
-          showToast('Thêm khoản chi mới thành công!', 'success');
+          showToast(t('expenseAddedSuccess', 'Thêm khoản chi mới thành công!'), 'success');
         } catch (apiErr) {
           // If network dropped mid-submission
           const isNetErr = !navigator.onLine || apiErr.message?.includes('Network Error') || apiErr.message?.includes('không phản hồi');
@@ -539,7 +584,7 @@ export default function TripDetailPage() {
               createdAt: new Date().toISOString()
             };
             setExpenses((prev) => [tempExpense, ...prev]);
-            showToast('📶 Mất sóng mạng. Khoản chi đã được lưu tạm và sẽ tự động đồng bộ khi có kết nối lại!', 'info');
+            showToast(t('offlineNetworkLostSavedToast', '📶 Mất sóng mạng. Khoản chi đã được lưu tạm và sẽ tự động đồng bộ khi có kết nối lại!'), 'info');
             setAddExpenseModalOpen(false);
             return;
           }
@@ -550,7 +595,7 @@ export default function TripDetailPage() {
       setAddExpenseModalOpen(false);
       loadTripData();
     } catch (err) {
-      showToast(err.message || 'Lỗi lưu khoản chi', 'error');
+      showToast(err.message || t('saveExpenseError', 'Lỗi lưu khoản chi'), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -559,31 +604,31 @@ export default function TripDetailPage() {
   // Delete Expense
   const handleDeleteExpense = async (expenseId) => {
     const isConfirmed = await confirm({
-      title: 'Xóa khoản chi này?',
-      message: 'Bạn có chắc chắn muốn xóa khoản chi này? Khoản tiền này sẽ được trừ ra và tính toán lại công nợ của cả nhóm.',
-      confirmText: 'Xác nhận xóa',
-      cancelText: 'Giữ lại',
+      title: t('deleteExpenseConfirmTitle', 'Xóa khoản chi này?'),
+      message: t('deleteExpenseConfirmMsg', 'Bạn có chắc chắn muốn xóa khoản chi này? Khoản tiền này sẽ được trừ ra và tính toán lại công nợ của cả nhóm.'),
+      confirmText: t('confirmDeleteBtn', 'Xác nhận xóa'),
+      cancelText: t('keepBtn', 'Giữ lại'),
       type: 'danger'
     });
     if (!isConfirmed) return;
 
     try {
       await api.delete(`/trips/${tripId}/expenses/${expenseId}`);
-      showToast('Đã xóa khoản chi thành công', 'success');
+      showToast(t('expenseDeletedSuccess', 'Đã xóa khoản chi thành công'), 'success');
       setViewExpenseModalOpen(false);
       loadTripData();
     } catch (err) {
-      showToast(err.message || 'Lỗi khi xóa khoản chi', 'error');
+      showToast(err.message || t('deleteExpenseError', 'Lỗi khi xóa khoản chi'), 'error');
     }
   };
 
   // Remove member
   const handleRemoveMember = async (member) => {
     const isConfirmed = await confirm({
-      title: 'Xóa thành viên?',
-      message: `Bạn có chắc muốn xóa thành viên "${member.displayName}" khỏi chuyến đi?`,
-      confirmText: 'Xóa thành viên',
-      cancelText: 'Hủy bỏ',
+      title: t('removeMemberConfirmTitle', 'Xóa thành viên?'),
+      message: t('removeMemberConfirmMsg', 'Bạn có chắc muốn xóa thành viên "{name}" khỏi chuyến đi?').replace('{name}', member.displayName || ''),
+      confirmText: t('removeMemberConfirmBtn', 'Xóa thành viên'),
+      cancelText: t('cancel', 'Hủy bỏ'),
       type: 'danger'
     });
     if (!isConfirmed) return;
@@ -591,10 +636,10 @@ export default function TripDetailPage() {
     try {
       const targetId = member.userId || member.uid || member.id;
       await api.delete(`/trips/${tripId}/members/${targetId}`);
-      showToast('Đã xóa thành viên khỏi chuyến đi', 'success');
+      showToast(t('memberRemovedSuccess', 'Đã xóa thành viên khỏi chuyến đi'), 'success');
       loadTripData();
     } catch (err) {
-      showToast(err.message || 'Lỗi khi xóa thành viên', 'error');
+      showToast(err.message || t('removeMemberError', 'Lỗi khi xóa thành viên'), 'error');
     }
   };
 
@@ -614,11 +659,11 @@ export default function TripDetailPage() {
       await api.post(`/trips/${tripId}/settlements/${settlement.id}/confirm`, {
         toUserId: settlement.toUserId,
       });
-      showToast('Xác nhận nhận tiền thành công! Giao dịch đã được chốt.', 'success');
-      confetti({ particleCount: 50, spread: 60 });
+      showToast(t('confirmReceiptSuccessToast', 'Xác nhận nhận tiền thành công! Giao dịch đã được chốt.'), 'success');
+      confetti({ particleCount: 50, spread: 60, disableForReducedMotion: true });
       loadTripData();
     } catch (err) {
-      showToast(err.message || 'Lỗi khi xác nhận thanh toán', 'error');
+      showToast(err.message || t('confirmPaymentError', 'Lỗi khi xác nhận thanh toán'), 'error');
     }
   };
 
@@ -635,7 +680,7 @@ export default function TripDetailPage() {
       setCompletingTrip(true);
       const res = await api.post(`/trips/${tripId}/complete`);
       showToast(res.message || t('tripCompletedSuccess', 'Chuyến đi đã chốt sổ thành công!'), 'success');
-      confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
+      confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 }, disableForReducedMotion: true });
       setCompleteTripModalOpen(false);
       loadTripData();
 
@@ -644,7 +689,7 @@ export default function TripDetailPage() {
         setTripWrappedModalOpen(true);
       }, 600);
     } catch (err) {
-      showToast(err.message || 'Lỗi khi hoàn thành chuyến đi', 'error');
+      showToast(err.message || t('completeTripError', 'Lỗi khi hoàn thành chuyến đi'), 'error');
     } finally {
       setCompletingTrip(false);
     }
@@ -657,10 +702,15 @@ export default function TripDetailPage() {
         budget: budgetObj
       });
       setTrip((prev) => ({ ...prev, budget: budgetObj }));
-      showToast(budgetObj ? 'Đã lưu hạn mức chi tiêu của chuyến đi!' : 'Đã xóa hạn mức chi tiêu.', 'success');
+      showToast(
+        budgetObj
+          ? t('budgetSavedToast', 'Đã lưu hạn mức chi tiêu của chuyến đi!')
+          : t('budgetRemovedToast', 'Đã xóa hạn mức chi tiêu.'),
+        'success'
+      );
       loadTripData();
     } catch (err) {
-      showToast(err.message || 'Lỗi khi cập nhật hạn mức', 'error');
+      showToast(err.message || t('updateBudgetError', 'Lỗi khi cập nhật hạn mức'), 'error');
       throw err;
     }
   };
@@ -671,11 +721,11 @@ export default function TripDetailPage() {
     setSelectedExpense(null);
     setEditingExpense(null);
     setExpTitle(
-      mode === 'payer' 
-        ? 'Chầu ăn uống / Cafe (Bao trọn) ' 
-        : mode === 'lucky_free' 
-        ? 'Chầu ăn uống (Được khao)' 
-        : 'Chầu cafe / trà sữa '
+      mode === 'payer'
+        ? (isEn ? 'Treat meal / Drinks (Full bill)' : 'Chầu ăn uống / Cafe (Bao trọn)')
+        : mode === 'lucky_free'
+        ? (isEn ? 'Group treat (Lucky free pass)' : 'Chầu ăn uống (Được khao)')
+        : (isEn ? 'Drinks / Coffee round' : 'Chầu cafe / trà sữa')
     );
     setExpAmount('');
     setExpCurrency('VND');
@@ -704,7 +754,11 @@ export default function TripDetailPage() {
     setExpIndividualAmounts({});
     setExpBillImageUrl('');
     setExpDate(new Date().toISOString().split('T')[0]);
-    setExpNote(`Quay từ Vòng xoay may mắn : ${winnerMember.displayName} được chọn (${mode === 'lucky_free' ? 'Được khao 0đ' : mode === 'payer' ? 'Bao trọn chầu' : 'Ứng tiền trước'})!`);
+    setExpNote(
+      isEn
+        ? `Lucky Wheel pick: ${winnerMember.displayName} (${mode === 'lucky_free' ? 'Free pass' : mode === 'payer' ? 'Covers full bill' : 'Advanced payment'})!`
+        : `Quay từ Vòng xoay may mắn: ${winnerMember.displayName} được chọn (${mode === 'lucky_free' ? 'Được khao 0đ' : mode === 'payer' ? 'Bao trọn chầu' : 'Ứng tiền trước'})!`
+    );
     setLuckyWheelModalOpen(false);
     setAddExpenseModalOpen(true);
   };
@@ -728,7 +782,7 @@ export default function TripDetailPage() {
     return (
       <div className="py-20 text-center">
         <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-sm text-slate-500 font-medium">Đang tải dữ liệu chuyến đi...</p>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400 font-medium">{t('loadingTripData', 'Đang tải dữ liệu chuyến đi...')}</p>
       </div>
     );
   }
@@ -736,9 +790,9 @@ export default function TripDetailPage() {
   if (!trip) {
     return (
       <div className="py-20 text-center">
-        <p className="text-base text-slate-600 font-semibold mb-4">Không tìm thấy thông tin chuyến đi.</p>
-        <Link to="/dashboard" className="px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-500 text-white rounded-2xl text-sm font-bold shadow-lg shadow-emerald-500/25">
-          Về trang chủ
+        <p className="text-base text-slate-700 dark:text-zinc-300 font-semibold mb-4">{t('tripNotFoundNotice', 'Không tìm thấy thông tin chuyến đi.')}</p>
+        <Link to="/dashboard" className="tactile-btn-dark inline-flex items-center gap-2 px-5 py-3 text-sm font-bold">
+          {t('backToHome', 'Về trang chủ')}
         </Link>
       </div>
     );
@@ -790,15 +844,18 @@ export default function TripDetailPage() {
           <div className="flex items-center gap-2.5">
             <WifiOff className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
             <div>
-              <p className="font-bold">Đang hoạt động ngoại tuyến (Offline Mode)</p>
-              <p className="text-[11px] opacity-80">Bạn vẫn có thể xem chuyến đi và ghi chép chi tiêu bình thường. Dữ liệu sẽ tự động đồng bộ ngay khi có sóng 4G/Wifi.</p>
+              <p className="font-bold">{t('offlineModeBannerTitle', 'Đang hoạt động ngoại tuyến (Offline Mode)')}</p>
+              <p className="text-[11px] opacity-85">
+                {t('offlineModeBannerDesc', 'Bạn vẫn có thể xem chuyến đi và ghi chép chi tiêu bình thường. Dữ liệu sẽ tự động đồng bộ ngay khi có sóng 4G/Wifi.')}
+              </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={() => offlineSyncService.syncOfflineQueue()}
             className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shrink-0 transition-colors cursor-pointer"
           >
-            Thử đồng bộ
+            {t('retrySyncBtn', 'Thử đồng bộ')}
           </button>
         </div>
       )}
@@ -822,14 +879,16 @@ export default function TripDetailPage() {
               </span>
 
               {/* Trip Code Pill */}
-              <div
+              <button
+                type="button"
                 onClick={handleCopyCode}
+                aria-label={`${t('copyCodeTooltip', 'Sao chép mã mời')}: #${trip.tripCode}`}
                 className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f4f3ec] dark:bg-[#212129] hover:bg-[#eae8df] dark:hover:bg-[#2c2c36] text-zinc-800 dark:text-zinc-200 text-xs font-mono font-bold transition-all border border-[#e6e4dc] dark:border-[#32323e]"
                 title={t('copyCodeTooltip', 'Bấm để sao chép mã mời')}
               >
                 <span>{t('tripCodeLabel', 'Mã:')} #{trip.tripCode}</span>
-                {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />}
-              </div>
+                {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />}
+              </button>
 
               {/* Invite via Link & QR Button */}
               <button
@@ -840,28 +899,6 @@ export default function TripDetailPage() {
               >
                 <Share2 className="w-3.5 h-3.5" />
                 <span>{t('inviteViaLinkBtn', 'Mời bằng link')}</span>
-              </button>
-
-              {/* Lucky Wheel Quick Trigger */}
-              <button
-                type="button"
-                onClick={() => setLuckyWheelModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-300 text-xs font-bold transition-all border border-amber-200 dark:border-amber-800/50 cursor-pointer shadow-xs active:scale-95"
-                title={t('luckyWheelHeaderPrompt', 'Vòng xoay may mắn - Ai trả chầu này?')}
-              >
-                <RotateCw className="w-3.5 h-3.5 text-amber-500" />
-                <span>{t('luckyWheelBtn', 'Vòng xoay ')}</span>
-              </button>
-
-              {/* Spliqo Wrapped Quick Trigger (Neo-Retro) */}
-              <button
-                type="button"
-                onClick={() => setTripWrappedModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-950/60 hover:bg-orange-100 dark:hover:bg-orange-900/60 text-[#ff5400] dark:text-orange-400 text-xs font-black transition-all border border-orange-300 dark:border-orange-800/60 cursor-pointer shadow-xs active:scale-95"
-                title={t('wrappedTitle', 'Spliqo Wrapped - Thẻ ký ức Neo-Retro')}
-              >
-                <Sparkles className="w-3.5 h-3.5 text-[#ff5400]" />
-                <span>{t('wrappedBtn', 'Wrapped ')}</span>
               </button>
             </div>
 
@@ -884,12 +921,12 @@ export default function TripDetailPage() {
             </div>
 
             {trip.description && (
-              <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-xl">
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 max-w-xl">
                 {trip.description}
               </p>
             )}
 
-            <div className="flex items-center gap-4 text-xs text-zinc-400 dark:text-zinc-400 pt-1">
+            <div className="flex items-center gap-4 text-xs text-zinc-600 dark:text-zinc-400 pt-1">
               <span className="flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />
                 {trip.startDate} → {trip.endDate}
@@ -901,14 +938,14 @@ export default function TripDetailPage() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
             <div className="p-4 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] flex items-center justify-between sm:justify-start gap-6">
               <div>
-                <span className="text-[11px] font-bold text-zinc-400 dark:text-zinc-400 uppercase tracking-wider">{t('totalTripCost', 'Tổng chi phí')}</span>
+                <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">{t('totalTripCost', 'Tổng chi phí')}</span>
                 <div className="text-xl sm:text-2xl font-extrabold text-[#18181b] dark:text-white">
-                  {formatVND(balances?.totalExpense || 0)}
+                  {formatMoney(balances?.totalExpense || 0)}
                 </div>
               </div>
               <div className="h-8 w-px bg-[#e6e4dc] dark:bg-[#32323e]" />
               <div className="text-right sm:text-left">
-                <span className="text-[11px] font-bold text-zinc-400 dark:text-zinc-400 uppercase tracking-wider">{t('scale', 'Quy mô')}</span>
+                <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">{t('scale', 'Quy mô')}</span>
                 <div className="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200">
                   {members.length} {t('membersUnit', 'Người')} • {expenses.length} {t('billsUnit', 'Bill')}
                 </div>
@@ -916,6 +953,7 @@ export default function TripDetailPage() {
             </div>
 
             <button
+              type="button"
               onClick={handleOpenAddExpense}
               className="tactile-btn-dark py-3.5 px-5 text-sm"
             >
@@ -938,12 +976,13 @@ export default function TripDetailPage() {
             return (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => handleTabChange(tab.id)}
-                className={`tactile-tab shrink-0 whitespace-nowrap ${isTabActive ? 'active-purple' : ''}`}
+                className={`tactile-tab shrink-0 whitespace-nowrap ${isTabActive ? 'active-emerald' : ''}`}
               >
                 <span className="whitespace-nowrap shrink-0">{tab.label}</span>
                 {tab.count !== null && (
-                  <span className={`tactile-badge w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center shrink-0 leading-none ${isTabActive ? 'bg-purple-200/80 dark:bg-purple-900/60 text-purple-900 dark:text-purple-200' : 'bg-[#f4f3ec] dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300'}`}>
+                  <span className={`tactile-badge w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center shrink-0 leading-none ${isTabActive ? 'bg-emerald-200/80 dark:bg-emerald-900/60 text-emerald-950 dark:text-emerald-200' : 'bg-[#f4f3ec] dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300'}`}>
                     {tab.count}
                   </span>
                 )}
@@ -1033,164 +1072,186 @@ export default function TripDetailPage() {
         />
       )}
 
-      {/* MODAL: ADD / EDIT EXPENSE */}
-      <ExpenseFormModal
-        isOpen={addExpenseModalOpen}
-        onClose={() => setAddExpenseModalOpen(false)}
-        editingExpense={editingExpense}
-        members={members}
-        currentUser={currentUser}
-        expTitle={expTitle}
-        setExpTitle={setExpTitle}
-        expAmount={expAmount}
-        setExpAmount={setExpAmount}
-        expCurrency={expCurrency}
-        setExpCurrency={setExpCurrency}
-        expOriginalAmount={expOriginalAmount}
-        setExpOriginalAmount={setExpOriginalAmount}
-        expExchangeRate={expExchangeRate}
-        setExpExchangeRate={setExpExchangeRate}
-        expPaidBy={expPaidBy}
-        setExpPaidBy={setExpPaidBy}
-        expParticipants={expParticipants}
-        expSplitType={expSplitType}
-        setExpSplitType={setExpSplitType}
-        expIndividualAmounts={expIndividualAmounts}
-        setExpIndividualAmounts={setExpIndividualAmounts}
-        expBillImageUrl={expBillImageUrl}
-        expDate={expDate}
-        setExpDate={setExpDate}
-        expNote={expNote}
-        setExpNote={setExpNote}
-        liveShares={liveShares}
-        submitting={submitting}
-        onSaveExpense={handleSaveExpense}
-        onOpenCamera={() => setCameraModalOpen(true)}
-        onSelectAllParticipants={handleSelectAllParticipants}
-        onClearAllParticipants={handleClearAllParticipants}
-        onToggleParticipant={toggleParticipant}
-        t={t}
-      />
+      <Suspense fallback={null}>
+        {/* MODAL: ADD / EDIT EXPENSE */}
+        {addExpenseModalOpen && (
+          <ExpenseFormModal
+            isOpen={addExpenseModalOpen}
+            onClose={() => setAddExpenseModalOpen(false)}
+            editingExpense={editingExpense}
+            members={members}
+            currentUser={currentUser}
+            expTitle={expTitle}
+            setExpTitle={setExpTitle}
+            expAmount={expAmount}
+            setExpAmount={setExpAmount}
+            expCurrency={expCurrency}
+            setExpCurrency={setExpCurrency}
+            expOriginalAmount={expOriginalAmount}
+            setExpOriginalAmount={setExpOriginalAmount}
+            expExchangeRate={expExchangeRate}
+            setExpExchangeRate={setExpExchangeRate}
+            expPaidBy={expPaidBy}
+            setExpPaidBy={setExpPaidBy}
+            expParticipants={expParticipants}
+            expSplitType={expSplitType}
+            setExpSplitType={setExpSplitType}
+            expIndividualAmounts={expIndividualAmounts}
+            setExpIndividualAmounts={setExpIndividualAmounts}
+            expBillImageUrl={expBillImageUrl}
+            expDate={expDate}
+            setExpDate={setExpDate}
+            expNote={expNote}
+            setExpNote={setExpNote}
+            liveShares={liveShares}
+            submitting={submitting}
+            onSaveExpense={handleSaveExpense}
+            onOpenCamera={() => setCameraModalOpen(true)}
+            onSelectAllParticipants={handleSelectAllParticipants}
+            onClearAllParticipants={handleClearAllParticipants}
+            onToggleParticipant={toggleParticipant}
+            t={t}
+          />
+        )}
 
-      {/* MODAL: VIEW EXPENSE DETAIL & AUDIT HISTORY */}
-      <ExpenseDetailModal
-        isOpen={viewExpenseModalOpen}
-        onClose={() => setViewExpenseModalOpen(false)}
-        selectedExpense={selectedExpense}
-        members={members}
-        onDeleteExpense={handleDeleteExpense}
-        onOpenEditExpense={handleOpenEditExpense}
-        t={t}
-      />
+        {/* MODAL: VIEW EXPENSE DETAIL & AUDIT HISTORY */}
+        {viewExpenseModalOpen && selectedExpense && (
+          <ExpenseDetailModal
+            isOpen={viewExpenseModalOpen}
+            onClose={() => setViewExpenseModalOpen(false)}
+            selectedExpense={selectedExpense}
+            members={members}
+            onDeleteExpense={handleDeleteExpense}
+            onOpenEditExpense={handleOpenEditExpense}
+            t={t}
+          />
+        )}
 
-      {/* CAMERA & BILL UPLOAD MODAL */}
-      <CameraModal
-        isOpen={cameraModalOpen}
-        onClose={() => setCameraModalOpen(false)}
-        currentImageUrl={expBillImageUrl}
-        onImageSelected={(url) => setExpBillImageUrl(url)}
-      />
+        {/* CAMERA & BILL UPLOAD MODAL */}
+        {cameraModalOpen && (
+          <CameraModal
+            isOpen={cameraModalOpen}
+            onClose={() => setCameraModalOpen(false)}
+            currentImageUrl={expBillImageUrl}
+            onImageSelected={(url) => setExpBillImageUrl(url)}
+          />
+        )}
 
-      {/* VIETQR & PAYMENT MODAL */}
-      <VietQRModal
-        isOpen={vietQrModalOpen}
-        onClose={() => {
-          setVietQrModalOpen(false);
-          setSelectedSettlement(null);
-        }}
-        settlement={selectedSettlement}
-        tripName={trip.name}
-        onMarkAsPaid={handleMarkAsPaid}
-        onConfirmPayment={handleConfirmPayment}
-      />
+        {/* VIETQR & PAYMENT MODAL */}
+        {vietQrModalOpen && selectedSettlement && (
+          <VietQRModal
+            isOpen={vietQrModalOpen}
+            onClose={() => {
+              setVietQrModalOpen(false);
+              setSelectedSettlement(null);
+            }}
+            settlement={selectedSettlement}
+            tripName={trip.name}
+            onMarkAsPaid={handleMarkAsPaid}
+            onConfirmPayment={handleConfirmPayment}
+          />
+        )}
 
-      {/* MODAL: MỜI BẰNG LINK & QR TRỰC TIẾP */}
-      <InviteTripModal
-        isOpen={inviteLinkModalOpen}
-        onClose={() => setInviteLinkModalOpen(false)}
-        trip={trip}
-        onOpenFriendList={openInviteFriendsModal}
-      />
+        {/* MODAL: MỜI BẰNG LINK & QR TRỰC TIẾP */}
+        {inviteLinkModalOpen && (
+          <InviteTripModal
+            isOpen={inviteLinkModalOpen}
+            onClose={() => setInviteLinkModalOpen(false)}
+            trip={trip}
+            onOpenFriendList={openInviteFriendsModal}
+          />
+        )}
 
-      {/* MODAL: MỜI BẠN BÈ VÀO CHUYẾN ĐI NÀY */}
-      <InviteFriendsModal
-        isOpen={inviteFriendsModalOpen}
-        onClose={() => setInviteFriendsModalOpen(false)}
-        trip={trip}
-        friendsList={friendsList}
-        loadingFriends={loadingFriends}
-        invitingFriendId={invitingFriendId}
-        members={members}
-        onInviteFriend={handleInviteFriendToTrip}
-        t={t}
-      />
+        {/* MODAL: MỜI BẠN BÈ VÀO CHUYẾN ĐI NÀY */}
+        {inviteFriendsModalOpen && (
+          <InviteFriendsModal
+            isOpen={inviteFriendsModalOpen}
+            onClose={() => setInviteFriendsModalOpen(false)}
+            trip={trip}
+            friendsList={friendsList}
+            loadingFriends={loadingFriends}
+            invitingFriendId={invitingFriendId}
+            members={members}
+            onInviteFriend={handleInviteFriendToTrip}
+            t={t}
+          />
+        )}
 
-      {/* MODAL: CONFIRM COMPLETE TRIP */}
-      <CompleteTripModal
-        isOpen={completeTripModalOpen}
-        onClose={() => setCompleteTripModalOpen(false)}
-        isAllSettled={isAllSettled}
-        confirmedSettlements={confirmedSettlements}
-        totalSettlements={totalSettlements}
-        settlementProgress={settlementProgress}
-        unsettledDebts={unsettledDebts}
-        balances={balances}
-        members={members}
-        completingTrip={completingTrip}
-        onConfirmCompleteTrip={handleConfirmCompleteTrip}
-        onGoToSettlementTab={() => {
-          setCompleteTripModalOpen(false);
-          setActiveTab('settlement');
-        }}
-        t={t}
-      />
+        {/* MODAL: CONFIRM COMPLETE TRIP */}
+        {completeTripModalOpen && (
+          <CompleteTripModal
+            isOpen={completeTripModalOpen}
+            onClose={() => setCompleteTripModalOpen(false)}
+            isAllSettled={isAllSettled}
+            confirmedSettlements={confirmedSettlements}
+            totalSettlements={totalSettlements}
+            settlementProgress={settlementProgress}
+            unsettledDebts={unsettledDebts}
+            balances={balances}
+            members={members}
+            completingTrip={completingTrip}
+            onConfirmCompleteTrip={handleConfirmCompleteTrip}
+            onGoToSettlementTab={() => {
+              setCompleteTripModalOpen(false);
+              setActiveTab('settlement');
+            }}
+            t={t}
+          />
+        )}
 
-      {/* MODAL: SMART NUDGE (NHẮC NỢ THÔNG MINH) */}
-      {smartNudgeSettlement && (
-        <SmartNudgeModal
-          isOpen={smartNudgeModalOpen}
-          onClose={() => {
-            setSmartNudgeModalOpen(false);
-            setSmartNudgeSettlement(null);
-          }}
-          settlement={smartNudgeSettlement}
-          tripName={trip?.name}
-          onNudgeSent={(updated) => {
-            setSettlements(prev => prev.map(s => (s.id === updated.id ? { ...s, ...updated } : s)));
-          }}
-        />
-      )}
+        {/* MODAL: SMART NUDGE (NHẮC NỢ THÔNG MINH) */}
+        {smartNudgeModalOpen && smartNudgeSettlement && (
+          <SmartNudgeModal
+            isOpen={smartNudgeModalOpen}
+            onClose={() => {
+              setSmartNudgeModalOpen(false);
+              setSmartNudgeSettlement(null);
+            }}
+            settlement={smartNudgeSettlement}
+            tripName={trip?.name}
+            onNudgeSent={(updated) => {
+              setSettlements(prev => prev.map(s => (s.id === updated.id ? { ...s, ...updated } : s)));
+            }}
+          />
+        )}
 
-      {/* MODAL: LUCKY WHEEL (VÒNG XOAY MAY MẮN) */}
-      <LuckyWheelModal
-        isOpen={luckyWheelModalOpen}
-        onClose={() => setLuckyWheelModalOpen(false)}
-        members={members}
-        onPickWinnerForExpense={handlePickWinnerForExpense}
-        t={t}
-      />
+        {/* MODAL: LUCKY WHEEL (VÒNG XOAY MAY MẮN) */}
+        {luckyWheelModalOpen && (
+          <LuckyWheelModal
+            isOpen={luckyWheelModalOpen}
+            onClose={() => setLuckyWheelModalOpen(false)}
+            members={members}
+            onPickWinnerForExpense={handlePickWinnerForExpense}
+            t={t}
+          />
+        )}
 
-      {/* MODAL: SPLIQO WRAPPED (THẺ KÝ ỨC CHUYẾN ĐI) */}
-      <TripWrappedModal
-        isOpen={tripWrappedModalOpen}
-        onClose={() => setTripWrappedModalOpen(false)}
-        trip={trip}
-        expenses={expenses}
-        members={members}
-        balances={balances}
-        settlements={settlements}
-        t={t}
-      />
+        {/* MODAL: SPLIQO WRAPPED (THẺ KÝ ỨC CHUYẾN ĐI) */}
+        {tripWrappedModalOpen && (
+          <TripWrappedModal
+            isOpen={tripWrappedModalOpen}
+            onClose={() => setTripWrappedModalOpen(false)}
+            trip={trip}
+            expenses={expenses}
+            members={members}
+            balances={balances}
+            settlements={settlements}
+            t={t}
+          />
+        )}
 
-      {/* MODAL: TRIP AUDIT & EDIT HISTORY */}
-      <TripHistoryModal
-        isOpen={tripHistoryModalOpen}
-        onClose={() => setTripHistoryModalOpen(false)}
-        activities={activities}
-        loading={loadingActivities}
-        onRefresh={fetchTripActivities}
-        tripName={trip?.name || ''}
-      />
+        {/* MODAL: TRIP AUDIT & EDIT HISTORY */}
+        {tripHistoryModalOpen && (
+          <TripHistoryModal
+            isOpen={tripHistoryModalOpen}
+            onClose={() => setTripHistoryModalOpen(false)}
+            activities={activities}
+            loading={loadingActivities}
+            onRefresh={fetchTripActivities}
+            tripName={trip?.name || ''}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }

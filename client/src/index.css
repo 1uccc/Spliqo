@@ -13,17 +13,46 @@
     --clay-border: #e6e4dc;
     --clay-border-dark: #18181b;
     --clay-dark: #18181b;
-    --clay-muted: #71717a;
+    --clay-muted: #52525b;
     --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-bg-light: rgba(255, 255, 255, 0.55);
     --glass-border: rgba(230, 228, 220, 0.8);
+    --glass-border-subtle: rgba(255, 255, 255, 0.35);
+    --glass-blur: 20px;
+    --glass-blur-lg: 32px;
+    --focus-ring: #059669;
+  }
+
+  html.dark {
+    --clay-bg: #0f0f12;
+    --clay-card: #18181f;
+    --clay-chip: #212129;
+    --clay-border: #272732;
+    --clay-border-dark: #f4f4f6;
+    --clay-dark: #f4f4f6;
+    --clay-muted: #a1a1aa;
+    --focus-ring: #34d399;
   }
 
   body {
-    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    background-color: #f4f3ec;
-    color: #18181b;
+    font-family: 'Lexend', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--clay-bg);
+    color: var(--clay-dark);
     -webkit-tap-highlight-color: transparent;
     min-height: 100vh;
+  }
+
+  h1, h2, h3, h4 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :is(a, button, input, select, textarea, [role="button"], [tabindex]):focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
   }
 }
 
@@ -211,6 +240,7 @@
     border: 1px solid #e6e4dc;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
+    -webkit-user-select: none;
     user-select: none;
     line-height: 1;
   }
@@ -248,12 +278,7 @@
     background-color: #faf9f6;
   }
 
-  .tactile-tab.active-purple {
-    background-color: #ede9fe;
-    color: #5b21b6;
-    border-color: #ddd6fe;
-  }
-
+  .tactile-tab.active-purple,
   .tactile-tab.active-emerald {
     background-color: #d1fae5;
     color: #065f46;
@@ -268,37 +293,10 @@ input[type="date"] {
   overflow: hidden;
   -webkit-appearance: none;
   -moz-appearance: none;
+  appearance: none;
 }
 input[type="date"]::-webkit-date-and-time-value {
   text-align: left;
-}
-
-/* Cross-browser no-scrollbar utility */
-.no-scrollbar::-webkit-scrollbar {
-  display: none !important;
-}
-.no-scrollbar {
-  -ms-overflow-style: none !important;
-  scrollbar-width: none !important;
-}
-
-/* Custom sleek scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.4);
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.6);
 }
 
 /* Utility animations */
@@ -568,15 +566,17 @@ html.dark .tactile-tab:hover {
   border-color: #3f3f50 !important;
 }
 
-html.dark .tactile-tab.active-purple {
-  background-color: #2e1065 !important;
-  color: #ede9fe !important;
-  border-color: #7c3aed !important;
-  box-shadow: 0 0 16px rgba(124, 58, 237, 0.25);
+html.dark .tactile-tab.active-purple,
+html.dark .tactile-tab.active-emerald {
+  background-color: #064e3b !important;
+  color: #a7f3d0 !important;
+  border-color: #059669 !important;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
 }
 
-html.dark .tactile-tab.active-purple .tactile-badge {
-  background-color: #7c3aed !important;
+html.dark .tactile-tab.active-purple .tactile-badge,
+html.dark .tactile-tab.active-emerald .tactile-badge {
+  background-color: #059669 !important;
   color: #ffffff !important;
   border-color: rgba(255, 255, 255, 0.25) !important;
 }
@@ -585,19 +585,6 @@ html.dark .tactile-tab .tactile-badge {
   background-color: #272733 !important;
   color: #f4f4f6 !important;
   border-color: #38384a !important;
-}
-
-html.dark .tactile-tab.active-emerald {
-  background-color: #064e3b !important;
-  color: #a7f3d0 !important;
-  border-color: #059669 !important;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
-}
-
-html.dark .tactile-tab.active-emerald .tactile-badge {
-  background-color: #059669 !important;
-  color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.25) !important;
 }
 
 /* Status Badge Pills in Dark Mode */
@@ -633,12 +620,18 @@ html.dark select:focus,
 html.dark textarea:focus {
   background-color: #272732 !important;
   border-color: #10b981 !important;
-  outline: none !important;
+}
+
+html.dark input:focus-visible,
+html.dark select:focus-visible,
+html.dark textarea:focus-visible {
+  outline: 2px solid #34d399 !important;
+  outline-offset: 2px;
 }
 
 html.dark input::placeholder, 
 html.dark textarea::placeholder {
-  color: #71717a !important;
+  color: #a1a1aa !important;
 }
 
 /* Modals & Dialogs */
@@ -668,7 +661,7 @@ html.dark ::-webkit-scrollbar-thumb:hover {
   to { opacity: 1; }
 }
 
-@keyframes modalSpringPop {
+@keyframes modalPopIn {
   0% {
     opacity: 0;
     transform: scale(0.96) translateY(6px);
@@ -695,12 +688,40 @@ html.dark ::-webkit-scrollbar-thumb:hover {
 }
 
 .animate-modal-pop {
-  animation: modalSpringPop 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @media (max-width: 639px) {
   .animate-modal-pop {
     animation: modalSheetSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-modal-pop,
+  .animate-modal-backdrop {
+    animation: modalBackdropFadeIn 0.14s ease-out forwards !important;
+  }
+
+  .animate-pulse,
+  .animate-pulse-subtle,
+  .animate-ping,
+  .animate-bounce {
+    animation: none !important;
+  }
+
+  .animate-spin {
+    animation: pulseSubtle 1.8s ease-in-out infinite !important;
+  }
+
+  .tactile-card:hover,
+  .tactile-btn-pill:active,
+  .tactile-btn-dark:active,
+  .liquid-glass-card:hover,
+  .liquid-glass-btn:hover {
+    transform: none !important;
   }
 }
 

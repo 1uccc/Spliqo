@@ -8,7 +8,6 @@ import StatCard from '../components/StatCard';
 import Modal from '../components/Modal';
 import TripCard from '../components/trip/TripCard';
 import InviteTripModal from '../components/InviteTripModal';
-import { formatVND } from '../services/calculation';
 import { 
   Plus, 
   LogIn, 
@@ -23,7 +22,7 @@ import {
 
 export default function DashboardPage() {
   const { currentUser } = useAuth();
-  const { t, isEn } = useLanguage();
+  const { t, isEn, formatMoney } = useLanguage();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
@@ -80,7 +79,7 @@ export default function DashboardPage() {
   const handleCreateTrip = async (e) => {
     e.preventDefault();
     if (!tripName.trim()) {
-      showToast('Vui lòng nhập tên chuyến đi', 'error');
+      showToast(t('enterTripNameError', 'Vui lòng nhập tên chuyến đi'), 'error');
       return;
     }
 
@@ -93,14 +92,19 @@ export default function DashboardPage() {
         endDate,
       });
 
-      showToast(`Tạo chuyến đi "${newTrip.name}" thành công! Mã: ${newTrip.tripCode}`, 'success');
+      showToast(
+        isEn
+          ? `Created trip "${newTrip.name}"! Code: ${newTrip.tripCode}`
+          : `Tạo chuyến đi "${newTrip.name}" thành công! Mã: ${newTrip.tripCode}`,
+        'success'
+      );
       setCreateModalOpen(false);
       setTripName('');
       setDescription('');
       fetchTripsAndStats();
       navigate(`/trips/${newTrip.id}`);
     } catch (err) {
-      showToast(err.message || 'Lỗi khi tạo chuyến đi', 'error');
+      showToast(err.message || t('createTripError', 'Lỗi khi tạo chuyến đi'), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -109,7 +113,7 @@ export default function DashboardPage() {
   const handleJoinTrip = async (e) => {
     e.preventDefault();
     if (!joinCode.trim()) {
-      showToast('Vui lòng nhập mã chuyến đi', 'error');
+      showToast(t('enterTripCodeError', 'Vui lòng nhập mã chuyến đi'), 'error');
       return;
     }
 
@@ -119,7 +123,7 @@ export default function DashboardPage() {
         tripCode: joinCode.trim().toUpperCase(),
       });
 
-      showToast(res.message || 'Tham gia chuyến đi thành công!', 'success');
+      showToast(res.message || t('joinTripSuccessToast', 'Tham gia chuyến đi thành công!'), 'success');
       setJoinModalOpen(false);
       setJoinCode('');
       fetchTripsAndStats();
@@ -161,7 +165,7 @@ export default function DashboardPage() {
           {/* Tab 1: Ongoing trips */}
           <button
             onClick={() => setActiveTab('ALL')}
-            className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'ALL' ? 'active-purple' : ''}`}
+            className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'ALL' ? 'active-emerald' : ''}`}
           >
             <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
             <span className="whitespace-nowrap shrink-0">{t('activeTrips', 'Đang diễn ra')}</span>
@@ -172,12 +176,13 @@ export default function DashboardPage() {
 
           {/* Tab 2: Need settlement */}
           <button
+            type="button"
             onClick={() => setActiveTab('SETTLEMENT')}
-            className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'SETTLEMENT' ? 'active-purple' : ''}`}
+            className={`tactile-tab shrink-0 whitespace-nowrap ${activeTab === 'SETTLEMENT' ? 'active-emerald' : ''}`}
           >
-            <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span>
+            <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0"></span>
             <span className="whitespace-nowrap shrink-0">{t('needSettlement', 'Chờ quyết toán')}</span>
-            <span className="tactile-badge w-5 h-5 rounded-full bg-purple-200/80 dark:bg-purple-800/80 text-purple-900 dark:text-purple-100 text-[11px] font-bold flex items-center justify-center shrink-0 leading-none">
+            <span className="tactile-badge w-5 h-5 rounded-full bg-emerald-200/80 dark:bg-emerald-900/70 text-emerald-950 dark:text-emerald-100 text-[11px] font-bold flex items-center justify-center shrink-0 leading-none">
               {sortedOngoingTrips.filter(t => (t.totalExpense || 0) > 0 || (t.expenseCount || 0) > 0).length}
             </span>
           </button>
@@ -212,7 +217,7 @@ export default function DashboardPage() {
 
         <StatCard
           title={t('youOweTitle', 'Bạn cần trả')}
-          value={formatVND(stats.youOwe)}
+          value={formatMoney(stats.youOwe)}
           icon={TrendingDown}
           color="rose"
           subtitle={stats.youOwe > 0 ? t('oweOthersDesc', 'Số tiền bạn đang nợ thành viên khác') : t('noDebtDesc', 'Tuyệt vời, bạn không nợ ai!')}
@@ -220,7 +225,7 @@ export default function DashboardPage() {
 
         <StatCard
           title={t('youWillReceiveTitle', 'Bạn sẽ nhận')}
-          value={formatVND(stats.youWillReceive)}
+          value={formatMoney(stats.youWillReceive)}
           icon={TrendingUp}
           color="emerald"
           subtitle={stats.youWillReceive > 0 ? t('receiveBackDesc', 'Khoản bạn cần nhận lại từ nhóm') : t('noReceiveDesc', 'Không có khoản tiền chờ nhận')}
@@ -233,13 +238,14 @@ export default function DashboardPage() {
           <h2 className="text-xl font-bold tracking-tight text-[#18181b] dark:text-white">
             {t('activeTripsSectionTitle', 'Chuyến đi đang diễn ra')}
           </h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+          <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">
             {t('activeTripsSubtitle', 'Chạm vào bất kỳ chuyến đi nào để xem chi tiết chi phí và danh sách thành viên')}
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
           <button
+            type="button"
             onClick={() => setCreateModalOpen(true)}
             className="tactile-btn-dark cursor-pointer"
           >
@@ -248,6 +254,7 @@ export default function DashboardPage() {
           </button>
 
           <button
+            type="button"
             onClick={() => setJoinModalOpen(true)}
             className="tactile-btn-pill border border-[#e6e4dc] dark:border-[#32323e] dark:bg-[#24242d] dark:text-white dark:hover:bg-[#2e2e38] cursor-pointer"
           >
@@ -272,13 +279,14 @@ export default function DashboardPage() {
           <h3 className="font-bold text-[#18181b] dark:text-white text-base">
             {t('noActiveTripsTitle', 'Không có chuyến đi đang diễn ra')}
           </h3>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+          <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-sm mx-auto">
             {completedTripsCount > 0 
               ? (isEn ? `You have ${completedTripsCount} completed trip(s) in My Trips. Create a new trip to start your next journey!` : `Bạn có ${completedTripsCount} chuyến đi đã chốt sổ trong mục Chuyến đi. Bấm tạo mới để bắt đầu chuyến đi tiếp theo!`)
               : t('noTripsInCategoryDesc', 'Bấm tạo chuyến đi mới để bắt đầu thêm hóa đơn và chia tiền tự động với bạn bè!')}
           </p>
           <div className="flex items-center justify-center gap-2 pt-1">
             <button
+              type="button"
               onClick={() => setCreateModalOpen(true)}
               className="tactile-btn-dark cursor-pointer"
             >
@@ -362,50 +370,54 @@ export default function DashboardPage() {
       >
         <form id="dashboard-create-trip-form" onSubmit={handleCreateTrip} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('tripNameGroupRequired', 'Tên chuyến đi / Nhóm *')}</label>
+            <label htmlFor="dash-create-name" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('tripNameGroupRequired', 'Tên chuyến đi / Nhóm *')}</label>
             <input
+              id="dash-create-name"
               type="text"
               required
               placeholder={t('tripNamePlaceholder', 'Ví dụ: Đà Lạt 3N2Đ, Ăn lẩu Haidilao...')}
               value={tripName}
               onChange={(e) => setTripName(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-sm text-[#18181b] dark:text-white outline-none focus:border-zinc-900 focus:bg-white transition-colors"
+              className="w-full px-4 py-2.5 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-sm text-[#18181b] dark:text-white focus:border-zinc-900 focus:bg-white dark:focus:bg-[#2a2a36] transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('shortDescription', 'Mô tả ngắn')}</label>
+            <label htmlFor="dash-create-desc" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('shortDescription', 'Mô tả ngắn')}</label>
             <textarea
+              id="dash-create-desc"
               rows={2}
               placeholder={t('tripDescPlaceholder', 'Chuyến đi khám phá, nghỉ dưỡng cùng hội bạn thân...')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-2 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-sm text-[#18181b] dark:text-white outline-none focus:border-zinc-900 focus:bg-white transition-colors resize-none"
+              className="w-full px-4 py-2 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-sm text-[#18181b] dark:text-white focus:border-zinc-900 focus:bg-white dark:focus:bg-[#2a2a36] transition-colors resize-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('startDate', 'Ngày bắt đầu')}</label>
+              <label htmlFor="dash-start-date" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('startDate', 'Ngày bắt đầu')}</label>
               <input
+                id="dash-start-date"
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-xs text-[#18181b] dark:text-white outline-none"
+                className="w-full px-3 py-2 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-xs text-[#18181b] dark:text-white"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('endDate', 'Ngày kết thúc')}</label>
+              <label htmlFor="dash-end-date" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('endDate', 'Ngày kết thúc')}</label>
               <input
+                id="dash-end-date"
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-xs text-[#18181b] dark:text-white outline-none"
+                className="w-full px-3 py-2 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-xs text-[#18181b] dark:text-white"
               />
             </div>
           </div>
 
-          <p className="text-[11px] text-zinc-400 italic">
+          <p className="text-xs text-zinc-600 dark:text-zinc-400 italic">
             {t('autoTripCodeHint', '* Sau khi tạo, hệ thống sẽ tự động cấp một mã chuyến đi để bạn gửi cho bạn bè cùng tham gia.')}
           </p>
         </form>
@@ -439,19 +451,20 @@ export default function DashboardPage() {
       >
         <form id="dashboard-join-trip-form" onSubmit={handleJoinTrip} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('enterTripCodeRequired', 'Nhập mã Trip Code *')}</label>
+            <label htmlFor="dash-join-code" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('enterTripCodeRequired', 'Nhập mã Trip Code *')}</label>
             <input
+              id="dash-join-code"
               type="text"
               required
               maxLength={8}
               placeholder={t('enterTripCodePlaceholder', 'Ví dụ: DL26A8')}
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              className="w-full px-4 py-3 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-center text-lg font-mono font-bold tracking-widest uppercase outline-none focus:border-zinc-900 focus:bg-white transition-colors"
+              className="w-full px-4 py-3 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-center text-lg font-mono font-bold tracking-widest uppercase focus:border-zinc-900 focus:bg-white dark:focus:bg-[#2a2a36] transition-colors text-[#18181b] dark:text-white"
             />
           </div>
 
-          <p className="text-[11px] text-zinc-400 text-center">
+          <p className="text-xs text-zinc-600 dark:text-zinc-400 text-center">
             {t('tripCodeHint', 'Mã chuyến đi gồm các ký tự được trưởng nhóm chia sẻ.')}
           </p>
         </form>

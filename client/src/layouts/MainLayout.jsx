@@ -155,6 +155,20 @@ export default function MainLayout({ onOpenAddExpense }) {
     forceUnlockBodyScroll();
   }, [location.pathname]);
 
+  // Dismiss header popovers on Escape
+  useEffect(() => {
+    if (!userDropdownOpen && !notificationsOpen && !helpOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setUserDropdownOpen(false);
+        setNotificationsOpen(false);
+        setHelpOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [userDropdownOpen, notificationsOpen, helpOpen]);
+
   const handleInstallApp = async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
@@ -186,107 +200,127 @@ export default function MainLayout({ onOpenAddExpense }) {
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row bg-[#f4f3ec] dark:bg-[#0f0f12] text-[#18181b] dark:text-[#f4f4f5]">
       
-      {/* Left Vertical Dock (Detached Floating Capsule/Pill - Exact match to image!) */}
-      <aside className="hidden md:flex flex-col items-center justify-between w-[68px] shrink-0 my-3 ml-3 sm:my-4 sm:ml-4 h-[calc(100vh-1.5rem)] sm:h-[calc(100vh-2rem)] sticky top-3 sm:top-4 z-30 bg-[#edebe4] dark:bg-[#1a1a20] rounded-full border border-[#dedbd0] dark:border-[#2e2e38] py-4 px-2 shadow-xs select-none">
+      {/* Left Vertical Dock (Detached Floating Capsule/Pill) */}
+      <aside
+        aria-label={isEn ? 'Primary navigation' : 'Thanh điều hướng chính'}
+        className="hidden md:flex flex-col items-center justify-between w-[68px] shrink-0 my-3 ml-3 sm:my-4 sm:ml-4 h-[calc(100vh-1.5rem)] sm:h-[calc(100vh-2rem)] sticky top-3 sm:top-4 z-30 bg-[#edebe4] dark:bg-[#1a1a20] rounded-full border border-[#dedbd0] dark:border-[#2e2e38] py-4 px-2 shadow-xs select-none"
+      >
         {/* Top Brand Logo - Dark Circle (White in Dark Mode) */}
         <Link 
           to="/dashboard"
+          aria-label={t('dashboard', 'Trang tổng quan')}
           className="w-11 h-11 bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] rounded-full flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all group"
           title={t('dashboard', 'Trang tổng quan')}
         >
-          <Flame className="w-5 h-5 text-amber-400 fill-amber-400 group-hover:scale-110 transition-transform" />
+          <Flame className="w-5 h-5 text-amber-400 fill-amber-400 group-hover:scale-110 transition-transform" aria-hidden="true" />
         </Link>
 
-        {/* Middle Nav Icons Stack (White circle pills + Black active circle in Light, Stark White active circle in Dark) */}
-        <nav className="flex flex-col items-center gap-2.5 my-auto">
+        {/* Middle Nav Icons Stack */}
+        <nav aria-label={isEn ? 'Main sections' : 'Các mục chính'} className="flex flex-col items-center gap-2.5 my-auto">
           {/* Dashboard / Home */}
           <Link
             to="/dashboard"
+            aria-label={t('dashboard', 'Trang tổng quan')}
+            aria-current={isActive('/dashboard') ? 'page' : undefined}
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
               isActive('/dashboard')
                 ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-md dark:shadow-white/10 scale-105'
-                : 'bg-white dark:bg-[#23232c] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:scale-105 shadow-xs border border-transparent dark:border-[#30303c]'
+                : 'bg-white dark:bg-[#23232c] text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:scale-105 shadow-xs border border-transparent dark:border-[#30303c]'
             }`}
             title={t('dashboard', 'Trang tổng quan')}
           >
-            <Home className="w-4 h-4 stroke-[2.2]" />
+            <Home className="w-4 h-4 stroke-[2.2]" aria-hidden="true" />
           </Link>
 
-          {/* Trips (Shopping Bag icon as in reference) */}
+          {/* Trips */}
           <Link
             to="/trips"
+            aria-label={t('myTrips', 'Chuyến đi của tôi')}
+            aria-current={isActive('/trips') ? 'page' : undefined}
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
               isActive('/trips')
                 ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-md dark:shadow-white/10 scale-105'
-                : 'bg-white dark:bg-[#23232c] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:scale-105 shadow-xs border border-transparent dark:border-[#30303c]'
+                : 'bg-white dark:bg-[#23232c] text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:scale-105 shadow-xs border border-transparent dark:border-[#30303c]'
             }`}
-            title="Chuyến đi của tôi"
+            title={t('myTrips', 'Chuyến đi của tôi')}
           >
-            <ShoppingBag className="w-4 h-4 stroke-[2.2]" />
+            <ShoppingBag className="w-4 h-4 stroke-[2.2]" aria-hidden="true" />
           </Link>
 
-          {/* Settlements / Tag */}
+          {/* Settlements */}
           <Link
             to="/settlements"
+            aria-label={t('settlement', 'Quyết toán công nợ')}
+            aria-current={isActive('/settlements') ? 'page' : undefined}
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
               isActive('/settlements')
                 ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-md dark:shadow-white/10 scale-105'
-                : 'bg-white dark:bg-[#23232c] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:scale-105 shadow-xs border border-transparent dark:border-[#30303c]'
+                : 'bg-white dark:bg-[#23232c] text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:scale-105 shadow-xs border border-transparent dark:border-[#30303c]'
             }`}
             title={t('settlement', 'Quyết toán công nợ')}
           >
-            <Tag className="w-4 h-4 stroke-[2.2]" />
+            <Tag className="w-4 h-4 stroke-[2.2]" aria-hidden="true" />
           </Link>
 
-          {/* Friends / Bạn bè & Kết nối (Icon Users requested by user) */}
+          {/* Friends */}
           <Link
             to="/friends"
+            aria-label={t('friendsNavTooltip', 'Bạn bè & Mời chuyến đi')}
+            aria-current={isActive('/friends') ? 'page' : undefined}
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
               isActive('/friends')
                 ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-md dark:shadow-white/10 scale-105'
-                : 'bg-white dark:bg-[#23232c] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:scale-105 shadow-xs border border-transparent dark:border-[#30303c]'
+                : 'bg-white dark:bg-[#23232c] text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:scale-105 shadow-xs border border-transparent dark:border-[#30303c]'
             }`}
-            title="Bạn bè & Mời chuyến đi"
+            title={t('friendsNavTooltip', 'Bạn bè & Mời chuyến đi')}
           >
-            <Users className="w-4 h-4 stroke-[2.2]" />
+            <Users className="w-4 h-4 stroke-[2.2]" aria-hidden="true" />
           </Link>
         </nav>
 
         {/* Bottom Dock Tools: Day/Night Capsule & Settings White Pill */}
         <div className="flex flex-col items-center gap-2.5">
-          {/* Day/Night Capsule (White pill container) */}
+          {/* Day/Night Capsule */}
           <div className="bg-white dark:bg-[#24242b] rounded-full p-1 flex flex-col items-center gap-1 shadow-xs border border-[#e6e4dc] dark:border-[#32323c]">
             <button
+              type="button"
               onClick={() => setDarkMode(true)}
-              className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-                isDark ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] font-bold shadow-xs' : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
+              aria-label={t('darkMode', 'Giao diện Tối')}
+              aria-pressed={isDark}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                isDark ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] font-bold shadow-xs' : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white'
               }`}
-              title="Giao diện Tối"
+              title={t('darkMode', 'Giao diện Tối')}
             >
-              <Moon className="w-3.5 h-3.5 stroke-[2.2]" />
+              <Moon className="w-4 h-4 stroke-[2.2]" aria-hidden="true" />
             </button>
             <button
+              type="button"
               onClick={() => setDarkMode(false)}
-              className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-                !isDark ? 'bg-[#18181b] text-white dark:bg-[#34343f] font-bold shadow-xs' : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
+              aria-label={t('lightMode', 'Giao diện Sáng')}
+              aria-pressed={!isDark}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                !isDark ? 'bg-[#18181b] text-white dark:bg-[#34343f] font-bold shadow-xs' : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white'
               }`}
-              title="Giao diện Sáng"
+              title={t('lightMode', 'Giao diện Sáng')}
             >
-              <Sun className="w-3.5 h-3.5 stroke-[2.2]" />
+              <Sun className="w-4 h-4 stroke-[2.2]" aria-hidden="true" />
             </button>
           </div>
 
           {/* Settings Circle Button */}
           <Link
             to="/profile"
-            className={`w-9 h-9 rounded-full flex items-center justify-center shadow-xs border transition-all hover:scale-105 ${
+            aria-label={t('accountSettingsTooltip', 'Cài đặt tài khoản')}
+            aria-current={isActive('/profile') ? 'page' : undefined}
+            className={`w-10 h-10 rounded-full flex items-center justify-center shadow-xs border transition-all hover:scale-105 ${
               isActive('/profile')
                 ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] border-transparent font-bold'
-                : 'bg-white dark:bg-[#24242b] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white border-[#e6e4dc] dark:border-[#32323c]'
+                : 'bg-white dark:bg-[#24242b] text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white border-[#e6e4dc] dark:border-[#32323c]'
             }`}
-            title="Cài đặt tài khoản"
+            title={t('accountSettingsTooltip', 'Cài đặt tài khoản')}
           >
-            <Settings className="w-4 h-4 stroke-[2.2]" />
+            <Settings className="w-4 h-4 stroke-[2.2]" aria-hidden="true" />
           </Link>
         </div>
       </aside>
@@ -301,10 +335,11 @@ export default function MainLayout({ onOpenAddExpense }) {
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 mr-2">
               <Link 
                 to="/dashboard"
-                className="md:hidden w-8 h-8 sm:w-9 sm:h-9 bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] rounded-full flex items-center justify-center shadow-xs shrink-0 hover:scale-105 active:scale-95 transition-all"
+                aria-label="Spliqo Dashboard"
+                className="md:hidden w-9 h-9 bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] rounded-full flex items-center justify-center shadow-xs shrink-0 hover:scale-105 active:scale-95 transition-all"
                 title="Spliqo"
               >
-                <Flame className="w-4 h-4 text-amber-400 fill-amber-400" />
+                <Flame className="w-4 h-4 text-amber-400 fill-amber-400" aria-hidden="true" />
               </Link>
               <h1 className="text-sm sm:text-base md:text-xl font-bold tracking-tight text-[#18181b] dark:text-white truncate whitespace-nowrap">
                 {getPageTitle()}
@@ -317,30 +352,34 @@ export default function MainLayout({ onOpenAddExpense }) {
               {/* Help (?) Circle Button - Hidden on mobile, visible on desktop */}
               <div className="hidden md:block relative">
                 <button
+                  type="button"
+                  aria-label={t('help', 'Trợ giúp')}
+                  aria-expanded={helpOpen}
                   onClick={() => {
                     setHelpOpen(!helpOpen);
                     setNotificationsOpen(false);
                     setUserDropdownOpen(false);
                   }}
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white dark:bg-[#24242b] hover:bg-zinc-50 dark:hover:bg-[#2e2e38] text-zinc-700 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white border border-[#dedbd0]/70 dark:border-[#32323c] flex items-center justify-center shadow-xs transition-all hover:scale-105 active:scale-95"
+                  className="w-10 h-10 rounded-full bg-white dark:bg-[#24242b] hover:bg-zinc-50 dark:hover:bg-[#2e2e38] text-zinc-700 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white border border-[#dedbd0]/70 dark:border-[#32323c] flex items-center justify-center shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
                   title={t('help', 'Trợ giúp')}
                 >
-                  <HelpCircle className="w-4 h-4 stroke-[2.2]" />
+                  <HelpCircle className="w-4 h-4 stroke-[2.2]" aria-hidden="true" />
                 </button>
 
                 {helpOpen && (
                   <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-[#18181f] rounded-3xl p-4 border border-[#dedbd0] dark:border-[#32323e] shadow-2xl z-50 text-xs animate-fade-in text-[#18181b] dark:text-zinc-100">
                     <div className="font-bold text-[#18181b] dark:text-white mb-1 flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-500" /> {t('quickGuide', 'Hướng dẫn nhanh Spliqo')}
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> {t('quickGuide', 'Hướng dẫn nhanh Spliqo')}
                     </div>
-                    <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">
+                    <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed mb-3">
                       {t('quickGuideDesc', 'Tạo chuyến đi, thêm khoản chi, hệ thống tự động tối ưu giao dịch chuyển khoản VietQR và tạo mã QR kèm STK sẵn sàng thanh toán!')}
                     </p>
                     <button 
+                      type="button"
                       onClick={() => setHelpOpen(false)}
                       className="w-full text-center py-2 bg-[#edebe4] dark:bg-[#252530] hover:bg-[#dedbd0] dark:hover:bg-[#2f2f3d] text-[#18181b] dark:text-white font-bold rounded-full transition-colors cursor-pointer"
                     >
-                      {t('gotIt', 'Hiểu òi')}
+                      {t('gotIt', 'Đã hiểu')}
                     </button>
                   </div>
                 )}
@@ -350,6 +389,8 @@ export default function MainLayout({ onOpenAddExpense }) {
               <div className="relative">
                 <button
                   type="button"
+                  aria-label={t('notifications', 'Thông báo')}
+                  aria-expanded={notificationsOpen}
                   onClick={() => {
                     setNotificationsOpen(!notificationsOpen);
                     setHelpOpen(false);
@@ -392,17 +433,20 @@ export default function MainLayout({ onOpenAddExpense }) {
                           <button
                             type="button"
                             onClick={markAllAsRead}
-                            className="text-[11px] font-semibold text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white flex items-center gap-1 px-2 py-1 rounded-full hover:bg-[#edebe4] dark:hover:bg-[#252530] transition-colors cursor-pointer"
+                            aria-label={t('markAllAsReadTooltip', 'Đánh dấu tất cả đã đọc')}
+                            className="text-xs font-semibold text-zinc-700 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white flex items-center gap-1 px-2.5 py-1.5 rounded-full hover:bg-[#edebe4] dark:hover:bg-[#252530] transition-colors cursor-pointer"
                             title={t('markAllAsReadTooltip', 'Đánh dấu tất cả đã đọc')}
                           >
-                            <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
+                            <CheckCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                             <span className="hidden sm:inline">{t('markAllAsRead', 'Đã đọc tất cả')}</span>
                           </button>
                         )}
                         <button
                           type="button"
                           onClick={() => setNotificationsOpen(false)}
-                          className="w-7 h-7 rounded-full text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-[#edebe4] dark:hover:bg-[#252530] flex items-center justify-center transition-colors cursor-pointer"
+                          aria-label={t('close', 'Đóng')}
+                          title={t('close', 'Đóng')}
+                          className="w-9 h-9 rounded-full text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-[#edebe4] dark:hover:bg-[#252530] flex items-center justify-center transition-colors cursor-pointer"
                         >
                           ✕
                         </button>
@@ -414,10 +458,10 @@ export default function MainLayout({ onOpenAddExpense }) {
                       <button
                         type="button"
                         onClick={() => setNotifTab('ALL')}
-                        className={`flex-1 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+                        className={`flex-1 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                           notifTab === 'ALL'
                             ? 'bg-white dark:bg-[#2c2c36] text-[#18181b] dark:text-white shadow-xs'
-                            : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+                            : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                         }`}
                       >
                         {t('allTab', 'Tất cả')} ({notifications.length})
@@ -425,10 +469,10 @@ export default function MainLayout({ onOpenAddExpense }) {
                       <button
                         type="button"
                         onClick={() => setNotifTab('UNREAD')}
-                        className={`flex-1 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+                        className={`flex-1 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                           notifTab === 'UNREAD'
                             ? 'bg-white dark:bg-[#2c2c36] text-[#18181b] dark:text-white shadow-xs'
-                            : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+                            : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                         }`}
                       >
                         {t('unreadTab', 'Chưa đọc')} ({unreadCount})
@@ -438,14 +482,14 @@ export default function MainLayout({ onOpenAddExpense }) {
                     {/* Notifications List (Scrollable) */}
                     <div className="flex-1 overflow-y-auto space-y-2 pr-1 my-1 custom-scrollbar">
                       {filteredNotifs.length === 0 ? (
-                        <div className="py-10 text-center text-zinc-400 dark:text-zinc-500 space-y-2">
-                          <div className="w-10 h-10 rounded-full bg-[#f4f3ec] dark:bg-[#24242d] flex items-center justify-center mx-auto text-zinc-400">
+                        <div className="py-10 text-center text-zinc-600 dark:text-zinc-400 space-y-2">
+                          <div className="w-10 h-10 rounded-full bg-[#f4f3ec] dark:bg-[#24242d] flex items-center justify-center mx-auto text-zinc-600 dark:text-zinc-400">
                             <BellOff className="w-5 h-5" />
                           </div>
-                          <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+                          <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                             {notifTab === 'UNREAD' ? t('noUnreadNotifications', 'Không có thông báo chưa đọc nào') : t('noNotificationsYet', 'Bạn chưa có thông báo nào')}
                           </p>
-                          <p className="text-[11px] text-zinc-400 max-w-[220px] mx-auto">
+                          <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-[240px] mx-auto">
                             {t('notificationsEmptyDesc', 'Khi có chi tiêu mới, mời chuyến đi hoặc cập nhật thanh toán, thông báo sẽ hiển thị tại đây.')}
                           </p>
                         </div>
@@ -456,67 +500,70 @@ export default function MainLayout({ onOpenAddExpense }) {
                           return (
                             <div
                               key={n.id}
-                              onClick={() => {
-                                markAsRead(n.id);
-                                if (n.link) {
-                                  navigate(n.link);
-                                  setNotificationsOpen(false);
-                                }
-                              }}
-                              className={`group relative p-2.5 rounded-2xl flex items-start gap-2.5 transition-all cursor-pointer border ${
+                              className={`group relative rounded-2xl flex items-start gap-2 transition-all border ${
                                 !n.read
                                   ? 'bg-[#f8f7f2] dark:bg-[#23232c] border-amber-500/30 dark:border-amber-500/20 shadow-xs'
                                   : 'bg-[#fbfbfa] dark:bg-[#1d1d24] border-transparent hover:border-[#e6e4dc] dark:hover:border-[#32323e] hover:bg-[#f4f3ec] dark:hover:bg-[#24242e]'
                               }`}
                             >
-                              {/* Avatar / Icon Badge */}
-                              <div className="relative shrink-0 mt-0.5">
-                                {n.actor?.photoURL ? (
-                                  <img
-                                    src={n.actor.photoURL}
-                                    alt=""
-                                    className="w-8 h-8 rounded-full object-cover ring-1 ring-black/5 dark:ring-white/10"
-                                  />
-                                ) : (
-                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${config.bg}`}>
-                                    <Icon className="w-4 h-4" />
-                                  </div>
-                                )}
-                                <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ${config.badge} flex items-center justify-center text-white ring-1 ring-white dark:ring-[#18181f]`}>
-                                  <Icon className="w-2 h-2" />
-                                </span>
-                              </div>
-
-                              {/* Body */}
-                              <div className="flex-1 min-w-0 pr-6">
-                                <div className="flex items-center justify-between gap-1 mb-0.5">
-                                  <h4 className={`text-xs truncate ${!n.read ? 'font-bold text-[#18181b] dark:text-white' : 'font-semibold text-zinc-700 dark:text-zinc-300'}`}>
-                                    {n.title}
-                                  </h4>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  markAsRead(n.id);
+                                  if (n.link) {
+                                    navigate(n.link);
+                                    setNotificationsOpen(false);
+                                  }
+                                }}
+                                className="flex-1 min-w-0 p-2.5 flex items-start gap-2.5 text-left cursor-pointer rounded-2xl"
+                              >
+                                {/* Avatar / Icon Badge */}
+                                <div className="relative shrink-0 mt-0.5">
+                                  {n.actor?.photoURL ? (
+                                    <img
+                                      src={n.actor.photoURL}
+                                      alt=""
+                                      className="w-8 h-8 rounded-full object-cover ring-1 ring-black/5 dark:ring-white/10"
+                                    />
+                                  ) : (
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${config.bg}`}>
+                                      <Icon className="w-4 h-4" />
+                                    </div>
+                                  )}
+                                  <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ${config.badge} flex items-center justify-center text-white ring-1 ring-white dark:ring-[#18181f]`}>
+                                    <Icon className="w-2 h-2" />
+                                  </span>
                                 </div>
-                                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug line-clamp-2">
-                                  {n.message}
-                                </p>
-                                <span className="text-[10px] font-medium text-zinc-400 mt-1 block">
-                                  {formatTimeAgo(n.createdAt, isEn)}
-                                </span>
-                              </div>
 
-                              {/* Action controls (delete / unread dot) on hover */}
-                              <div className="absolute top-2.5 right-2.5 flex items-center gap-1">
+                                {/* Body */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between gap-1 mb-0.5">
+                                    <h4 className={`text-xs truncate ${!n.read ? 'font-bold text-[#18181b] dark:text-white' : 'font-semibold text-zinc-700 dark:text-zinc-300'}`}>
+                                      {n.title}
+                                    </h4>
+                                  </div>
+                                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-snug line-clamp-2">
+                                    {n.message}
+                                  </p>
+                                  <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mt-1 block">
+                                    {formatTimeAgo(n.createdAt, isEn)}
+                                  </span>
+                                </div>
+                              </button>
+
+                              {/* Action controls (unread dot & touch-accessible delete button) */}
+                              <div className="flex items-center gap-1 pt-2 pr-2 shrink-0">
                                 {!n.read && (
-                                  <span className="w-2 h-2 rounded-full bg-amber-500 ring-2 ring-white dark:ring-[#18181f]" />
+                                  <span className="w-2 h-2 rounded-full bg-amber-500 ring-2 ring-white dark:ring-[#18181f]" aria-hidden="true" />
                                 )}
                                 <button
                                   type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteNotification(n.id);
-                                  }}
-                                  className="opacity-0 group-hover:opacity-100 p-1 text-zinc-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer"
-                                  title={isEn ? 'Delete notification' : 'Xóa thông báo này'}
+                                  onClick={() => deleteNotification(n.id)}
+                                  aria-label={t('deleteNotificationTooltip', 'Xóa thông báo này')}
+                                  className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 w-8 h-8 flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer"
+                                  title={t('deleteNotificationTooltip', 'Xóa thông báo này')}
                                 >
-                                  <Trash2 className="w-3 h-3" />
+                                  <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                                 </button>
                               </div>
                             </div>
@@ -527,7 +574,7 @@ export default function MainLayout({ onOpenAddExpense }) {
 
                     {/* Footer Clear All */}
                     {notifications.length > 0 && (
-                      <div className="pt-2 border-t border-[#e6e4dc] dark:border-[#2e2e38] flex items-center justify-between shrink-0 text-[11px]">
+                      <div className="pt-2 border-t border-[#e6e4dc] dark:border-[#2e2e38] flex items-center justify-between shrink-0 text-xs">
                         <button
                           type="button"
                           onClick={async () => {
@@ -540,11 +587,11 @@ export default function MainLayout({ onOpenAddExpense }) {
                             });
                             if (ok) clearAll();
                           }}
-                          className="text-zinc-400 hover:text-rose-600 font-semibold transition-colors cursor-pointer py-1"
+                          className="text-zinc-700 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 font-semibold transition-colors cursor-pointer py-1"
                         >
                           {t('clearAllNotifications', 'Xóa tất cả thông báo')}
                         </button>
-                        <span className="text-zinc-400 font-medium">
+                        <span className="text-zinc-600 dark:text-zinc-400 font-medium">
                           {notifications.length} {t('notificationCount', 'thông báo')}
                         </span>
                       </div>
@@ -557,13 +604,18 @@ export default function MainLayout({ onOpenAddExpense }) {
               {/* User Profile Pill [Avatar Name v] (Compact on mobile, full on desktop) */}
               <div className="relative">
                 <button
+                  type="button"
+                  aria-label={t('userInfoTooltip', 'Thông tin người dùng')}
+                  aria-expanded={userDropdownOpen}
+                  aria-controls="user-menu-popover"
+                  aria-haspopup="true"
                   onClick={() => {
                     setUserDropdownOpen(!userDropdownOpen);
                     setHelpOpen(false);
                     setNotificationsOpen(false);
                   }}
                   className="h-9 sm:h-10 pl-1 sm:pl-1.5 pr-2 sm:pr-3 bg-white dark:bg-[#24242b] hover:bg-zinc-50 dark:hover:bg-[#2c2c36] border border-[#dedbd0]/70 dark:border-[#32323c] hover:border-zinc-400 dark:hover:border-zinc-600 rounded-full shadow-xs flex items-center gap-1 sm:gap-2.5 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer shrink-0"
-                  title="Thông tin người dùng"
+                  title={t('userInfoTooltip', 'Thông tin người dùng')}
                 >
                   <img
                     src={currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.uid}`}
@@ -573,12 +625,15 @@ export default function MainLayout({ onOpenAddExpense }) {
                   <span className="hidden sm:inline text-xs sm:text-sm font-semibold text-[#18181b] dark:text-white max-w-[120px] truncate">
                     {sanitizeDisplayName(currentUser?.displayName, currentUser?.uid, currentUser?.email)}
                   </span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 stroke-[2.5] transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 text-zinc-600 dark:text-zinc-300 stroke-[2.5] transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </button>
 
-                {/* Dropdown Menu for Demo Users & Logout */}
+                {/* Dropdown Popover */}
                 {userDropdownOpen && (
                   <div 
+                    id="user-menu-popover"
+                    role="region"
+                    aria-label={t('userInfoTooltip', 'Thông tin người dùng')}
                     className="absolute right-0 mt-3 w-72 bg-white dark:bg-[#1f1f28] rounded-3xl p-3 border border-[#dedbd0] dark:border-[#2e2e38] shadow-2xl z-50 animate-fade-in"
                     onClick={() => setUserDropdownOpen(false)}
                   >
@@ -586,7 +641,7 @@ export default function MainLayout({ onOpenAddExpense }) {
                       <div className="font-bold text-xs text-[#18181b] dark:text-white">
                         {sanitizeDisplayName(currentUser?.displayName, currentUser?.uid, currentUser?.email)}
                       </div>
-                      <div className="text-[11px] text-zinc-400 truncate">
+                      <div className="text-xs text-zinc-600 dark:text-zinc-400 truncate">
                         {currentUser?.bankName ? `${currentUser.bankName} • ${currentUser.bankAccountNumber}` : currentUser?.email}
                       </div>
                     </div>
@@ -596,22 +651,26 @@ export default function MainLayout({ onOpenAddExpense }) {
                       {/* Language Switcher in Dropdown */}
                       <div className="w-full flex items-center justify-between text-xs text-zinc-700 dark:text-zinc-300 font-semibold py-2 px-3 rounded-2xl hover:bg-[#edebe4]/60 dark:hover:bg-zinc-800 transition-colors">
                         <div className="flex items-center gap-2">
-                          <Globe className="w-3.5 h-3.5 text-zinc-500" />
+                          <Globe className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
                           <span>{t('language', 'Ngôn ngữ')}</span>
                         </div>
                         <div className="flex items-center gap-1 bg-[#edebe4] dark:bg-zinc-800 p-0.5 rounded-full">
                           <button
+                            type="button"
                             onClick={() => setLanguage('vi')}
-                            className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-all ${
-                              language === 'vi' ? 'bg-white dark:bg-[#24242b] text-black dark:text-white shadow-xs' : 'text-zinc-500'
+                            aria-pressed={language === 'vi'}
+                            className={`px-2 py-1 rounded-full text-[11px] font-bold cursor-pointer transition-all ${
+                              language === 'vi' ? 'bg-white dark:bg-[#24242b] text-black dark:text-white shadow-xs' : 'text-zinc-700 dark:text-zinc-300'
                             }`}
                           >
                             VI
                           </button>
                           <button
+                            type="button"
                             onClick={() => setLanguage('en')}
-                            className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-all ${
-                              language === 'en' ? 'bg-white dark:bg-[#24242b] text-black dark:text-white shadow-xs' : 'text-zinc-500'
+                            aria-pressed={language === 'en'}
+                            className={`px-2 py-1 rounded-full text-[11px] font-bold cursor-pointer transition-all ${
+                              language === 'en' ? 'bg-white dark:bg-[#24242b] text-black dark:text-white shadow-xs' : 'text-zinc-700 dark:text-zinc-300'
                             }`}
                           >
                             EN
@@ -625,7 +684,7 @@ export default function MainLayout({ onOpenAddExpense }) {
                           {isDark ? (
                             <Moon className="w-3.5 h-3.5 text-amber-400" />
                           ) : (
-                            <Sun className="w-3.5 h-3.5 text-zinc-500" />
+                            <Sun className="w-3.5 h-3.5 text-zinc-600" />
                           )}
                           <span>{t('theme', 'Giao diện')}</span>
                         </div>
@@ -635,23 +694,25 @@ export default function MainLayout({ onOpenAddExpense }) {
                           <button
                             type="button"
                             onClick={() => setDarkMode(false)}
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-all flex items-center gap-1 ${
+                            aria-pressed={!isDark}
+                            className={`px-2 py-1 rounded-full text-[11px] font-bold cursor-pointer transition-all flex items-center gap-1 ${
                               !isDark
                                 ? 'bg-white dark:bg-[#24242b] text-zinc-900 dark:text-white shadow-xs'
-                                : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                                : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
                             }`}
                             title={t('lightMode', 'Giao diện Sáng')}
                           >
-                            <Sun className={`w-3 h-3 ${!isDark ? 'text-amber-500 fill-amber-500' : ''}`} />
+                            <Sun className={`w-3 h-3 ${!isDark ? 'text-amber-600 fill-amber-500' : ''}`} />
                             <span>{t('lightShort', 'Sáng')}</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => setDarkMode(true)}
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-all flex items-center gap-1 ${
+                            aria-pressed={isDark}
+                            className={`px-2 py-1 rounded-full text-[11px] font-bold cursor-pointer transition-all flex items-center gap-1 ${
                               isDark
                                 ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-xs'
-                                : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                                : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
                             }`}
                             title={t('darkMode', 'Giao diện Tối')}
                           >
@@ -668,10 +729,10 @@ export default function MainLayout({ onOpenAddExpense }) {
                             handleInstallApp();
                             setUserDropdownOpen(false);
                           }}
-                          className="w-full flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300 font-semibold py-2 px-3 rounded-2xl hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
+                          className="w-full flex items-center gap-2 text-xs text-amber-800 dark:text-amber-300 font-semibold py-2 px-3 rounded-2xl hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
                         >
-                          <Download className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                          <span>Cài đặt ứng dụng Spliqo</span>
+                          <Download className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+                          <span>{t('installAppMenu', 'Cài đặt ứng dụng Spliqo')}</span>
                         </button>
                       )}
 
@@ -679,7 +740,7 @@ export default function MainLayout({ onOpenAddExpense }) {
                         to="/profile"
                         className="w-full flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white font-semibold py-2 px-3 rounded-2xl hover:bg-[#edebe4]/60 dark:hover:bg-zinc-800 transition-colors"
                       >
-                        <Settings className="w-3.5 h-3.5 text-zinc-500" />
+                        <Settings className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
                         {t('profileSettingsAndBank', 'Cài đặt tài khoản')}
                       </Link>
 
@@ -687,13 +748,14 @@ export default function MainLayout({ onOpenAddExpense }) {
                         to="/about"
                         className="w-full flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white font-semibold py-2 px-3 rounded-2xl hover:bg-[#edebe4]/60 dark:hover:bg-zinc-800 transition-colors"
                       >
-                        <Info className="w-3.5 h-3.5 text-zinc-500" />
+                        <Info className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
                         <span>{t('about', 'Giới thiệu')}</span>
                       </Link>
 
                       <button
+                        type="button"
                         onClick={logout}
-                        className="w-full flex items-center gap-2 text-xs text-rose-600 hover:text-rose-700 font-semibold py-2 px-3 rounded-2xl hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                        className="w-full flex items-center gap-2 text-xs text-rose-700 dark:text-rose-400 hover:text-rose-800 font-semibold py-2 px-3 rounded-2xl hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
                       >
                         <LogOut className="w-3.5 h-3.5" />
                         {t('logout', 'Đăng xuất')}
@@ -708,20 +770,21 @@ export default function MainLayout({ onOpenAddExpense }) {
 
         {/* Global Offline Status Banner */}
         {!isOnline && (
-          <div className="mb-4 px-4 py-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs flex items-center justify-between gap-3 shadow-xs animate-fade-in">
+          <div role="status" aria-live="polite" className="mb-4 px-4 py-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs flex items-center justify-between gap-3 shadow-xs animate-fade-in">
             <div className="flex items-center gap-2">
-              <WifiOff className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <WifiOff className="w-4 h-4 text-amber-700 dark:text-amber-400 shrink-0" />
               <span className="font-semibold">
-                Đang ngoại tuyến (Không có 4G/Wifi). Bạn vẫn có thể ghi chép chi tiêu bình thường
-                {pendingQueueCount > 0 ? ` (${pendingQueueCount} khoản chi chờ đồng bộ)` : ''}.
+                {t('offlineHeaderNotice', 'Đang ngoại tuyến (Không có 4G/Wifi). Bạn vẫn có thể ghi chép chi tiêu bình thường')}
+                {pendingQueueCount > 0 ? ` (${pendingQueueCount} ${t('offlineQueueCountSuffix', 'khoản chi chờ đồng bộ')})` : ''}.
               </span>
             </div>
             {pendingQueueCount > 0 && (
               <button
+                type="button"
                 onClick={() => offlineSyncService.syncOfflineQueue()}
-                className="px-2.5 py-1 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shrink-0 cursor-pointer"
+                className="px-3 py-1.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs shrink-0 cursor-pointer"
               >
-                Đồng bộ ngay
+                {t('syncNowBtn', 'Đồng bộ ngay')}
               </button>
             )}
           </div>
@@ -731,27 +794,31 @@ export default function MainLayout({ onOpenAddExpense }) {
         {showInstallBanner && deferredPrompt && (
           <div className="mb-4 p-3.5 sm:p-4 rounded-2xl bg-[#edebe4] dark:bg-[#1f1f27] border border-[#dedbd0] dark:border-[#2e2e38] flex items-center justify-between gap-3 shadow-xs animate-fade-in">
             <div className="flex items-center gap-3 min-w-0">
-              <img src="/pwa-icon-192.svg" alt="Spliqo" className="w-9 h-9 rounded-xl shrink-0" />
+              <img src="/pwa-icon-192.png" alt="Spliqo" className="w-9 h-9 rounded-xl shrink-0" />
               <div className="min-w-0">
                 <h4 className="text-xs sm:text-sm font-bold text-[#18181b] dark:text-white truncate">
-                  Cài đặt Spliqo vào điện thoại
+                  {t('installAppBannerTitle', 'Cài đặt Spliqo vào điện thoại')}
                 </h4>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
-                  Sử dụng như ứng dụng native từ màn hình chính & hoạt động ngoại tuyến khi mất sóng.
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 truncate">
+                  {t('installAppBannerDesc', 'Sử dụng như ứng dụng native từ màn hình chính & hoạt động ngoại tuyến khi mất sóng.')}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <button
+                type="button"
                 onClick={handleInstallApp}
-                className="px-3.5 py-1.5 rounded-xl bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] font-bold text-xs hover:scale-105 active:scale-95 transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-xl bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] font-bold text-xs hover:scale-105 active:scale-95 transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>Cài đặt</span>
+                <span>{t('installBtn', 'Cài đặt')}</span>
               </button>
               <button
+                type="button"
+                aria-label={t('close', 'Đóng')}
+                title={t('close', 'Đóng')}
                 onClick={() => setShowInstallBanner(false)}
-                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer text-xs"
+                className="w-9 h-9 rounded-lg text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center cursor-pointer text-xs"
               >
                 ✕
               </button>

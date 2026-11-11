@@ -1,7 +1,6 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Receipt, Users, Share2, Check, Flag, ArrowRight, Sparkles, Calendar } from 'lucide-react';
-import { formatVND } from '../../services/calculation';
 import { getTripVisual } from '../../utils/tripVisuals';
 import { useLanguage } from '../../contexts/LanguageContext';
 
@@ -20,16 +19,16 @@ export const PASTEL_TRIP_THEMES = [
     badgeText: 'text-emerald-800 dark:text-emerald-300',
   },
   {
-    id: 'lavender',
-    name: 'Oải hương thanh lịch',
-    accentBar: 'from-purple-400 to-indigo-400',
-    cardBg: 'bg-gradient-to-br from-[#f8f5fd] via-[#fbf9fe] to-[#f1eafd] dark:from-[#20172e] dark:via-[#261b36] dark:to-[#181123]',
-    cardBorder: 'border-purple-200 hover:border-purple-300 dark:border-purple-800/50 dark:hover:border-purple-600/60',
-    hoverGlow: 'hover:shadow-purple-500/10',
-    avatarBg: 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-200 border border-purple-200/80 dark:border-purple-700/50',
-    chipBg: 'bg-white/85 dark:bg-black/30 border border-purple-100/90 dark:border-purple-900/40',
-    badgeActive: 'bg-purple-100/90 text-purple-800 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/50',
-    badgeText: 'text-purple-800 dark:text-purple-300',
+    id: 'sage',
+    name: 'Xanh xô thơm dịu mắt',
+    accentBar: 'from-emerald-600 to-green-500',
+    cardBg: 'bg-gradient-to-br from-[#f3f8f4] via-[#f9fcf9] to-[#e9f2eb] dark:from-[#14221a] dark:via-[#192820] dark:to-[#0f1a14]',
+    cardBorder: 'border-emerald-200 hover:border-emerald-300 dark:border-emerald-800/50 dark:hover:border-emerald-600/60',
+    hoverGlow: 'hover:shadow-emerald-500/10',
+    avatarBg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-700/50',
+    chipBg: 'bg-white/85 dark:bg-black/30 border border-emerald-100/90 dark:border-emerald-900/40',
+    badgeActive: 'bg-emerald-100/90 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50',
+    badgeText: 'text-emerald-800 dark:text-emerald-300',
   },
   {
     id: 'peach',
@@ -92,16 +91,16 @@ export const PASTEL_TRIP_THEMES = [
     badgeText: 'text-teal-800 dark:text-teal-300',
   },
   {
-    id: 'indigo',
-    name: 'Chàm pastel thanh tú',
-    accentBar: 'from-indigo-400 to-purple-400',
-    cardBg: 'bg-gradient-to-br from-[#f3f5fe] via-[#f9faff] to-[#e9edfc] dark:from-[#151c31] dark:via-[#1a223a] dark:to-[#0f1423]',
-    cardBorder: 'border-indigo-200 hover:border-indigo-300 dark:border-indigo-800/50 dark:hover:border-indigo-600/60',
-    hoverGlow: 'hover:shadow-indigo-500/10',
-    avatarBg: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-200 border border-indigo-200/80 dark:border-indigo-700/50',
-    chipBg: 'bg-white/85 dark:bg-black/30 border border-indigo-100/90 dark:border-indigo-900/40',
-    badgeActive: 'bg-indigo-100/90 text-indigo-800 dark:bg-indigo-950/70 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/50',
-    badgeText: 'text-indigo-800 dark:text-indigo-300',
+    id: 'slate',
+    name: 'Đá phiến thanh lịch',
+    accentBar: 'from-slate-500 to-zinc-700',
+    cardBg: 'bg-gradient-to-br from-[#f4f5f6] via-[#fafafb] to-[#ebecee] dark:from-[#1a1c22] dark:via-[#20222a] dark:to-[#131418]',
+    cardBorder: 'border-zinc-200 hover:border-zinc-300 dark:border-zinc-700/60 dark:hover:border-zinc-500/60',
+    hoverGlow: 'hover:shadow-zinc-500/10',
+    avatarBg: 'bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200 border border-zinc-300/80 dark:border-zinc-700',
+    chipBg: 'bg-white/85 dark:bg-black/30 border border-zinc-200/90 dark:border-zinc-800/50',
+    badgeActive: 'bg-zinc-200/90 text-zinc-900 dark:bg-zinc-800/80 dark:text-zinc-200 border border-zinc-300/80 dark:border-zinc-700',
+    badgeText: 'text-zinc-800 dark:text-zinc-300',
   }
 ];
 
@@ -122,7 +121,7 @@ export default function TripCard({
   onShare,
   t: tProp
 }) {
-  const { t: tLang } = useLanguage();
+  const { t: tLang, formatMoney } = useLanguage();
   const t = tProp || tLang;
   const navigate = useNavigate();
   const isCompleted = trip.status === 'COMPLETED';
@@ -130,34 +129,26 @@ export default function TripCard({
   const visual = getTripVisual(trip);
   const VisualIcon = visual.Icon;
 
-  const handleCardClick = () => {
-    navigate(`/trips/${trip.id}`);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      handleCardClick();
-    }
-  };
-
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={handleCardClick}
-      onKeyDown={handleKeyDown}
-      className={`rounded-3xl p-5 border transition-all duration-300 flex flex-col justify-between group cursor-pointer relative overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1.5 select-none ${theme.cardBg} ${theme.cardBorder} ${theme.hoverGlow}`}
+    <article
+      className={`rounded-3xl p-5 border transition-all duration-300 flex flex-col justify-between group relative overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1.5 select-none ${theme.cardBg} ${theme.cardBorder} ${theme.hoverGlow}`}
     >
       {/* Top subtle decorative color bar */}
-      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.accentBar} opacity-80`} />
+      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.accentBar} opacity-80 pointer-events-none`} />
 
       {/* Ambient Decorative Background Watermark Icon */}
       <div className="absolute -right-4 -bottom-4 opacity-[0.06] dark:opacity-[0.08] pointer-events-none transform -rotate-12 transition-transform duration-500 group-hover:scale-125 group-hover:-rotate-6 text-[#18181b] dark:text-white">
         <VisualIcon className="w-36 h-36 stroke-[1.1]" />
       </div>
 
-      <div className="relative z-10">
+      {/* Primary card link overlay (avoids nested interactive elements) */}
+      <Link
+        to={`/trips/${trip.id}`}
+        aria-label={`${t('viewDetails', 'Xem chi tiết')}: ${trip.name}`}
+        className="absolute inset-0 z-10 rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-600 dark:focus-visible:ring-emerald-400"
+      />
+
+      <div>
         {/* Card Header: Icon Avatar + Name/Code + Status Badge + Share Button */}
         <div className="flex items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -210,15 +201,12 @@ export default function TripCard({
             {onShare && (
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onShare(trip);
-                }}
-                className="w-7 h-7 rounded-full flex items-center justify-center bg-white/90 dark:bg-black/30 hover:bg-white dark:hover:bg-white/20 text-zinc-600 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white transition-all border border-black/5 dark:border-white/10 shadow-xs cursor-pointer hover:scale-105 active:scale-95"
+                onClick={() => onShare(trip)}
+                aria-label={`${t('shareTripTooltip', 'Mời & Chia sẻ mã QR chuyến đi')}: ${trip.name}`}
+                className="relative z-20 w-11 h-11 rounded-full flex items-center justify-center bg-white/90 dark:bg-black/30 hover:bg-white dark:hover:bg-white/20 text-zinc-700 hover:text-zinc-950 dark:text-zinc-200 dark:hover:text-white transition-all border border-black/5 dark:border-white/10 shadow-xs cursor-pointer hover:scale-105 active:scale-95"
                 title={t('shareTripTooltip', 'Mời & Chia sẻ mã QR chuyến đi')}
               >
-                <Share2 className="w-3.5 h-3.5" />
+                <Share2 className="w-4 h-4" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -227,18 +215,18 @@ export default function TripCard({
         {/* 2 Micro-Cards for Key Metrics */}
         <div className="grid grid-cols-2 gap-2 my-3">
           <div className={`p-2.5 rounded-2xl transition-colors backdrop-blur-xs ${theme.chipBg}`}>
-            <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 dark:text-zinc-400 mb-1 font-medium">
-              <Receipt className="w-3.5 h-3.5 text-zinc-400" />
+            <div className="flex items-center gap-1.5 text-[11px] text-zinc-600 dark:text-zinc-400 mb-1 font-medium">
+              <Receipt className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
               <span>{t('totalExpense', 'Tổng chi')}</span>
             </div>
             <div className="text-xs sm:text-sm font-black text-[#18181b] dark:text-white truncate">
-              {formatVND(trip.totalExpense || 0)}
+              {formatMoney(trip.totalExpense || 0)}
             </div>
           </div>
 
           <div className={`p-2.5 rounded-2xl transition-colors backdrop-blur-xs ${theme.chipBg}`}>
-            <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 dark:text-zinc-400 mb-1 font-medium">
-              <Users className="w-3.5 h-3.5 text-zinc-400" />
+            <div className="flex items-center gap-1.5 text-[11px] text-zinc-600 dark:text-zinc-400 mb-1 font-medium">
+              <Users className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
               <span>{t('membersCount', 'Thành viên')}</span>
             </div>
             <div className="text-xs sm:text-sm font-black text-[#18181b] dark:text-white truncate">
@@ -254,16 +242,13 @@ export default function TripCard({
       </div>
 
       {/* Card Footer: Action Buttons */}
-      <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/10 flex items-center justify-between gap-2">
+      <div className="relative z-20 mt-4 pt-3 border-t border-black/5 dark:border-white/10 flex items-center justify-between gap-2">
         {!isCompleted ? (
           <>
             {/* View Details */}
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/trips/${trip.id}`);
-              }}
+              onClick={() => navigate(`/trips/${trip.id}`)}
               className="flex-1 py-2 px-3 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-white/90 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-zinc-800 dark:text-zinc-200 border border-black/5 dark:border-white/10 shadow-xs cursor-pointer group-hover:border-black/15"
             >
               <span>{t('viewDetails', 'Xem chi tiết')}</span>
@@ -273,10 +258,7 @@ export default function TripCard({
             {/* Settle Debt Button */}
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/trips/${trip.id}?tab=settlement`);
-              }}
+              onClick={() => navigate(`/trips/${trip.id}?tab=settlement`)}
               className="flex-1 py-2 px-3 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-[#18181b] dark:bg-white hover:bg-black dark:hover:bg-zinc-100 text-white dark:text-[#18181b] shadow-xs cursor-pointer hover:scale-[1.02] active:scale-95"
             >
               <Check className="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600 stroke-[2.5]" />
@@ -287,10 +269,7 @@ export default function TripCard({
           /* When completed: Quyết toán công nợ button is removed! Single full-width detail button */
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/trips/${trip.id}`);
-            }}
+            onClick={() => navigate(`/trips/${trip.id}`)}
             className="w-full py-2.5 px-4 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-2 bg-white/90 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-zinc-800 dark:text-zinc-200 border border-black/5 dark:border-white/10 shadow-xs cursor-pointer group-hover:border-black/15 hover:shadow-xs"
           >
             <span>{t('viewTripDetails', 'Xem chi tiết chuyến đi')}</span>
@@ -298,6 +277,6 @@ export default function TripCard({
           </button>
         )}
       </div>
-    </div>
+    </article>
   );
 }

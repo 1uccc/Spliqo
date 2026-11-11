@@ -49,7 +49,7 @@ export default function InviteTripModal({ isOpen, onClose, trip, onOpenFriendLis
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Mời tham gia: ${trip.name}`,
+          title: language === 'en' ? `Join trip: ${trip.name}` : `Mời tham gia: ${trip.name}`,
           text: shareText,
           url: inviteUrl
         });
@@ -116,10 +116,10 @@ export default function InviteTripModal({ isOpen, onClose, trip, onOpenFriendLis
 
         {/* 1. Direct Invite Link Card */}
         <div className="space-y-1.5">
-          <label className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+          <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
             <Link2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
             <span>{t('directInviteLink', 'Link mời tham gia trực tiếp')}</span>
-          </label>
+          </span>
 
           <div className="flex items-center gap-2">
             <div className="flex-1 min-w-0 p-2.5 rounded-xl bg-white dark:bg-[#18181f] border border-[#dedbd0] dark:border-[#2e2e38] font-mono text-[11px] text-zinc-700 dark:text-zinc-200 truncate select-all">
@@ -154,13 +154,13 @@ export default function InviteTripModal({ isOpen, onClose, trip, onOpenFriendLis
         <div className="p-3.5 rounded-2xl bg-white dark:bg-[#18181f] border border-[#dedbd0] dark:border-[#2e2e38] space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-              <QrCode className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+              <QrCode className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>{t('scanQrToJoin', 'Mã QR quét tham gia ngay')}</span>
             </span>
             <button
               type="button"
               onClick={() => setShowQR(!showQR)}
-              className="text-[10px] text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 font-semibold cursor-pointer"
+              className="text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 font-semibold cursor-pointer py-1 px-2"
             >
               {showQR ? t('hide', 'Thu gọn') : t('show', 'Hiển thị')}
             </button>
@@ -180,7 +180,7 @@ export default function InviteTripModal({ isOpen, onClose, trip, onOpenFriendLis
                 <p className="text-[11px] text-zinc-600 dark:text-zinc-400">
                   {t('qrInstruction', 'Bạn bè chỉ cần bật camera điện thoại quét mã QR này để truy cập chuyến đi tức thì.')}
                 </p>
-                <div className="flex items-center justify-center sm:justify-start gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                <div className="flex items-center justify-center sm:justify-start gap-1 text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">
                   <ShieldCheck className="w-3.5 h-3.5" />
                   <span>{t('instantAccess', 'Tiện lợi • Không cần cài app')}</span>
                 </div>
@@ -192,7 +192,7 @@ export default function InviteTripModal({ isOpen, onClose, trip, onOpenFriendLis
         {/* 3. Manual Trip Code Card */}
         <div className="p-3 rounded-2xl bg-[#edebe4]/50 dark:bg-[#212129] border border-[#dedbd0] dark:border-[#2e2e38] flex items-center justify-between gap-3">
           <div>
-            <span className="text-[10px] text-zinc-400 dark:text-zinc-400 uppercase tracking-wider block font-bold">
+            <span className="text-[11px] text-zinc-600 dark:text-zinc-400 uppercase tracking-wider block font-bold">
               {t('tripCodeLabel', 'Mã chuyến đi:')}
             </span>
             <span className="font-mono text-base font-extrabold text-zinc-900 dark:text-white tracking-wider">

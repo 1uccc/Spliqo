@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Download,
@@ -10,13 +10,114 @@ import {
   X,
   Play,
   Pause,
-  Award
+  Award,
+  CheckCircle2,
+  Clock,
+  Share2,
+  Sparkles,
+  Users
 } from 'lucide-react';
-import { formatVND } from '../../services/calculation';
 import confetti from 'canvas-confetti';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { lockBodyScroll, unlockBodyScroll } from '../../utils/scrollLock';
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+function drawRoundedRectPath(ctx, x, y, w, h, r) {
+  const radius = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.arcTo(x + w, y, x + w, y + h, radius);
+  ctx.arcTo(x + w, y + h, x, y + h, radius);
+  ctx.arcTo(x, y + h, x, y, radius);
+  ctx.arcTo(x, y, x + w, y, radius);
+  ctx.closePath();
+}
+
+function drawTruncatedText(ctx, text, x, y, maxWidth, align = 'left') {
+  const str = String(text ?? '');
+  ctx.textAlign = align;
+  if (ctx.measureText(str).width <= maxWidth) {
+    ctx.fillText(str, x, y);
+    return;
+  }
+  let clipped = str;
+  while (clipped.length > 1 && ctx.measureText(`${clipped}...`).width > maxWidth) {
+    clipped = clipped.slice(0, -1);
+  }
+  ctx.fillText(`${clipped.trimEnd()}...`, x, y);
+}
+
+/**
+ * Isolated 50ms progress ticker so timer ticks never re-render the full Wrapped modal.
+ */
+function StoryProgressBar({
+  isOpen,
+  isPaused,
+  currentSlide,
+  totalSlides,
+  slideDuration,
+  onAutoAdvance,
+  onReachEnd,
+  onSelectSlide,
+  isEn
+}) {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    setProgress(0);
+  }, [currentSlide, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || isPaused) return undefined;
+
+    const intervalMs = 50;
+    const step = (intervalMs / slideDuration) * 100;
+
+    const id = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          if (currentSlide < totalSlides - 1) {
+            onAutoAdvance();
+            return 0;
+          }
+          onReachEnd();
+          return 100;
+        }
+        return prev + step;
+      });
+    }, intervalMs);
+
+    return () => clearInterval(id);
+  }, [isOpen, isPaused, currentSlide, totalSlides, slideDuration, onAutoAdvance, onReachEnd]);
+
+  return (
+    <div className="flex items-center gap-1.5 w-full" role="group" aria-label={isEn ? 'Story progress' : 'Tiến trình thẻ kỷ niệm'}>
+      {Array.from({ length: totalSlides }).map((_, idx) => (
+        <button
+          key={idx}
+          type="button"
+          aria-label={isEn ? `Go to story ${idx + 1}` : `Chuyển đến trang ${idx + 1}`}
+          aria-current={idx === currentSlide ? 'step' : undefined}
+          onClick={() => onSelectSlide(idx)}
+          className="flex-1 min-h-[28px] py-2 -my-1 flex items-center cursor-pointer"
+        >
+          <span className="h-1.5 w-full rounded-full overflow-hidden bg-[#18181b]/15 dark:bg-white/15 block">
+            <span
+              className="block h-full bg-[#18181b] dark:bg-white transition-all duration-75 ease-linear rounded-full"
+              style={{
+                width: idx < currentSlide ? '100%' : idx === currentSlide ? `${Math.min(100, progress)}%` : '0%'
+              }}
+            />
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function TripWrappedModal({
   isOpen,
@@ -25,769 +126,787 @@ export default function TripWrappedModal({
   expenses = [],
   members = [],
   balances,
-  settlements = []
+  settlements = [],
+  t: propT
 }) {
-  const { isEn } = useLanguage();
+  const { isEn, t: contextT, formatMoney } = useLanguage();
+  const t = propT || contextT;
   const { showToast } = useToast();
+  const { isDark } = useTheme();
+
+  const prefersReducedMotion = useMemo(
+    () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
+    []
+  );
 
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [isPaused, setIsPaused] = useState(prefersReducedMotion);
   const [exporting, setExporting] = useState(false);
-  const [previewImage, setPreviewImage] = useState(null);
+  const [previewImages, setPreviewImages] = useState(null);
+  const [fallbackToday] = useState(() => new Date());
+
+  const autoPausedAtEndRef = useRef(false);
+  const previousFocusRef = useRef(null);
+  const dialogRef = useRef(null);
+  const previewDialogRef = useRef(null);
+  const touchStartRef = useRef(null);
+  const justSwipedRef = useRef(false);
 
   const totalSlides = 5;
-  const slideDuration = 6000; // 6 seconds per story slide
-  const timerRef = useRef(null);
-  const storyContainerRef = useRef(null);
+  const slideDuration = 6000;
 
-  // Analytics computation
-  const totalExpense = balances?.totalExpense || 0;
-  const memberCount = Math.max(members.length, 1);
-  const avgPerPerson = Math.round(totalExpense / memberCount);
-
-  // Dates
-  const parseDate = (dStr) => {
-    if (!dStr) return new Date();
-    const [y, m, d] = dStr.split('-').map(Number);
-    return new Date(y, (m || 1) - 1, d || 1);
-  };
-  const startDate = parseDate(trip?.startDate);
-  const endDate = parseDate(trip?.endDate);
-  const totalDays = Math.max(1, Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1);
-
-  // 1. Top Payer MVP
-  const sortedMembersByPaid = [...(balances?.members || [])].sort((a, b) => (b.totalPaid || 0) - (a.totalPaid || 0));
-  const topPayer = sortedMembersByPaid[0] || balances?.topPayer || { displayName: 'Thành viên', totalPaid: 0 };
-  const topPayerPercent = totalExpense > 0 ? Math.round((topPayer.totalPaid / totalExpense) * 100) : 0;
-
-  // 2. Most expensive bill
-  const sortedExpenses = [...expenses].sort((a, b) => (Number(b.amount) || 0) - (Number(a.amount) || 0));
-  const topExpense = sortedExpenses[0] || null;
-  const topExpensePayer = topExpense ? members.find(m => (m.userId || m.uid || m.id) === topExpense.paidBy) : null;
-
-  // 3. Fastest settlement / Team spirit
-  const confirmedSettlements = settlements.filter(s => s.status === 'CONFIRMED');
-  const fastestSettler = confirmedSettlements[0]?.fromUser || (members.length > 1 ? members[1] : members[0]);
-
-  // Lock body scroll when modal is open
+  // Reset slide cleanly when opening modal
   useEffect(() => {
-    if (!isOpen) return;
+    if (isOpen) {
+      setCurrentSlide(0);
+      setIsPaused(prefersReducedMotion);
+      autoPausedAtEndRef.current = false;
+      setPreviewImages(null);
+    }
+  }, [isOpen, prefersReducedMotion]);
+
+  // Body scroll lock & focus restoration
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    previousFocusRef.current = document.activeElement;
     lockBodyScroll();
+
+    const focusRaf = requestAnimationFrame(() => {
+      const container = dialogRef.current;
+      if (!container) return;
+      const focusables = container.querySelectorAll(FOCUSABLE_SELECTOR);
+      if (focusables.length > 0) {
+        focusables[0].focus();
+      } else {
+        container.focus();
+      }
+    });
+
     return () => {
+      cancelAnimationFrame(focusRaf);
       unlockBodyScroll();
+      if (previousFocusRef.current && typeof previousFocusRef.current.focus === 'function') {
+        previousFocusRef.current.focus();
+      }
     };
   }, [isOpen]);
 
-  // Trigger celebration confetti when reaching the final ticket slide
+  // Focus preview dialog when opened on iOS
   useEffect(() => {
-    if (isOpen && currentSlide === totalSlides - 1) {
+    if (!previewImages) return undefined;
+    const raf = requestAnimationFrame(() => {
+      const el = previewDialogRef.current;
+      if (!el) return;
+      const firstFocusable = el.querySelector(FOCUSABLE_SELECTOR);
+      if (firstFocusable) firstFocusable.focus();
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [previewImages]);
+
+  // Memoized analytics & single source of truth shared between DOM & Canvas
+  const analytics = useMemo(() => {
+    const safeTripName = (trip?.name || (isEn ? 'Spliqo Trip' : 'Chuyến đi Spliqo')).trim();
+    const truncName = safeTripName.length > 26 ? `${safeTripName.slice(0, 24).trimEnd()}...` : safeTripName;
+    const tripCode = trip?.tripCode || 'SPLIQO';
+
+    const parseDate = (dStr) => {
+      if (!dStr || typeof dStr !== 'string') return fallbackToday;
+      const [y, m, d] = dStr.split('-').map(Number);
+      if (!y) return fallbackToday;
+      return new Date(y, (m || 1) - 1, d || 1);
+    };
+
+    const startDate = parseDate(trip?.startDate);
+    const endDate = parseDate(trip?.endDate || trip?.startDate);
+    const totalDays = Math.max(1, Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1);
+    const tripYear = startDate.getFullYear();
+
+    const totalExpense = Number(balances?.totalExpense) || 0;
+    const memberCount = Math.max(members.length, 1);
+    const avgPerPerson = Math.round(totalExpense / memberCount);
+    const hasExpenses = expenses.length > 0 && totalExpense > 0;
+
+    // 1. Top payer
+    const sortedMembersByPaid = [...(balances?.members || [])].sort(
+      (a, b) => (b.totalPaid || 0) - (a.totalPaid || 0)
+    );
+    const topPayerCandidate = sortedMembersByPaid[0] || balances?.topPayer || null;
+    const hasTopPayer = hasExpenses && topPayerCandidate && (Number(topPayerCandidate.totalPaid) || 0) > 0;
+    const topPayer = hasTopPayer
+      ? topPayerCandidate
+      : { displayName: isEn ? 'No payments recorded' : 'Chưa phát sinh chi trả', totalPaid: 0, photoURL: null };
+    const topPayerPercent = hasTopPayer ? Math.round(((topPayer.totalPaid || 0) / totalExpense) * 100) : 0;
+
+    // 2. Highest expense
+    const sortedExpenses = [...expenses].sort((a, b) => (Number(b.amount) || 0) - (Number(a.amount) || 0));
+    const topExpense = sortedExpenses[0] || null;
+    const topExpensePayer = topExpense
+      ? members.find((m) => String(m.userId || m.uid || m.id) === String(topExpense.paidBy))
+      : null;
+
+    // 3. Honest settlement reconciliation
+    const totalSettlementCount = settlements.length;
+    const confirmedSettlements = settlements.filter((s) => s.status === 'CONFIRMED');
+    const pendingSettlementCount = totalSettlementCount - confirmedSettlements.length;
+    const isBalancedZeroTransfers = hasExpenses && totalSettlementCount === 0;
+    const isFullySettled = hasExpenses && (isBalancedZeroTransfers || pendingSettlementCount === 0);
+
+    const settlementPercent = !hasExpenses
+      ? 0
+      : isBalancedZeroTransfers
+        ? 100
+        : Math.round((confirmedSettlements.length / totalSettlementCount) * 100);
+
+    let fastestSettler = null;
+    if (confirmedSettlements.length > 0) {
+      const firstConfirmed = confirmedSettlements[0];
+      fastestSettler =
+        firstConfirmed.fromUser ||
+        members.find((m) => String(m.userId || m.uid || m.id) === String(firstConfirmed.fromUserId)) ||
+        null;
+    }
+
+    const statusBadgeText = !hasExpenses
+      ? (isEn ? 'No expenses recorded yet' : 'Chưa có khoản chi nào')
+      : isFullySettled
+        ? (isEn ? '100% Reconciled' : 'Đã tất toán 100%')
+        : (isEn
+            ? `Settling ${confirmedSettlements.length}/${totalSettlementCount} transfers`
+            : `Đã đối soát ${confirmedSettlements.length}/${totalSettlementCount} khoản`);
+
+    const ratingBadgeText = !hasExpenses
+      ? (isEn ? 'WAITING FOR FIRST BILL' : 'CHỜ KHOẢN CHI ĐẦU TIÊN')
+      : isFullySettled
+        ? (isEn ? '100% SETTLED • FAIR PLAY' : '100% SÒNG PHẲNG • CHUẨN XÁC')
+        : (isEn ? `${settlementPercent}% RECONCILED` : `ĐÃ ĐỐI SOÁT ${settlementPercent}%`);
+
+    return {
+      safeTripName,
+      truncName,
+      tripCode,
+      startDateStr: trip?.startDate || '',
+      tripYear,
+      totalDays,
+      memberCount,
+      totalExpense,
+      avgPerPerson,
+      hasExpenses,
+      hasTopPayer,
+      topPayer,
+      topPayerPercent,
+      topExpense,
+      topExpensePayer,
+      totalSettlementCount,
+      confirmedCount: confirmedSettlements.length,
+      pendingSettlementCount,
+      isBalancedZeroTransfers,
+      isFullySettled,
+      settlementPercent,
+      fastestSettler,
+      statusBadgeText,
+      ratingBadgeText
+    };
+  }, [trip, expenses, members, balances, settlements, isEn, fallbackToday]);
+
+  // Shared slide metadata & copy used identically by both JSX & Canvas export
+  const slideCopy = useMemo(() => {
+    const a = analytics;
+    return [
+      {
+        chapter: isEn ? 'CHAPTER 01 • OVERVIEW' : 'CHƯƠNG 01 • TỔNG QUAN',
+        heading: a.truncName,
+        meta: isEn
+          ? `${a.totalDays} day(s) • ${members.length} member(s) • #${a.tripCode}`
+          : `${a.totalDays} ngày • ${members.length} thành viên • #${a.tripCode}`,
+        heroLabel: isEn ? 'Total group spend' : 'Tổng chi phí chuyến đi',
+        heroValue: formatMoney(a.totalExpense),
+        avgLabel: isEn ? 'Average per person' : 'Bình quân mỗi người',
+        avgValue: `${formatMoney(a.avgPerPerson)}/${isEn ? 'person' : 'người'}`,
+        stat1Label: isEn ? 'Bills logged' : 'Số hóa đơn',
+        stat1Value: isEn ? `${expenses.length} bill(s)` : `${expenses.length} khoản chi`,
+        stat2Label: isEn ? 'Duration' : 'Thời gian',
+        stat2Value: isEn ? `${a.totalDays} day(s)` : `${a.totalDays} ngày đi`,
+        statusLabel: a.statusBadgeText
+      },
+      {
+        chapter: isEn ? 'CHAPTER 02 • TOP PAYER' : 'CHƯƠNG 02 • NGƯỜI CHI NHIỀU NHẤT',
+        heading: a.topPayer.displayName,
+        subline: a.hasTopPayer
+          ? (isEn ? 'Fronted the largest share for the group' : 'Người ứng trước nhiều nhất cho cả nhóm')
+          : (isEn ? 'Add expenses to crown your trip MVP' : 'Thêm khoản chi để vinh danh người ứng nhiều nhất'),
+        amountLabel: isEn ? 'Total paid in advance' : 'Tổng tiền đã ứng trước',
+        amountValue: formatMoney(a.topPayer.totalPaid || 0),
+        shareLine: a.hasTopPayer
+          ? (isEn
+              ? `Covered ${a.topPayerPercent}% of total group expenses`
+              : `Đóng góp ${a.topPayerPercent}% tổng chi tiêu cả đoàn`)
+          : (isEn ? '0% recorded so far' : 'Chưa có dữ liệu chi trả'),
+        footerNote: a.hasTopPayer
+          ? (isEn
+              ? 'Thank you for keeping group payments smooth and stress-free!'
+              : 'Cảm ơn bạn đã ứng trước giúp chuyến đi của cả nhóm luôn suôn sẻ!')
+          : (isEn ? 'Record your first bill to see breakdown stats.' : 'Hãy ghi nhận hóa đơn đầu tiên để xem thống kê.')
+      },
+      {
+        chapter: isEn ? 'CHAPTER 03 • PEAK EXPENSE' : 'CHƯƠNG 03 • KHOẢN CHI LỚN NHẤT',
+        heading: isEn ? 'Standout Trip Bill' : 'Hóa đơn kỷ lục',
+        subline: isEn ? 'Single highest expense recorded' : 'Khoản chi có giá trị cao nhất chuyến đi',
+        billTitle: a.topExpense ? a.topExpense.title : (isEn ? 'No expenses recorded yet' : 'Chưa có khoản chi'),
+        billAmount: formatMoney(a.topExpense ? a.topExpense.amount : 0),
+        payerLabel: isEn ? 'Paid by' : 'Người thanh toán',
+        payerValue: a.topExpensePayer?.displayName || (isEn ? '—' : '—'),
+        dateLabel: isEn ? 'Date' : 'Ngày ghi nhận',
+        dateValue: a.topExpense?.date || (isEn ? 'During trip' : 'Trong chuyến đi'),
+        splitLabel: isEn ? 'Shared among' : 'Số người chia',
+        splitValue: a.topExpense
+          ? `${a.topExpense.participants?.length || members.length} ${isEn ? 'member(s)' : 'thành viên'}`
+          : '—',
+        footerNote: a.topExpense
+          ? (isEn
+              ? 'One standout highlight that shaped your shared journey together.'
+              : 'Khoản chi đáng nhớ góp phần tạo nên hành trình trọn vẹn của cả nhóm.')
+          : (isEn ? 'Your highest group bill will appear here.' : 'Hóa đơn lớn nhất của nhóm sẽ hiển thị tại đây.')
+      },
+      {
+        chapter: isEn ? 'CHAPTER 04 • SETTLEMENT' : 'CHƯƠNG 04 • TẤT TOÁN CÔNG NỢ',
+        heading: !a.hasExpenses
+          ? (isEn ? 'Ready to Split' : 'Sẵn sàng chia tiền')
+          : a.isFullySettled
+            ? (isEn ? 'All Balances Settled' : '100% Sòng Phẳng')
+            : (isEn ? 'Settlement In Progress' : 'Đang đối soát công nợ'),
+        subline: !a.hasExpenses
+          ? (isEn ? 'No debts generated yet' : 'Chưa phát sinh khoản công nợ nào')
+          : a.isBalancedZeroTransfers
+            ? (isEn ? 'Balances are naturally even — zero transfers needed' : 'Số dư đã tự cân bằng — không cần chuyển khoản thêm')
+            : (isEn
+                ? `${a.confirmedCount} of ${a.totalSettlementCount} transfer(s) confirmed`
+                : `Đã xác nhận ${a.confirmedCount}/${a.totalSettlementCount} giao dịch chuyển khoản`),
+        progressLabel: isEn ? 'Reconciliation progress' : 'Tiến độ đối soát',
+        progressPercentText: a.hasExpenses ? `${a.settlementPercent}%` : '0%',
+        settlerCardTitle: a.fastestSettler
+          ? (isEn ? 'Confirmed Settler' : 'Thành viên đã xác nhận tất toán')
+          : (isEn ? 'Settlement Status' : 'Trạng thái công nợ'),
+        settlerName: a.fastestSettler
+          ? a.fastestSettler.displayName
+          : !a.hasExpenses
+            ? (isEn ? 'No expenses logged yet' : 'Chưa ghi nhận chi tiêu')
+            : a.isBalancedZeroTransfers
+              ? (isEn ? 'Naturally Balanced' : 'Cân bằng tự nhiên')
+              : (isEn ? `${a.pendingSettlementCount} transfer(s) awaiting confirmation` : `Còn ${a.pendingSettlementCount} khoản chờ xác nhận`),
+        settlerDesc: a.fastestSettler
+          ? (isEn ? 'Completed VietQR settlement cleanly and transparently.' : 'Đã hoàn tất chuyển khoản minh bạch qua VietQR.')
+          : a.hasExpenses && !a.isFullySettled
+            ? (isEn ? 'Complete pending transfers in the Settlement tab.' : 'Vào tab Quyết toán để hoàn tất các khoản còn lại.')
+            : (isEn ? 'Every amount stays transparent down to the last đồng.' : 'Mọi khoản thu chi đều được đối soát minh bạch từng đồng.')
+      },
+      {
+        chapter: isEn ? 'CHAPTER 05 • TRIP RECAP' : 'CHƯƠNG 05 • THẺ KÝ ỨC',
+        yearBadge: `${a.tripYear} • RECAP`,
+        heading: a.truncName,
+        meta: `#${a.tripCode}${a.startDateStr ? ` • ${a.startDateStr}` : ''}`,
+        row1Label: isEn ? 'Total trip spend' : 'Tổng chi toàn chuyến',
+        row1Value: formatMoney(a.totalExpense),
+        row2Label: isEn ? 'Top payer' : 'Chi nhiều nhất',
+        row2Value: a.hasTopPayer ? a.topPayer.displayName : '—',
+        row3Label: isEn ? 'Largest bill' : 'Khoản chi lớn nhất',
+        row3Value: a.topExpense ? a.topExpense.title : '—',
+        row4Label: isEn ? 'Settlement' : 'Trạng thái đối soát',
+        row4Value: a.statusBadgeText,
+        footerPill: a.ratingBadgeText
+      }
+    ];
+  }, [analytics, expenses.length, members.length, formatMoney, isEn]);
+
+  // Trigger celebration confetti only when trip has real expenses and is fully settled on final card
+  useEffect(() => {
+    if (isOpen && currentSlide === totalSlides - 1 && analytics.hasExpenses && analytics.isFullySettled) {
       try {
         confetti({
-          particleCount: 50,
-          spread: 80,
-          origin: { y: 0.6 }
+          particleCount: 45,
+          spread: 70,
+          origin: { y: 0.6 },
+          disableForReducedMotion: true
         });
       } catch {
-        // Confetti optional
+        // Optional celebratory effect
       }
     }
-  }, [isOpen, currentSlide]);
+  }, [isOpen, currentSlide, totalSlides, analytics.hasExpenses, analytics.isFullySettled]);
 
-  // Auto-advance story timer
-  useEffect(() => {
-    if (!isOpen || isPaused) return;
+  const handleAutoAdvance = useCallback(() => {
+    setCurrentSlide((curr) => Math.min(totalSlides - 1, curr + 1));
+  }, [totalSlides]);
 
-    const intervalTime = 50;
-    const increment = (intervalTime / slideDuration) * 100;
+  const handleReachEnd = useCallback(() => {
+    autoPausedAtEndRef.current = true;
+    setIsPaused(true);
+  }, []);
 
-    timerRef.current = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          if (currentSlide < totalSlides - 1) {
-            setCurrentSlide((curr) => curr + 1);
-            return 0;
-          } else {
-            setIsPaused(true);
-            return 100;
-          }
-        }
-        return prev + increment;
-      });
-    }, intervalTime);
-
-    return () => clearInterval(timerRef.current);
-  }, [isOpen, isPaused, currentSlide, totalSlides]);
-
-  // Reset timer progress on slide change
-  useEffect(() => {
-    setProgress(0);
-  }, [currentSlide]);
+  const resumeIfAutoPaused = useCallback(() => {
+    if (autoPausedAtEndRef.current) {
+      autoPausedAtEndRef.current = false;
+      if (!prefersReducedMotion) {
+        setIsPaused(false);
+      }
+    }
+  }, [prefersReducedMotion]);
 
   const handleNext = useCallback(() => {
     if (currentSlide < totalSlides - 1) {
+      resumeIfAutoPaused();
       setCurrentSlide((prev) => prev + 1);
-      setProgress(0);
     }
-  }, [currentSlide, totalSlides]);
+  }, [currentSlide, totalSlides, resumeIfAutoPaused]);
 
   const handlePrev = useCallback(() => {
     if (currentSlide > 0) {
+      resumeIfAutoPaused();
       setCurrentSlide((prev) => prev - 1);
-      setProgress(0);
     }
-  }, [currentSlide]);
+  }, [currentSlide, resumeIfAutoPaused]);
 
-  // Keyboard navigation
+  const handleSelectSlide = useCallback(
+    (idx) => {
+      resumeIfAutoPaused();
+      setCurrentSlide(idx);
+    },
+    [resumeIfAutoPaused]
+  );
+
+  // Keyboard shortcuts + focus trap across active modal layer
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) return undefined;
+
     const handleKeyDown = (e) => {
+      const activeContainer = previewImages ? previewDialogRef.current : dialogRef.current;
+
       if (e.key === 'Escape') {
-        onClose();
-      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        if (previewImages) {
+          setPreviewImages(null);
+        } else {
+          onClose();
+        }
+        return;
+      }
+
+      if (e.key === 'Tab' && activeContainer) {
+        const focusables = Array.from(activeContainer.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
+          (el) => el.offsetParent !== null
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+        return;
+      }
+
+      if (previewImages) return;
+
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
         handleNext();
       } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
         handlePrev();
       } else if (e.key === ' ') {
-        e.preventDefault();
-        setIsPaused((p) => !p);
+        const tag = document.activeElement?.tagName;
+        if (tag !== 'BUTTON' && tag !== 'A') {
+          e.preventDefault();
+          autoPausedAtEndRef.current = false;
+          setIsPaused((p) => !p);
+        }
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, handleNext, handlePrev, onClose]);
+  }, [isOpen, previewImages, handleNext, handlePrev, onClose]);
 
+  // Tactile Clay 1080x1920 PNG Canvas Exporter matching UI light/dark theme & shared slideCopy
+  const generateSlideCanvas = useCallback(
+    (slideIndex) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1080;
+      canvas.height = 1920;
+      const ctx = canvas.getContext('2d');
 
-  // Canvas Generator: Y2K Retro-Futurism × Neo-Psychedelic on App Cream Canvas (1080x1920)
-  const generateSlideCanvas = (slideIndex) => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 1080;
-    canvas.height = 1920;
-    const ctx = canvas.getContext('2d');
+      const palette = isDark
+        ? {
+            bg: '#14141a',
+            card: '#18181f',
+            chip: '#212129',
+            border: '#2e2e38',
+            text: '#f4f4f6',
+            muted: '#a1a1aa',
+            emerald: '#34d399',
+            emeraldBg: '#064e3b',
+            emeraldText: '#a7f3d0',
+            amberBg: '#451a03',
+            amberText: '#fcd34d',
+            pillBg: '#ffffff',
+            pillText: '#18181b',
+            grid: 'rgba(255, 255, 255, 0.035)'
+          }
+        : {
+            bg: '#f4f3ec',
+            card: '#ffffff',
+            chip: '#f4f3ec',
+            border: '#dedbd0',
+            text: '#18181b',
+            muted: '#52525b',
+            emerald: '#047857',
+            emeraldBg: '#d1fae5',
+            emeraldText: '#065f46',
+            amberBg: '#fef3c7',
+            amberText: '#92400e',
+            pillBg: '#18181b',
+            pillText: '#ffffff',
+            grid: 'rgba(24, 24, 27, 0.04)'
+          };
 
-    // 1. Warm Creamy White Canvas Background (Spliqo App Aesthetic)
-    ctx.fillStyle = '#faf9f6';
-    ctx.fillRect(0, 0, 1080, 1920);
+      // 1. Background fill + subtle radial ambient warmth
+      ctx.fillStyle = palette.bg;
+      ctx.fillRect(0, 0, 1080, 1920);
 
-    // 2. Cyber Matrix Grid Lines on Cream
-    ctx.strokeStyle = 'rgba(24, 24, 27, 0.05)';
-    ctx.lineWidth = 1.5;
-    for (let x = 40; x < 1080; x += 60) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, 1920);
-      ctx.stroke();
-    }
-    for (let y = 40; y < 1920; y += 60) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(1080, y);
-      ctx.stroke();
-    }
+      const drawSoftOrb = (cx, cy, r, rgba) => {
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        g.addColorStop(0, rgba);
+        g.addColorStop(1, 'transparent');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fill();
+      };
+      drawSoftOrb(900, 260, 480, isDark ? 'rgba(16, 185, 129, 0.14)' : 'rgba(16, 185, 129, 0.10)');
+      drawSoftOrb(180, 1520, 520, isDark ? 'rgba(245, 158, 11, 0.10)' : 'rgba(245, 158, 11, 0.09)');
 
-    // 3. Ambient Psychedelic Glow Orbs
-    const drawGlowOrb = (cx, cy, r, color) => {
-      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-      g.addColorStop(0, color);
-      g.addColorStop(1, 'transparent');
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.fill();
-    };
+      // Helper for tactile rounded bento cards
+      const drawTactileCard = (x, y, w, h, fill = palette.card, border = palette.border, radius = 44) => {
+        ctx.save();
+        ctx.shadowColor = isDark ? 'rgba(0,0,0,0.4)' : 'rgba(24,24,27,0.06)';
+        ctx.shadowBlur = 32;
+        ctx.shadowOffsetY = 12;
+        drawRoundedRectPath(ctx, x, y, w, h, radius);
+        ctx.fillStyle = fill;
+        ctx.fill();
+        ctx.restore();
 
-    drawGlowOrb(900, 300, 520, 'rgba(123, 44, 191, 0.15)');
-    drawGlowOrb(180, 1100, 480, 'rgba(0, 240, 255, 0.18)');
-    drawGlowOrb(800, 1600, 550, 'rgba(255, 0, 85, 0.12)');
+        drawRoundedRectPath(ctx, x, y, w, h, radius);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = border;
+        ctx.stroke();
+      };
 
-    // 4. Retro 3D Ribbons (Curved 3D Neon Gradient Bands)
-    const draw3DRibbon = (startY, midY, endY, c1, c2, c3, c4) => {
-      ctx.save();
-      ctx.lineCap = 'round';
-      ctx.lineWidth = 76;
-      const grad = ctx.createLinearGradient(0, startY, 1080, endY);
-      grad.addColorStop(0, c1);
-      grad.addColorStop(0.35, c2);
-      grad.addColorStop(0.7, c3);
-      grad.addColorStop(1, c4);
+      const drawPillBadge = (x, y, text, bgColor, textColor, maxW = 620) => {
+        ctx.font = 'bold 24px "Lexend", system-ui, sans-serif';
+        const paddingX = 30;
+        const measured = Math.min(ctx.measureText(text).width + paddingX * 2, maxW);
+        drawRoundedRectPath(ctx, x, y, measured, 56, 28);
+        ctx.fillStyle = bgColor;
+        ctx.fill();
+        ctx.fillStyle = textColor;
+        ctx.textAlign = 'left';
+        ctx.fillText(text, x + paddingX, y + 37);
+      };
 
-      ctx.strokeStyle = grad;
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-      ctx.shadowBlur = 30;
-      ctx.beginPath();
-      ctx.moveTo(-60, startY);
-      ctx.bezierCurveTo(320, startY - 140, 760, midY, 1140, endY);
-      ctx.stroke();
-
-      // Inner 3D Highlight Tube
-      ctx.lineWidth = 14;
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-      ctx.shadowBlur = 0;
-      ctx.stroke();
-      ctx.restore();
-    };
-
-    if (slideIndex === 0) {
-      draw3DRibbon(380, 780, 1200, '#00F0FF', '#0047FF', '#7B2CBF', '#FF0055');
-    } else if (slideIndex === 1) {
-      draw3DRibbon(440, 850, 1300, '#FF0055', '#7B2CBF', '#FFE600', '#00F0FF');
-    } else if (slideIndex === 2) {
-      draw3DRibbon(350, 920, 1400, '#00C853', '#00F0FF', '#7B2CBF', '#FF0055');
-    } else if (slideIndex === 3) {
-      draw3DRibbon(400, 750, 1250, '#FFB703', '#FF0055', '#7B2CBF', '#00F0FF');
-    } else {
-      draw3DRibbon(320, 880, 1450, '#00F0FF', '#7B2CBF', '#FF0055', '#FFE600');
-    }
-
-    // 5. Helper: Stepped Pixelated Gradient Card (Crisp White with Stark Black Borders & Neon Stepped Shadows)
-    const drawPixelCard = (x, y, w, h, fill = '#ffffff', stepC1 = '#00F0FF', stepC2 = '#7B2CBF', stepC3 = '#FF0055') => {
-      // Step 3 shadow
-      ctx.fillStyle = stepC3;
-      ctx.fillRect(x + 16, y + 16, w, h);
-
-      // Step 2 shadow
-      ctx.fillStyle = stepC2;
-      ctx.fillRect(x + 10, y + 10, w, h);
-
-      // Step 1 shadow
-      ctx.fillStyle = stepC1;
-      ctx.fillRect(x + 4, y + 4, w, h);
-
-      // Card body
-      ctx.fillStyle = fill;
-      ctx.fillRect(x, y, w, h);
-
-      // Stark Black Border
-      ctx.lineWidth = 4;
-      ctx.strokeStyle = '#18181b';
-      ctx.strokeRect(x, y, w, h);
-
-      // 8-bit Pixel Corners
-      ctx.fillStyle = '#18181b';
-      ctx.fillRect(x - 2, y - 2, 10, 10);
-      ctx.fillRect(x + w - 8, y - 2, 10, 10);
-      ctx.fillRect(x - 2, y + h - 8, 10, 10);
-      ctx.fillRect(x + w - 8, y + h - 8, 10, 10);
-    };
-
-    // 6. Helper: Starburst Glyphs (✦)
-    const drawStarburst = (cx, cy, spikes = 4, outerR = 24, innerR = 6, color = '#FF0055') => {
-      ctx.save();
-      ctx.fillStyle = color;
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.12)';
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      let rot = (Math.PI / 2) * 3;
-      let x = cx;
-      let y = cy;
-      let step = Math.PI / spikes;
-
-      ctx.moveTo(cx, cy - outerR);
-      for (let i = 0; i < spikes; i++) {
-        x = cx + Math.cos(rot) * outerR;
-        y = cy + Math.sin(rot) * outerR;
-        ctx.lineTo(x, y);
-        rot += step;
-
-        x = cx + Math.cos(rot) * innerR;
-        y = cy + Math.sin(rot) * innerR;
-        ctx.lineTo(x, y);
-        rot += step;
+      // 2. Top progress strips & header brand
+      for (let i = 0; i < totalSlides; i++) {
+        const barW = (1080 - 140 - 4 * 14) / 5;
+        const barX = 70 + i * (barW + 14);
+        drawRoundedRectPath(ctx, barX, 72, barW, 8, 4);
+        ctx.fillStyle = i <= slideIndex ? palette.text : isDark ? 'rgba(255,255,255,0.16)' : 'rgba(24,24,27,0.14)';
+        ctx.fill();
       }
-      ctx.lineTo(cx, cy - outerR);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    };
 
-    // 7. Top Header Ribbon (Common to stories)
-    for (let i = 0; i < totalSlides; i++) {
-      const barW = (1080 - 140 - 4 * 12) / 5;
-      const barX = 70 + i * (barW + 12);
-      ctx.fillStyle = i <= slideIndex ? '#18181b' : 'rgba(24, 24, 27, 0.12)';
-      ctx.fillRect(barX, 60, barW, 6);
-    }
-
-    // Top Brand Tag
-    ctx.fillStyle = '#18181b';
-    ctx.font = '900 24px monospace';
-    ctx.fillText('SPLIQO // 2026 WRAPPED ✦', 70, 115);
-
-    ctx.textAlign = 'right';
-    ctx.fillStyle = '#7B2CBF';
-    ctx.font = '900 24px monospace';
-    ctx.fillText(`STORY 0${slideIndex + 1} / 05`, 1010, 115);
-    ctx.textAlign = 'left';
-
-    // 8. RENDER CHAPTER CONTENT
-    if (slideIndex === 0) {
-      // SLIDE 0: THE EXPEDITION
-      drawStarburst(940, 220, 4, 36, 8, '#FF0055');
-      drawStarburst(120, 720, 4, 28, 6, '#7B2CBF');
-
-      // Chapter badge
-      ctx.fillStyle = '#FFE600';
-      ctx.fillRect(70, 170, 360, 46);
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#18181b';
-      ctx.strokeRect(70, 170, 360, 46);
-      ctx.fillStyle = '#18181b';
-      ctx.font = '900 20px monospace';
-      ctx.fillText('✦ CHAPTER 01 // OVERVIEW', 90, 201);
-
-      // Hero Trip Name
-      ctx.font = '900 78px sans-serif';
-      const truncName = trip.name.length > 18 ? trip.name.substring(0, 16) + '...' : trip.name;
-      ctx.fillStyle = '#18181b';
-      ctx.fillText(truncName.toUpperCase(), 70, 300);
-
-      // Subtitle
-      ctx.fillStyle = '#52525b';
-      ctx.font = 'bold 26px monospace';
-      ctx.fillText(
-        isEn
-          ? `[ ${totalDays} DAYS EXPLORING • ${members.length} MEMBERS • #${trip.tripCode || 'SPLIQO'} ]`
-          : `[ ${totalDays} NGÀY KHÁM PHÁ • ${members.length} THÀNH VIÊN • #${trip.tripCode || 'SPLIQO'} ]`,
-        70,
-        355
-      );
-
-      // Main Budget Card (Stepped Pixel Gradient Border on White)
-      drawPixelCard(70, 420, 940, 460, '#ffffff', '#00F0FF', '#7B2CBF', '#FF0055');
-
-      ctx.fillStyle = '#FF0055';
-      ctx.font = '900 22px monospace';
-      ctx.fillText(isEn ? '► TOTAL EXPEDITION BUDGET' : '► TỔNG CHI PHÍ TOÀN BỘ CHUYẾN ĐI', 110, 485);
-
-      ctx.fillStyle = '#FF4500';
-      ctx.font = '900 110px monospace';
-      ctx.fillText(formatVND(totalExpense), 110, 630);
-
-      // Dashed divider
-      ctx.strokeStyle = '#dedbd0';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.setLineDash([10, 10]);
-      ctx.moveTo(110, 710);
-      ctx.lineTo(970, 710);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      ctx.fillStyle = '#52525b';
-      ctx.font = 'bold 28px sans-serif';
-      ctx.fillText(isEn ? 'Average per person:' : 'Định mức bình quân:', 110, 790);
-
+      drawPillBadge(70, 120, 'Spliqo Wrapped ✦', palette.pillBg, palette.pillText);
+      ctx.font = 'bold 28px "JetBrains Mono", "Lexend", monospace';
+      ctx.fillStyle = palette.emerald;
       ctx.textAlign = 'right';
-      ctx.fillStyle = '#059669';
-      ctx.font = '900 36px monospace';
-      ctx.fillText(`${formatVND(avgPerPerson)}/${isEn ? 'person' : 'người'}`, 970, 790);
+      ctx.fillText(`${slideIndex + 1} / ${totalSlides}`, 1010, 158);
       ctx.textAlign = 'left';
 
-      // Two Mini Pixel Cards
-      drawPixelCard(70, 940, 450, 260, '#ffffff', '#FFE600', '#FF0055', '#7B2CBF');
-      ctx.fillStyle = '#7B2CBF';
-      ctx.font = '900 24px monospace';
-      ctx.fillText('⚡ BILLS // HÓA ĐƠN', 105, 1010);
-      ctx.fillStyle = '#18181b';
-      ctx.font = '900 58px sans-serif';
-      ctx.fillText(`${expenses.length} KHOẢN CHI`, 105, 1110);
+      const s = slideCopy[slideIndex];
 
-      drawPixelCard(560, 940, 450, 260, '#ffffff', '#00F0FF', '#00C853', '#7B2CBF');
-      ctx.fillStyle = '#0284c7';
-      ctx.font = '900 24px monospace';
-      ctx.fillText('🪐 JOURNEY // THỜI GIAN', 595, 1010);
-      ctx.fillStyle = '#18181b';
-      ctx.font = '900 58px sans-serif';
-      ctx.fillText(`${totalDays} NGÀY ĐI`, 595, 1110);
+      // 3. Slide-specific Tactile Bento Layout
+      if (slideIndex === 0) {
+        drawPillBadge(70, 250, s.chapter, palette.emeraldBg, palette.emeraldText);
+        ctx.font = '800 74px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.text;
+        drawTruncatedText(ctx, s.heading, 70, 395, 940);
 
-      // Highlight Slogan Box
-      drawPixelCard(70, 1260, 940, 260, '#ffffff', '#FF0055', '#FFE600', '#00F0FF');
-      ctx.fillStyle = '#FF0055';
-      ctx.font = '900 28px sans-serif';
-      ctx.fillText('✦ STATUS: 100% RECONCILED // ZERO DRAMA', 110, 1335);
-      ctx.fillStyle = '#18181b';
-      ctx.font = 'bold 28px sans-serif';
-      ctx.fillText('Tài chính rõ ràng minh bạch giúp tình bạn luôn bền chặt!', 110, 1405);
-      ctx.fillText('Mọi chi phí phân chia sòng phẳng, chuẩn xác từng đồng.', 110, 1455);
+        ctx.font = '600 28px "JetBrains Mono", "Lexend", monospace';
+        ctx.fillStyle = palette.muted;
+        drawTruncatedText(ctx, s.meta, 70, 452, 940);
 
-    } else if (slideIndex === 1) {
-      // SLIDE 1: THE MONEY LORD (TOP SPENDER)
-      drawStarburst(920, 220, 4, 38, 9, '#FF0055');
-      drawStarburst(140, 760, 4, 28, 6, '#7B2CBF');
+        drawTactileCard(70, 520, 940, 420);
+        ctx.font = '700 28px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.muted;
+        ctx.fillText(s.heroLabel, 120, 600);
 
-      // Chapter badge
-      ctx.fillStyle = '#FF0055';
-      ctx.fillRect(70, 170, 420, 46);
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#18181b';
-      ctx.strokeRect(70, 170, 420, 46);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 20px monospace';
-      ctx.fillText('👑 CHAPTER 02 // TOP SPENDER MVP', 90, 201);
+        ctx.font = '800 92px "JetBrains Mono", "Lexend", monospace';
+        ctx.fillStyle = palette.text;
+        drawTruncatedText(ctx, s.heroValue, 120, 725, 840);
 
-      // Title
-      ctx.font = '900 70px sans-serif';
-      ctx.fillStyle = '#18181b';
-      ctx.fillText('ĐẠI GIA GÁNH TEAM', 70, 295);
+        ctx.strokeStyle = palette.border;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 10]);
+        ctx.beginPath();
+        ctx.moveTo(120, 790);
+        ctx.lineTo(960, 790);
+        ctx.stroke();
+        ctx.setLineDash([]);
 
-      ctx.fillStyle = '#52525b';
-      ctx.font = 'bold 26px monospace';
-      ctx.fillText('[ THE MONEY LORD OF THE EXPEDITION ]', 70, 345);
+        ctx.font = '600 28px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.muted;
+        ctx.fillText(s.avgLabel, 120, 868);
+        ctx.font = '800 32px "JetBrains Mono", "Lexend", monospace';
+        ctx.fillStyle = palette.emerald;
+        drawTruncatedText(ctx, s.avgValue, 960, 868, 460, 'right');
 
-      // Avatar Showcase Card
-      drawPixelCard(340, 410, 400, 360, '#ffffff', '#FFE600', '#FF0055', '#7B2CBF');
-      ctx.font = '900 110px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('👑', 540, 580);
-      ctx.fillStyle = '#FF0055';
-      ctx.font = '900 26px monospace';
-      ctx.fillText('#1 SPENDER // 9999 HP', 540, 670);
+        // Two Bento Tiles
+        drawTactileCard(70, 990, 450, 250);
+        ctx.font = '700 26px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.muted;
+        ctx.fillText(s.stat1Label, 115, 1065);
+        ctx.font = '800 54px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.text;
+        drawTruncatedText(ctx, s.stat1Value, 115, 1155, 360);
+
+        drawTactileCard(560, 990, 450, 250);
+        ctx.font = '700 26px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.muted;
+        ctx.fillText(s.stat2Label, 605, 1065);
+        ctx.font = '800 54px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.text;
+        drawTruncatedText(ctx, s.stat2Value, 605, 1155, 360);
+
+        drawTactileCard(
+          70,
+          1290,
+          940,
+          140,
+          analytics.isFullySettled ? palette.emeraldBg : palette.amberBg,
+          palette.border,
+          36
+        );
+        ctx.font = '800 30px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = analytics.isFullySettled ? palette.emeraldText : palette.amberText;
+        drawTruncatedText(ctx, `✦ ${s.statusLabel}`, 540, 1372, 860, 'center');
+      } else if (slideIndex === 1) {
+        drawPillBadge(70, 250, s.chapter, palette.amberBg, palette.amberText);
+
+        drawTactileCard(70, 360, 940, 1080);
+        ctx.font = '88px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(analytics.hasTopPayer ? '👑' : '🧾', 540, 505);
+
+        ctx.font = '800 62px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.text;
+        drawTruncatedText(ctx, s.heading, 540, 610, 840, 'center');
+
+        ctx.font = '600 28px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.muted;
+        drawTruncatedText(ctx, s.subline, 540, 670, 840, 'center');
+
+        drawTactileCard(120, 750, 840, 360, palette.chip, palette.border, 36);
+        ctx.font = '700 28px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.muted;
+        ctx.textAlign = 'left';
+        ctx.fillText(s.amountLabel, 170, 835);
+
+        ctx.font = '800 84px "JetBrains Mono", "Lexend", monospace';
+        ctx.fillStyle = palette.emerald;
+        drawTruncatedText(ctx, s.amountValue, 170, 950, 740);
+
+        ctx.font = '700 28px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.text;
+        drawTruncatedText(ctx, s.shareLine, 170, 1045, 740);
+
+        ctx.font = '600 28px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.muted;
+        drawTruncatedText(ctx, s.footerNote, 540, 1265, 820, 'center');
+      } else if (slideIndex === 2) {
+        drawPillBadge(70, 250, s.chapter, palette.emeraldBg, palette.emeraldText);
+
+        ctx.font = '800 64px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.text;
+        drawTruncatedText(ctx, s.heading, 70, 395, 940);
+
+        ctx.font = '600 28px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.muted;
+        drawTruncatedText(ctx, s.subline, 70, 450, 940);
+
+        drawTactileCard(70, 515, 940, 340);
+        ctx.font = '700 26px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.muted;
+        ctx.fillText(isEn ? 'Record Expense' : 'Tên khoản chi', 120, 590);
+
+        ctx.font = '800 50px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.text;
+        drawTruncatedText(ctx, s.billTitle, 120, 675, 840);
+
+        ctx.font = '800 76px "JetBrains Mono", "Lexend", monospace';
+        ctx.fillStyle = palette.emerald;
+        drawTruncatedText(ctx, s.billAmount, 120, 785, 840);
+
+        drawTactileCard(70, 905, 940, 370);
+        const rows = [
+          [s.payerLabel, s.payerValue],
+          [s.dateLabel, s.dateValue],
+          [s.splitLabel, s.splitValue]
+        ];
+        rows.forEach(([lbl, val], idx) => {
+          const y = 1005 + idx * 96;
+          ctx.font = '600 28px "Lexend", system-ui, sans-serif';
+          ctx.fillStyle = palette.muted;
+          ctx.textAlign = 'left';
+          ctx.fillText(lbl, 120, y);
+          ctx.font = '800 30px "JetBrains Mono", "Lexend", monospace';
+          ctx.fillStyle = palette.text;
+          drawTruncatedText(ctx, val, 960, y, 480, 'right');
+        });
+
+        drawTactileCard(70, 1320, 940, 130, palette.chip, palette.border, 32);
+        ctx.font = '600 26px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.text;
+        drawTruncatedText(ctx, `✦ ${s.footerNote}`, 540, 1396, 860, 'center');
+      } else if (slideIndex === 3) {
+        drawPillBadge(70, 250, s.chapter, palette.emeraldBg, palette.emeraldText);
+
+        ctx.font = '800 66px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.text;
+        drawTruncatedText(ctx, s.heading, 70, 395, 940);
+
+        ctx.font = '600 28px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.muted;
+        drawTruncatedText(ctx, s.subline, 70, 452, 940);
+
+        drawTactileCard(70, 525, 940, 360);
+        ctx.font = '700 28px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.muted;
+        ctx.fillText(s.progressLabel, 120, 610);
+
+        ctx.font = '800 64px "JetBrains Mono", "Lexend", monospace';
+        ctx.fillStyle = palette.emerald;
+        drawTruncatedText(ctx, s.progressPercentText, 960, 618, 300, 'right');
+
+        drawRoundedRectPath(ctx, 120, 680, 840, 36, 18);
+        ctx.fillStyle = palette.chip;
+        ctx.fill();
+
+        const fillW = Math.max(analytics.settlementPercent > 0 ? 36 : 0, Math.round((840 * analytics.settlementPercent) / 100));
+        if (fillW > 0) {
+          drawRoundedRectPath(ctx, 120, 680, fillW, 36, 18);
+          ctx.fillStyle = analytics.isFullySettled ? '#10b981' : '#f59e0b';
+          ctx.fill();
+        }
+
+        ctx.font = '600 26px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.muted;
+        drawTruncatedText(ctx, s.settlerDesc, 120, 800, 840);
+
+        drawTactileCard(70, 940, 940, 340);
+        ctx.font = '700 26px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.muted;
+        ctx.fillText(s.settlerCardTitle, 120, 1025);
+
+        ctx.font = '800 46px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.text;
+        drawTruncatedText(ctx, s.settlerName, 120, 1125, 840);
+
+        ctx.font = '600 26px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.emerald;
+        drawTruncatedText(ctx, `Spliqo • VietQR`, 120, 1210, 840);
+      } else {
+        drawPillBadge(70, 250, s.chapter, palette.pillBg, palette.pillText);
+        ctx.font = '700 28px "JetBrains Mono", "Lexend", monospace';
+        ctx.fillStyle = palette.muted;
+        ctx.textAlign = 'right';
+        ctx.fillText(s.yearBadge, 1010, 286);
+        ctx.textAlign = 'left';
+
+        ctx.font = '800 66px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = palette.text;
+        drawTruncatedText(ctx, s.heading, 70, 395, 940);
+
+        ctx.font = '600 28px "JetBrains Mono", "Lexend", monospace';
+        ctx.fillStyle = palette.muted;
+        drawTruncatedText(ctx, s.meta, 70, 452, 940);
+
+        drawTactileCard(70, 520, 940, 740);
+        const ticketRows = [
+          [s.row1Label, s.row1Value, palette.text],
+          [s.row2Label, s.row2Value, palette.text],
+          [s.row3Label, s.row3Value, palette.text],
+          [s.row4Label, s.row4Value, analytics.isFullySettled ? palette.emerald : palette.amberText]
+        ];
+        ticketRows.forEach(([lbl, val, color], idx) => {
+          const y = 650 + idx * 165;
+          ctx.font = '600 26px "Lexend", system-ui, sans-serif';
+          ctx.fillStyle = palette.muted;
+          ctx.textAlign = 'left';
+          ctx.fillText(lbl, 120, y);
+
+          ctx.font = idx === 0 ? '800 50px "JetBrains Mono", "Lexend", monospace' : '800 36px "Lexend", system-ui, sans-serif';
+          ctx.fillStyle = color;
+          drawTruncatedText(ctx, val, 120, y + 60, 840);
+
+          if (idx < ticketRows.length - 1) {
+            ctx.strokeStyle = palette.border;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 8]);
+            ctx.beginPath();
+            ctx.moveTo(120, y + 105);
+            ctx.lineTo(960, y + 105);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+        });
+
+        drawTactileCard(
+          70,
+          1310,
+          940,
+          140,
+          analytics.isFullySettled ? palette.emeraldBg : palette.chip,
+          palette.border,
+          36
+        );
+        ctx.font = '800 30px "Lexend", system-ui, sans-serif';
+        ctx.fillStyle = analytics.isFullySettled ? palette.emeraldText : palette.text;
+        drawTruncatedText(ctx, `★ ${s.footerPill}`, 540, 1392, 860, 'center');
+      }
+
+      // 4. Footer brand stamp
+      ctx.font = '700 24px "JetBrains Mono", "Lexend", monospace';
+      ctx.fillStyle = palette.muted;
       ctx.textAlign = 'left';
-
-      // Name Headline
-      ctx.textAlign = 'center';
-      ctx.font = '900 64px sans-serif';
-      ctx.fillStyle = '#18181b';
-      ctx.fillText(topPayer.displayName.toUpperCase(), 540, 850);
-      ctx.fillStyle = '#71717a';
-      ctx.font = 'bold 26px monospace';
-      ctx.fillText('CHỦ TỊCH QUẸT THẺ NHANH NHẤT HỆ MẶT TRỜI', 540, 905);
-      ctx.textAlign = 'left';
-
-      // Hero Stat Card
-      drawPixelCard(70, 970, 940, 380, '#ffffff', '#FF0055', '#FFE600', '#00F0FF');
-      ctx.fillStyle = '#FF0055';
-      ctx.font = '900 24px monospace';
-      ctx.fillText('► SỐ TIỀN ĐÃ ỨNG TRƯỚC CHO CẢ ĐOÀN:', 110, 1045);
-
-      ctx.fillStyle = '#FF4500';
-      ctx.font = '900 108px monospace';
-      ctx.fillText(formatVND(topPayer.totalPaid), 110, 1180);
-
-      ctx.strokeStyle = '#dedbd0';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.setLineDash([10, 10]);
-      ctx.moveTo(110, 1235);
-      ctx.lineTo(970, 1235);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      ctx.fillStyle = '#18181b';
-      ctx.font = 'bold 30px sans-serif';
-      ctx.fillText(`Chiếm tới ${topPayerPercent}% toàn bộ ngân sách cả chuyến đi!`, 110, 1295);
-
-      // Thank You Shoutout
-      drawPixelCard(70, 1400, 940, 180, '#ffffff', '#00C853', '#00F0FF', '#7B2CBF');
-      ctx.fillStyle = '#059669';
-      ctx.font = '900 26px sans-serif';
-      ctx.fillText('🙏 CREW SHOUTOUT // TRI ÂN CHỦ TỊCH', 110, 1465);
-      ctx.fillStyle = '#18181b';
-      ctx.font = 'bold 26px sans-serif';
-      ctx.fillText('Cảm ơn chủ tịch đã quẹt thẻ chi trả trước cho mọi hoạt động ăn chơi!', 110, 1520);
-
-    } else if (slideIndex === 2) {
-      // SLIDE 2: THE RECORD BREAKER
-      drawStarburst(940, 220, 4, 38, 9, '#059669');
-      drawStarburst(140, 780, 4, 28, 6, '#00F0FF');
-
-      // Chapter badge
-      ctx.fillStyle = '#059669';
-      ctx.fillRect(70, 170, 440, 46);
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#18181b';
-      ctx.strokeRect(70, 170, 440, 46);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 20px monospace';
-      ctx.fillText('🥩 CHAPTER 03 // RECORD-BREAKING BILL', 90, 201);
-
-      // Title
-      ctx.font = '900 70px sans-serif';
-      ctx.fillStyle = '#18181b';
-      ctx.fillText('HÓA ĐƠN KỶ LỤC', 70, 295);
-
-      ctx.fillStyle = '#52525b';
-      ctx.font = 'bold 26px monospace';
-      ctx.fillText('[ THE HEAVYWEIGHT CHAMPION OF EXPENSES ]', 70, 345);
-
-      // Big Bill Card
-      drawPixelCard(70, 410, 940, 480, '#ffffff', '#059669', '#00F0FF', '#7B2CBF');
-      ctx.fillStyle = '#0284c7';
-      ctx.font = '900 24px monospace';
-      ctx.fillText('► BILL KỶ LỤC CỦA CHUYẾN ĐI', 110, 480);
-
-      ctx.fillStyle = '#18181b';
-      ctx.font = '900 58px sans-serif';
-      const expTitle = topExpense ? `"${topExpense.title}"` : '"Chưa có khoản chi"';
-      const truncExp = expTitle.length > 20 ? expTitle.substring(0, 18) + '..."' : expTitle;
-      ctx.fillText(truncExp.toUpperCase(), 110, 580);
-
-      ctx.fillStyle = '#059669';
-      ctx.font = '900 110px monospace';
-      ctx.fillText(formatVND(topExpense ? topExpense.amount : 0), 110, 730);
-
-      const expPct = totalExpense > 0 && topExpense ? Math.round((topExpense.amount / totalExpense) * 100) : 0;
-      ctx.fillStyle = '#52525b';
-      ctx.font = 'bold 28px sans-serif';
-      ctx.fillText(`Chiếm ${expPct}% tổng chi tiêu toàn đoàn!`, 110, 820);
-
-      // Bill Details Matrix
-      drawPixelCard(70, 940, 940, 380, '#ffffff', '#FFE600', '#FF0055', '#7B2CBF');
-      ctx.fillStyle = '#7B2CBF';
-      ctx.font = '900 28px monospace';
-      ctx.fillText('✦ TRANSACTION ANATOMY // CHI TIẾT', 110, 1020);
-
-      ctx.font = 'bold 30px sans-serif';
-      ctx.fillStyle = '#52525b';
-      ctx.fillText(`• Người thanh toán:`, 110, 1100);
+      ctx.fillText(`SPLIQO • ${analytics.tripYear}`, 70, 1815);
       ctx.textAlign = 'right';
-      ctx.fillStyle = '#18181b';
-      ctx.fillText(`${topExpensePayer?.displayName || 'Thành viên'}`, 970, 1100);
+      ctx.fillStyle = palette.emerald;
+      ctx.fillText(isEn ? 'SPLIT EXPENSES • STAY FRIENDS' : 'CHIA TIỀN MINH BẠCH • GIỮ TRỌN TÌNH BẠN', 1010, 1815);
       ctx.textAlign = 'left';
 
-      ctx.fillStyle = '#52525b';
-      ctx.fillText(`• Ngày ghi nhận:`, 110, 1180);
-      ctx.textAlign = 'right';
-      ctx.fillStyle = '#FF4500';
-      ctx.fillText(`${topExpense?.date || 'Trong chuyến đi'}`, 970, 1180);
-      ctx.textAlign = 'left';
+      return canvas;
+    },
+    [isDark, totalSlides, slideCopy, analytics, isEn]
+  );
 
-      ctx.fillStyle = '#52525b';
-      ctx.fillText(`• Quy mô chia bill:`, 110, 1260);
-      ctx.textAlign = 'right';
-      ctx.fillStyle = '#059669';
-      ctx.fillText(`${topExpense?.participants?.length || members.length} thành viên`, 970, 1260);
-      ctx.textAlign = 'left';
-
-      // Slogan
-      drawPixelCard(70, 1370, 940, 200, '#ffffff', '#FF0055', '#FFE600', '#00C853');
-      ctx.fillStyle = '#FF0055';
-      ctx.font = '900 28px sans-serif';
-      ctx.fillText('✦ BILL NÀY GÁNH CẢ THANH XUÂN', 110, 1445);
-      ctx.fillStyle = '#18181b';
-      ctx.font = 'bold 26px sans-serif';
-      ctx.fillText('Những bữa ăn ngon nhất chính là những kỷ niệm đắt giá nhất!', 110, 1505);
-
-    } else if (slideIndex === 3) {
-      // SLIDE 3: ZERO DRAMA / 100% SÒNG PHẲNG
-      drawStarburst(940, 220, 4, 38, 9, '#FFE600');
-      drawStarburst(140, 800, 4, 32, 7, '#00F0FF');
-
-      // Chapter badge
-      ctx.fillStyle = '#7B2CBF';
-      ctx.fillRect(70, 170, 450, 46);
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#18181b';
-      ctx.strokeRect(70, 170, 450, 46);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 20px monospace';
-      ctx.fillText('⚡ CHAPTER 04 // FAIR PLAY ENERGY', 90, 201);
-
-      // Title
-      ctx.font = '900 70px sans-serif';
-      ctx.fillStyle = '#18181b';
-      ctx.fillText('100% SÒNG PHẲNG', 70, 295);
-
-      ctx.fillStyle = '#52525b';
-      ctx.font = 'bold 26px monospace';
-      ctx.fillText('[ ZERO DRAMA • MAXIMUM CREDIBILITY ]', 70, 345);
-
-      // Center Lightning Icon Box
-      drawPixelCard(420, 410, 240, 240, '#ffffff', '#FFE600', '#FF0055', '#00F0FF');
-      ctx.font = '900 120px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('⚡', 540, 580);
-      ctx.textAlign = 'left';
-
-      // Main Progress Card
-      drawPixelCard(70, 710, 940, 400, '#ffffff', '#00F0FF', '#7B2CBF', '#FF0055');
-      ctx.fillStyle = '#7B2CBF';
-      ctx.font = '900 26px monospace';
-      ctx.fillText('► RECONCILIATION PROGRESS // TIẾN ĐỘ', 110, 785);
-
-      ctx.fillStyle = '#059669';
-      ctx.font = '900 96px monospace';
-      ctx.fillText('100% COMPLETE', 110, 910);
-
-      // Stepped Rainbow Progress Bar
-      ctx.fillStyle = '#f4f3ec';
-      ctx.fillRect(110, 955, 860, 44);
-      const barGrad = ctx.createLinearGradient(110, 955, 970, 955);
-      barGrad.addColorStop(0, '#00F0FF');
-      barGrad.addColorStop(0.35, '#7B2CBF');
-      barGrad.addColorStop(0.7, '#FF0055');
-      barGrad.addColorStop(1, '#FFE600');
-      ctx.fillStyle = barGrad;
-      ctx.fillRect(110, 955, 860, 44);
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#18181b';
-      ctx.strokeRect(110, 955, 860, 44);
-
-      ctx.fillStyle = '#18181b';
-      ctx.font = 'bold 26px sans-serif';
-      ctx.fillText('Toàn bộ công nợ đã được tất toán chuẩn xác từng đồng qua VietQR!', 110, 1055);
-
-      // Fastest Settler Card
-      drawPixelCard(70, 1170, 940, 340, '#ffffff', '#FFE600', '#00C853', '#7B2CBF');
-      ctx.fillStyle = '#FF0055';
-      ctx.font = '900 24px monospace';
-      ctx.fillText('✦ LIGHTNING-FAST SETTLER // TẤT TOÁN NHANH NHẤT', 110, 1245);
-
-      ctx.fillStyle = '#059669';
-      ctx.font = '900 58px sans-serif';
-      const settlerName = fastestSettler?.displayName || (isEn ? 'WHOLE CREW' : 'CẢ NHÓM');
-      ctx.fillText(settlerName.toUpperCase(), 110, 1345);
-
-      ctx.fillStyle = '#18181b';
-      ctx.font = 'bold 28px sans-serif';
-      ctx.fillText('Tinh thần sòng phẳng thần tốc, chuẩn 10 điểm uy tín!', 110, 1430);
-
-    } else if (slideIndex === 4) {
-      // SLIDE 4: SPLIQO CYBER BOARDING PASS (FINALE)
-      drawStarburst(940, 200, 4, 40, 10, '#FFE600');
-      drawStarburst(120, 860, 4, 30, 7, '#FF0055');
-
-      // Chapter badge
-      ctx.fillStyle = '#FF0055';
-      ctx.fillRect(70, 160, 480, 46);
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#18181b';
-      ctx.strokeRect(70, 160, 480, 46);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 20px monospace';
-      ctx.fillText('★ CHAPTER 05 // OFFICIAL CYBER PASS', 90, 191);
-
-      // Title
-      ctx.font = '900 68px sans-serif';
-      ctx.fillStyle = '#18181b';
-      ctx.fillText(truncName.toUpperCase(), 70, 280);
-
-      ctx.fillStyle = '#7B2CBF';
-      ctx.font = 'bold 26px monospace';
-      ctx.fillText(`CODE: #${trip.tripCode || 'SPLIQO'} • TIMELINE: ${trip.startDate || '2026'}`, 70, 330);
-
-      // Giant Cyber Pass Card
-      drawPixelCard(70, 380, 940, 860, '#ffffff', '#00F0FF', '#7B2CBF', '#FF0055');
-
-      // Top Tag
-      ctx.fillStyle = '#FFE600';
-      ctx.fillRect(70, 380, 420, 52);
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#18181b';
-      ctx.strokeRect(70, 380, 420, 52);
-      ctx.fillStyle = '#18181b';
-      ctx.font = '900 22px monospace';
-      ctx.fillText('SPLIQO BOARDING PASS // 2026', 95, 415);
-
-      // Row 1: Total Spent
-      ctx.fillStyle = '#52525b';
-      ctx.font = 'bold 30px sans-serif';
-      ctx.fillText('Tổng chi tiêu toàn chuyến:', 110, 500);
-      ctx.textAlign = 'right';
-      ctx.fillStyle = '#FF4500';
-      ctx.font = '900 48px monospace';
-      ctx.fillText(formatVND(totalExpense), 970, 500);
-      ctx.textAlign = 'left';
-
-      // Row 2: Top Spender
-      ctx.fillStyle = '#52525b';
-      ctx.font = 'bold 30px sans-serif';
-      ctx.fillText('👑 Chủ tịch gánh team:', 110, 600);
-      ctx.textAlign = 'right';
-      ctx.fillStyle = '#18181b';
-      ctx.font = '900 36px sans-serif';
-      ctx.fillText(`${topPayer.displayName}`, 970, 600);
-      ctx.textAlign = 'left';
-
-      // Row 3: Biggest Bill
-      ctx.fillStyle = '#52525b';
-      ctx.font = 'bold 30px sans-serif';
-      ctx.fillText('🥩 Hóa đơn kỷ lục:', 110, 700);
-      ctx.textAlign = 'right';
-      ctx.fillStyle = '#059669';
-      ctx.font = '900 36px sans-serif';
-      const bTitle = topExpense ? topExpense.title : 'Chưa có';
-      const bTrunc = bTitle.length > 14 ? bTitle.substring(0, 12) + '...' : bTitle;
-      ctx.fillText(`${bTrunc}`, 970, 700);
-      ctx.textAlign = 'left';
-
-      // Row 4: Settlement
-      ctx.fillStyle = '#52525b';
-      ctx.font = 'bold 30px sans-serif';
-      ctx.fillText('⚡ Đối soát công nợ:', 110, 800);
-      ctx.textAlign = 'right';
-      ctx.fillStyle = '#7B2CBF';
-      ctx.font = '900 36px sans-serif';
-      ctx.fillText('100% Sòng phẳng', 970, 800);
-      ctx.textAlign = 'left';
-
-      // Dashed divider line
-      ctx.strokeStyle = '#dedbd0';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.setLineDash([10, 10]);
-      ctx.moveTo(110, 880);
-      ctx.lineTo(970, 880);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Holographic Stamp Box
-      ctx.fillStyle = '#FF0055';
-      ctx.font = '900 34px sans-serif';
-      ctx.fillText('★ CHỨNG NHẬN SÒNG PHẲNG SPLIQO ★', 110, 960);
-      ctx.fillStyle = '#18181b';
-      ctx.font = 'bold 26px sans-serif';
-      ctx.fillText('Tài chính rõ ràng • Đi chơi sảng khoái • Trọn vẹn tình bạn', 110, 1030);
-
-      ctx.fillStyle = '#059669';
-      ctx.font = '900 48px monospace';
-      ctx.fillText('GRADE: 10/10 ★★★★★', 110, 1140);
-
-      // Quote Card
-      drawPixelCard(70, 1300, 940, 260, '#ffffff', '#FFE600', '#FF0055', '#00F0FF');
-      ctx.fillStyle = '#7B2CBF';
-      ctx.font = '900 28px sans-serif';
-      ctx.fillText('✦ KỶ NIỆM VÔ GIÁ CÙNG SPLIQO ✦', 110, 1375);
-      ctx.fillStyle = '#18181b';
-      ctx.font = 'bold 26px sans-serif';
-      ctx.fillText('Chuyến đi đã khép lại, nhưng những kỷ niệm đẹp sẽ còn mãi.', 110, 1445);
-      ctx.fillText('Hẹn gặp lại cả nhóm trong hành trình tiếp theo!', 110, 1500);
-    }
-
-    // 9. Bottom Barcode & Cyber Watermark
-    const barcodeX = 70;
-    const barcodeY = 1760;
-    const barPattern = [4, 2, 8, 3, 2, 6, 4, 3, 7, 2, 4, 8, 3, 2, 5, 4, 2, 7, 3, 8, 2, 4, 6, 3, 2, 8, 5, 3, 2, 7];
-    let curX = barcodeX;
-    ctx.fillStyle = '#18181b';
-    for (const w of barPattern) {
-      ctx.fillRect(curX, barcodeY, w, 50);
-      curX += w + 6;
-    }
-
-    ctx.font = 'bold 22px monospace';
-    ctx.fillStyle = '#71717a';
-    ctx.fillText('* SPLIQO-CYBER-WRAPPED-2026 *', barcodeX, 1845);
-
-    ctx.textAlign = 'right';
-    ctx.fillStyle = '#18181b';
-    ctx.font = '900 26px monospace';
-    ctx.fillText('SPLIQO.APP ✦ SMART EXPENSE', 1010, 1795);
-    ctx.fillStyle = '#059669';
-    ctx.fillText('CHIA TIỀN TỨC THÌ • CHƠI ĐẸP', 1010, 1835);
-    ctx.textAlign = 'left';
-
-    return canvas;
-  };
-
-  // Convert canvas to Blob
-  const canvasToBlob = (canvas) => {
-    return new Promise((resolve) => {
-      canvas.toBlob((blob) => resolve(blob), 'image/png');
+  const canvasToBlob = (canvas) =>
+    new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error('Canvas export failed'));
+      }, 'image/png');
     });
-  };
 
-  // Trigger download helper
   const triggerDownload = (blob, filename) => {
     const blobUrl = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -799,608 +918,684 @@ export default function TripWrappedModal({
     setTimeout(() => URL.revokeObjectURL(blobUrl), 1500);
   };
 
-  // 1. Download single slide image
+  const isIOSDevice = () =>
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
   const handleDownloadSlide = async (slideIndex) => {
     try {
       setExporting(true);
+      await document.fonts?.ready;
       const canvas = generateSlideCanvas(slideIndex);
-      const blob = await canvasToBlob(canvas);
-      const cleanTripName = trip.name.replace(/[^a-zA-Z0-9\u00C0-\u024F\u1EA0-\u1EF9]/g, '_');
-      const filename = `Spliqo_Wrapped_${cleanTripName}_Story${slideIndex + 1}.png`;
+      const cleanName = analytics.safeTripName.replace(/[^a-zA-Z0-9\u00C0-\u024F\u1EA0-\u1EF9]/g, '_');
+      const filename = `Spliqo_Wrapped_${cleanName}_Story${slideIndex + 1}.png`;
 
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-      if (isIOS) {
-        setPreviewImage(canvas.toDataURL('image/png'));
-      } else {
-        triggerDownload(blob, filename);
-        showToast(isEn ? `Downloaded Story ${slideIndex + 1}!` : `Đã tải ảnh Story trang ${slideIndex + 1}!`, 'success');
+      if (isIOSDevice()) {
+        setPreviewImages([
+          {
+            slideIndex,
+            label: `${isEn ? 'Story' : 'Trang'} ${slideIndex + 1}/5`,
+            url: canvas.toDataURL('image/png'),
+            filename
+          }
+        ]);
+        return;
       }
+
+      const blob = await canvasToBlob(canvas);
+      triggerDownload(blob, filename);
+      showToast(isEn ? `Downloaded Story ${slideIndex + 1}!` : `Đã tải ảnh Story trang ${slideIndex + 1}!`, 'success');
     } catch (err) {
       console.error('Export error:', err);
-      showToast('Lỗi khi xuất ảnh', 'error');
+      showToast(t('exportImageError', 'Lỗi khi xuất ảnh'), 'error');
     } finally {
       setExporting(false);
     }
   };
 
-  // 2. Download all 5 slides sequentially
   const handleDownloadAllSlides = async () => {
     try {
       setExporting(true);
-      showToast(isEn ? 'Preparing all 5 story slides...' : 'Đang xuất toàn bộ 5 ảnh...', 'info');
+      await document.fonts?.ready;
+      const cleanName = analytics.safeTripName.replace(/[^a-zA-Z0-9\u00C0-\u024F\u1EA0-\u1EF9]/g, '_');
 
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-      if (isIOS) {
-        const canvas = generateSlideCanvas(currentSlide);
-        setPreviewImage(canvas.toDataURL('image/png'));
+      if (isIOSDevice()) {
+        showToast(isEn ? 'Generating all 5 stories for preview...' : 'Đang tạo bộ 5 ảnh Story để lưu về máy...', 'info');
+        const generated = [];
+        for (let i = 0; i < totalSlides; i++) {
+          const canvas = generateSlideCanvas(i);
+          generated.push({
+            slideIndex: i,
+            label: `${isEn ? 'Story' : 'Trang'} ${i + 1}/5`,
+            url: canvas.toDataURL('image/png'),
+            filename: `Spliqo_Wrapped_${cleanName}_Story${i + 1}.png`
+          });
+        }
+        setPreviewImages(generated);
         return;
       }
 
-      const cleanTripName = trip.name.replace(/[^a-zA-Z0-9\u00C0-\u024F\u1EA0-\u1EF9]/g, '_');
-
+      showToast(isEn ? 'Preparing all 5 story slides...' : 'Đang xuất toàn bộ 5 ảnh...', 'info');
       for (let i = 0; i < totalSlides; i++) {
         const canvas = generateSlideCanvas(i);
         const blob = await canvasToBlob(canvas);
-        const filename = `Spliqo_Wrapped_${cleanTripName}_Story${i + 1}.png`;
-        triggerDownload(blob, filename);
+        triggerDownload(blob, `Spliqo_Wrapped_${cleanName}_Story${i + 1}.png`);
         await new Promise((resolve) => setTimeout(resolve, 350));
       }
-
-      showToast(isEn ? 'Downloaded all 5 story slides successfully!' : 'Đã tải về toàn bộ 5 ảnh thành công!', 'success');
+      showToast(isEn ? 'Downloaded all 5 story slides!' : 'Đã tải về toàn bộ 5 ảnh thành công!', 'success');
     } catch (err) {
       console.error('Export all error:', err);
-      showToast('Lỗi khi tải ảnh', 'error');
+      showToast(t('downloadImageError', 'Lỗi khi tải ảnh'), 'error');
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleNativeSharePreview = async () => {
+    if (!previewImages || previewImages.length === 0) return;
+    try {
+      const files = await Promise.all(
+        previewImages.map(async (item) => {
+          const res = await fetch(item.url);
+          const blob = await res.blob();
+          return new File([blob], item.filename, { type: 'image/png' });
+        })
+      );
+      if (navigator.canShare && navigator.canShare({ files })) {
+        await navigator.share({
+          files,
+          title: `Spliqo Wrapped — ${analytics.safeTripName}`
+        });
+      }
+    } catch (err) {
+      if (err?.name !== 'AbortError') {
+        showToast(t('downloadImageError', 'Lỗi khi tải ảnh'), 'error');
+      }
+    }
+  };
+
+  // Story viewport tap & horizontal swipe handlers (never blocked by nested content container)
+  const handleTouchStart = (e) => {
+    const touch = e.touches?.[0];
+    if (!touch) return;
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!touchStartRef.current) return;
+    const touch = e.changedTouches?.[0];
+    if (!touch) return;
+    const dx = touch.clientX - touchStartRef.current.x;
+    const dy = touch.clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
+      justSwipedRef.current = true;
+      if (dx < 0) handleNext();
+      else handlePrev();
+      setTimeout(() => {
+        justSwipedRef.current = false;
+      }, 250);
+    }
+  };
+
+  const handleViewportClick = (e) => {
+    if (justSwipedRef.current) return;
+    if (e.target.closest('button, a, input, [data-interactive="true"]')) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const relX = e.clientX - rect.left;
+    if (relX < rect.width * 0.28) {
+      handlePrev();
+    } else {
+      handleNext();
     }
   };
 
   if (!isOpen || !trip) return null;
 
-  const truncName = trip.name.length > 20 ? trip.name.substring(0, 18) + '...' : trip.name;
+  const s0 = slideCopy[0];
+  const s1 = slideCopy[1];
+  const s2 = slideCopy[2];
+  const s3 = slideCopy[3];
+  const s4 = slideCopy[4];
+  const canNativeFileShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function' && typeof navigator.canShare === 'function';
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-0 sm:p-4 select-none animate-fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="wrapped-modal-title"
+      className="fixed inset-0 z-[100] bg-[#f4f3ec]/92 dark:bg-[#0f0f12]/92 backdrop-blur-xl flex flex-col items-center justify-center p-0 sm:p-4 select-none animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      {/* 9:16 Vertical Story Viewer Container */}
+      {/* Screen reader live announcement on slide navigation */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {isEn
+          ? `Story ${currentSlide + 1} of ${totalSlides}: ${slideCopy[currentSlide]?.heading}`
+          : `Trang ${currentSlide + 1} trên ${totalSlides}: ${slideCopy[currentSlide]?.heading}`}
+      </div>
+
+      {/* 9:16 Vertical Tactile Clay Story Viewer Container */}
       <div
-        ref={storyContainerRef}
-        className="relative w-full max-w-[440px] h-[100dvh] sm:h-[92dvh] max-h-[900px] flex flex-col justify-between overflow-hidden bg-[#faf9f6] text-[#18181b] sm:rounded-[2.5rem] border-0 sm:border-2 sm:border-[#18181b] shadow-[0_20px_50px_rgba(0,0,0,0.35)]"
+        ref={dialogRef}
+        tabIndex={-1}
+        className="relative w-full sm:max-w-[440px] h-[100dvh] sm:h-[92dvh] max-h-[900px] flex flex-col justify-between overflow-hidden bg-[#f4f3ec] dark:bg-[#14141a] text-[#18181b] dark:text-[#f4f4f6] sm:rounded-[2.5rem] border-0 sm:border sm:border-[#dedbd0] sm:dark:border-[#2e2e38] shadow-[0_25px_60px_-15px_rgba(24,24,27,0.18)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.75)] focus:outline-none"
       >
-        {/* Dynamic 3D Psychedelic Ribbon SVG Background */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-90 z-0">
-          <svg className="w-full h-full" viewBox="0 0 440 850" fill="none">
-            <defs>
-              <linearGradient id="cyberRibbonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#00F0FF" />
-                <stop offset="25%" stopColor="#0047FF" />
-                <stop offset="50%" stopColor="#7B2CBF" />
-                <stop offset="75%" stopColor="#FF0055" />
-                <stop offset="100%" stopColor="#FFE600" />
-              </linearGradient>
-              <filter id="ribbonGlow" x="-30%" y="-30%" width="160%" height="160%">
-                <feGaussianBlur stdDeviation="8" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-
-            {/* Ambient Background Grid */}
-            <g stroke="rgba(24, 24, 27, 0.05)" strokeWidth="1">
-              {Array.from({ length: 15 }).map((_, i) => (
-                <line key={`v-${i}`} x1={i * 32} y1="0" x2={i * 32} y2="850" />
-              ))}
-              {Array.from({ length: 28 }).map((_, i) => (
-                <line key={`h-${i}`} x1="0" y1={i * 32} x2="440" y2={i * 32} />
-              ))}
-            </g>
-
-            {/* 3D Curving Twisted Ribbon */}
-            <path
-              d={
-                currentSlide === 0
-                  ? "M-40,180 C80,80 140,420 260,320 C380,220 360,650 480,560"
-                  : currentSlide === 1
-                    ? "M-30,280 C120,180 160,520 280,420 C400,320 380,720 480,680"
-                    : currentSlide === 2
-                      ? "M-40,220 C100,320 180,180 300,450 C380,620 420,520 480,750"
-                      : currentSlide === 3
-                        ? "M-30,350 C80,200 160,580 300,400 C390,280 380,700 480,620"
-                        : "M-40,150 C120,250 180,120 280,380 C360,550 400,450 480,700"
-              }
-              stroke="url(#cyberRibbonGrad)"
-              strokeWidth="42"
-              strokeLinecap="round"
-              filter="url(#ribbonGlow)"
-              className="transition-all duration-700 ease-out"
-            />
-
-            {/* White Tube Specular Highlight */}
-            <path
-              d={
-                currentSlide === 0
-                  ? "M-40,180 C80,80 140,420 260,320 C380,220 360,650 480,560"
-                  : currentSlide === 1
-                    ? "M-30,280 C120,180 160,520 280,420 C400,320 380,720 480,680"
-                    : currentSlide === 2
-                      ? "M-40,220 C100,320 180,180 300,450 C380,620 420,520 480,750"
-                      : currentSlide === 3
-                        ? "M-30,350 C80,200 160,580 300,400 C390,280 380,700 480,620"
-                        : "M-40,150 C120,250 180,120 280,380 C360,550 400,450 480,700"
-              }
-              stroke="rgba(255, 255, 255, 0.85)"
-              strokeWidth="6"
-              strokeLinecap="round"
-              className="transition-all duration-700 ease-out"
-            />
-          </svg>
+        {/* Subtle Tactile Ambient Glow (non-intrusive, keeps body copy contrast clean) */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
+          <div className="absolute -top-20 -right-16 w-72 h-72 rounded-full bg-emerald-400/18 dark:bg-emerald-500/12 blur-3xl" />
+          <div className="absolute -bottom-20 -left-16 w-72 h-72 rounded-full bg-amber-400/16 dark:bg-amber-500/10 blur-3xl" />
         </div>
 
         {/* TOP STORY HEADER & PROGRESS BARS */}
-        <div className="relative z-20 px-4 pt-[max(3.5rem,calc(env(safe-area-inset-top)+1rem))] sm:pt-4 pb-2 space-y-2.5 shrink-0 bg-gradient-to-b from-[#faf9f6] via-[#faf9f6]/90 to-transparent">
-          {/* Segmented Story Progress Bar */}
-          <div className="flex items-center gap-1.5 w-full">
-            {Array.from({ length: totalSlides }).map((_, idx) => (
-              <div
-                key={idx}
-                onClick={() => {
-                  setCurrentSlide(idx);
-                  setProgress(0);
-                }}
-                className="h-1 flex-1 rounded-full overflow-hidden bg-black/10 cursor-pointer"
-              >
-                <div
-                  className="h-full bg-[#18181b] shadow-[0_0_4px_rgba(0,0,0,0.3)] transition-all duration-100 ease-linear"
-                  style={{
-                    width: idx < currentSlide ? '100%' : idx === currentSlide ? `${progress}%` : '0%'
-                  }}
-                />
-              </div>
-            ))}
-          </div>
+        <div className="relative z-20 px-4 pt-[max(0.875rem,calc(env(safe-area-inset-top)+0.625rem))] sm:pt-4 pb-2 space-y-2.5 shrink-0 bg-[#f4f3ec]/85 dark:bg-[#14141a]/85 backdrop-blur-md border-b border-[#e6e4dc]/45 dark:border-[#272732]/50">
+          <StoryProgressBar
+            isOpen={isOpen}
+            isPaused={isPaused || Boolean(previewImages)}
+            currentSlide={currentSlide}
+            totalSlides={totalSlides}
+            slideDuration={slideDuration}
+            onAutoAdvance={handleAutoAdvance}
+            onReachEnd={handleReachEnd}
+            onSelectSlide={handleSelectSlide}
+            isEn={isEn}
+          />
 
-          {/* Top Bar Navigation & Info */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 bg-[#FFE600] text-black font-mono font-black text-[10px] tracking-wider uppercase border border-[#18181b] shadow-[2px_2px_0px_#18181b]">
-                SPLIQO WRAPPED ✦
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span
+                id="wrapped-modal-title"
+                className="px-3 py-1 rounded-full bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] font-bold text-xs tracking-normal inline-flex items-center gap-1.5 shrink-0"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 dark:text-amber-600" aria-hidden="true" />
+                <span>Spliqo Wrapped</span>
               </span>
-              <span className="font-mono text-xs font-bold text-[#7B2CBF] tracking-wider">
-                STORY {currentSlide + 1}/5
+              <span className="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                {currentSlide + 1}/{totalSlides}
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Play/Pause Button */}
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
-                onClick={() => setIsPaused((p) => !p)}
-                className="p-1.5 rounded-full bg-black/5 hover:bg-black/10 text-[#18181b] border border-black/10 transition-all cursor-pointer"
-                title={isPaused ? "Tiếp tục" : "Tạm dừng"}
+                onClick={() => {
+                  autoPausedAtEndRef.current = false;
+                  setIsPaused((p) => !p);
+                }}
+                aria-pressed={isPaused}
+                className="w-11 h-11 rounded-full bg-white dark:bg-[#212129] hover:bg-[#eae8df] dark:hover:bg-[#2c2c36] text-[#18181b] dark:text-white border border-[#dedbd0] dark:border-[#32323e] flex items-center justify-center transition-colors cursor-pointer"
+                title={isPaused ? t('resumeStory', 'Tiếp tục') : t('pauseStory', 'Tạm dừng')}
+                aria-label={isPaused ? t('resumeStory', 'Tiếp tục') : t('pauseStory', 'Tạm dừng')}
               >
-                {isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5 fill-current" />}
+                {isPaused ? <Play className="w-4 h-4 fill-current" aria-hidden="true" /> : <Pause className="w-4 h-4 fill-current" aria-hidden="true" />}
               </button>
 
-              {/* Close Button */}
               <button
                 type="button"
                 onClick={onClose}
-                className="w-7 h-7 rounded-full bg-black/5 hover:bg-[#FF0055] hover:text-white text-[#18181b] border border-black/10 flex items-center justify-center transition-all cursor-pointer hover:rotate-90 active:scale-90"
-                title="Đóng (ESC)"
+                className="w-11 h-11 rounded-full bg-white dark:bg-[#212129] hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-700 dark:hover:text-rose-400 text-[#18181b] dark:text-white border border-[#dedbd0] dark:border-[#32323e] flex items-center justify-center transition-colors cursor-pointer"
+                title={t('closeEsc', 'Đóng (ESC)')}
+                aria-label={t('close', 'Đóng')}
               >
-                <X className="w-4 h-4 stroke-[2.5]" />
+                <X className="w-4 h-4 stroke-[2.4]" aria-hidden="true" />
               </button>
             </div>
           </div>
         </div>
 
-        {/* TAP NAVIGATION ZONES (Left 30% = Prev, Right 70% = Next) */}
+        {/* STORY SLIDE CONTENT VIEWPORT (Tap left 28% / right 72% or swipe horizontally) */}
         <div
-          className="absolute inset-0 z-10 flex"
-          onMouseDown={() => setIsPaused(true)}
-          onMouseUp={() => setIsPaused(false)}
-          onTouchStart={() => setIsPaused(true)}
-          onTouchEnd={() => setIsPaused(false)}
+          className="relative z-10 flex-1 px-4 sm:px-5 flex flex-col overflow-y-auto custom-scrollbar py-4 sm:py-5 cursor-pointer"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onClick={handleViewportClick}
         >
-          <div
-            className="w-[28%] h-full cursor-w-resize"
-            onClick={(e) => {
-              e.stopPropagation();
-              handlePrev();
-            }}
-          />
-          <div
-            className="w-[72%] h-full cursor-e-resize"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNext();
-            }}
-          />
-        </div>
-
-        {/* STORY SLIDE CONTENT CONTAINER */}
-        <div className="relative z-10 flex-1 px-4 sm:px-5 flex flex-col justify-center overflow-y-auto custom-scrollbar my-auto py-2">
-
-          {/* SLIDE 0: CHAPTER 01 • THE EXPEDITION (BỨC TRANH TÀI CHÍNH) */}
+          <div className="my-auto w-full">
+          {/* SLIDE 0: OVERVIEW */}
           {currentSlide === 0 && (
-            <div className="space-y-3 animate-fade-in">
-              <div className="flex items-center justify-between">
-                <span className="inline-block px-2.5 py-0.5 bg-[#FFE600] text-black font-mono font-black text-[10px] tracking-wider uppercase border border-[#18181b] shadow-[2px_2px_0px_#18181b]">
-                  ✦ CHƯƠNG 01 // OVERVIEW ✦
+            <div className="space-y-4 animate-fade-in">
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 text-[11px] font-bold tracking-wide uppercase">
+                  {s0.chapter}
                 </span>
-                <span className="text-[#FF0055] text-lg font-black animate-pulse">✶</span>
               </div>
 
               <div>
-                <h2 className="text-3xl sm:text-4xl font-black text-[#18181b] tracking-tighter uppercase leading-none">
-                  {truncName}
+                <h2 className="text-3xl font-extrabold text-[#18181b] dark:text-white tracking-tight leading-tight break-words">
+                  {s0.heading}
                 </h2>
-                <p className="text-[11px] font-mono font-bold text-[#52525b] mt-1 tracking-wider">
-                  [ {totalDays} NGÀY KHÁM PHÁ • {members.length} THÀNH VIÊN • #{trip.tripCode || 'SPLIQO'} ]
+                <p className="text-xs font-mono font-semibold text-zinc-600 dark:text-zinc-400 mt-1.5">
+                  {s0.meta}
                 </p>
               </div>
 
-              {/* Main Stat Card (Crisp White Card with Stepped Shadows) */}
-              <div className="p-4 bg-white border-2 border-[#18181b] shadow-[4px_4px_0px_#00F0FF,8px_8px_0px_#FF0055] space-y-1 relative">
-                <div className="flex items-center justify-between text-[10px] font-mono font-black text-[#FF0055] tracking-wider uppercase">
-                  <span>► TỔNG CHI PHÍ CHUYẾN ĐI</span>
-                  <span className="text-[#18181b] text-xs">✦</span>
+              <div className="tactile-card p-5 space-y-2.5">
+                <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider block">
+                  {s0.heroLabel}
+                </span>
+                <div className="text-[2.125rem] sm:text-4xl leading-none font-extrabold text-[#18181b] dark:text-white font-mono tracking-tight">
+                  {s0.heroValue}
                 </div>
-                <div className="text-3xl sm:text-4xl font-black text-[#FF4500] font-mono tracking-tight">
-                  {formatVND(totalExpense)}
-                </div>
-                <div className="pt-2 border-t-2 border-dashed border-[#e4e2d8] flex items-center justify-between text-xs font-bold font-mono">
-                  <span className="text-zinc-500">Định mức bình quân:</span>
-                  <span className="text-[#059669] font-black">{formatVND(avgPerPerson)}/người</span>
+                <div className="pt-3 border-t border-dashed border-[#e6e4dc] dark:border-[#2e2e38] flex items-center justify-between gap-2 flex-wrap text-xs font-bold">
+                  <span className="text-zinc-600 dark:text-zinc-400">{s0.avgLabel}</span>
+                  <span className="font-mono text-emerald-700 dark:text-emerald-400">{s0.avgValue}</span>
                 </div>
               </div>
 
-              {/* Two Mini Pixel Cards */}
-              <div className="grid grid-cols-2 gap-2.5">
-                <div className="p-3 bg-white border-2 border-[#18181b] shadow-[3px_3px_0px_#FFE600] space-y-0.5">
-                  <div className="text-[9px] font-mono font-black text-[#7B2CBF] uppercase tracking-wider flex items-center gap-1">
-                    <Receipt className="w-3 h-3" />
-                    <span>HÓA ĐƠN</span>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="tactile-card p-4 space-y-1.5">
+                  <div className="text-xs font-bold text-zinc-600 dark:text-zinc-400 flex items-center gap-1.5">
+                    <Receipt className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+                    <span>{s0.stat1Label}</span>
                   </div>
-                  <div className="text-lg font-black text-[#18181b] font-sans tracking-tight">
-                    {expenses.length} KHOẢN CHI
+                  <div className="text-base sm:text-lg font-extrabold text-[#18181b] dark:text-white">
+                    {s0.stat1Value}
                   </div>
                 </div>
 
-                <div className="p-3 bg-white border-2 border-[#18181b] shadow-[3px_3px_0px_#00F0FF] space-y-0.5">
-                  <div className="text-[9px] font-mono font-black text-[#0284c7] uppercase tracking-wider flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    <span>HÀNH TRÌNH</span>
+                <div className="tactile-card p-4 space-y-1.5">
+                  <div className="text-xs font-bold text-zinc-600 dark:text-zinc-400 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-sky-700 dark:text-sky-400" aria-hidden="true" />
+                    <span>{s0.stat2Label}</span>
                   </div>
-                  <div className="text-lg font-black text-[#18181b] font-sans tracking-tight">
-                    {totalDays} NGÀY ĐI
+                  <div className="text-base sm:text-lg font-extrabold text-[#18181b] dark:text-white">
+                    {s0.stat2Value}
                   </div>
                 </div>
               </div>
 
-              {/* Highlight Tag */}
-              <div className="p-2.5 bg-white border border-[#18181b] shadow-[2px_2px_0px_#FF0055] flex items-center justify-between text-[11px] font-mono font-bold">
-                <span className="text-[#FF0055] font-black">✦ STATUS: 100% RECONCILED</span>
-                <span className="text-[#7B2CBF]">ZERO DRAMA ⚡</span>
+              <div
+                className={`p-3.5 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 ${
+                  analytics.isFullySettled
+                    ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800/50 text-emerald-800 dark:text-emerald-300'
+                    : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/50 text-amber-900 dark:text-amber-300'
+                }`}
+              >
+                {analytics.isFullySettled ? (
+                  <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
+                ) : (
+                  <Clock className="w-4 h-4 shrink-0" aria-hidden="true" />
+                )}
+                <span>{s0.statusLabel}</span>
               </div>
             </div>
           )}
 
-          {/* SLIDE 1: CHAPTER 02 • THE MONEY LORD (CHỦ TỊCH GÁNH TEAM) */}
+          {/* SLIDE 1: TOP PAYER */}
           {currentSlide === 1 && (
-            <div className="space-y-3.5 animate-fade-in text-center">
+            <div className="space-y-4 animate-fade-in text-center">
               <div className="flex justify-center">
-                <span className="px-3 py-0.5 bg-[#FF0055] text-white font-mono font-black text-[10px] tracking-wider uppercase border border-[#18181b] shadow-[2px_2px_0px_#18181b]">
-                  CHƯƠNG 02 // TOP SPENDER MVP
+                <span className="px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50 text-[11px] font-bold tracking-wide uppercase">
+                  {s1.chapter}
                 </span>
               </div>
 
-              {/* Avatar Box */}
               <div className="relative inline-block mx-auto">
-                <div className="w-20 h-20 rounded-none bg-white border-2 border-[#18181b] shadow-[4px_4px_0px_#FF0055,8px_8px_0px_#FFE600] p-1 overflow-hidden flex items-center justify-center">
-                  <span className="text-4xl">👑</span>
-                </div>
-                <div className="absolute -bottom-2 -right-2 px-1.5 py-0.5 bg-[#FFE600] text-black font-mono font-black text-[9px] border border-[#18181b] shadow-[1.5px_1.5px_0px_#18181b]">
-                  #1 MVP
-                </div>
+                {analytics.hasTopPayer && analytics.topPayer.photoURL ? (
+                  <img
+                    src={analytics.topPayer.photoURL}
+                    alt=""
+                    className="w-20 h-20 rounded-3xl object-cover border-2 border-[#dedbd0] dark:border-[#32323e] shadow-md bg-white dark:bg-[#212129]"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-3xl bg-white dark:bg-[#18181f] border border-[#dedbd0] dark:border-[#2e2e38] shadow-sm flex items-center justify-center text-4xl" aria-hidden="true">
+                    {analytics.hasTopPayer ? '👑' : '🧾'}
+                  </div>
+                )}
+                {analytics.hasTopPayer && (
+                  <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-full bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] font-mono font-bold text-[11px] shadow-xs">
+                    #1
+                  </span>
+                )}
               </div>
 
               <div>
-                <h3 className="text-2xl sm:text-3xl font-black text-[#18181b] uppercase tracking-tight">
-                  {topPayer.displayName}
+                <h3 className="text-2xl font-extrabold text-[#18181b] dark:text-white tracking-tight break-words">
+                  {s1.heading}
                 </h3>
-                <p className="text-[10px] font-mono font-bold text-zinc-500 tracking-wider mt-0.5">
-                  [ NGƯỜI CHỊU CHI BẠO TAY NHẤT CẢ CHUYẾN ĐI ]
+                <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400 mt-1">
+                  {s1.subline}
                 </p>
               </div>
 
-              {/* Main Spend Box */}
-              <div className="p-3.5 bg-white border-2 border-[#18181b] shadow-[4px_4px_0px_#FFE600] text-left space-y-1">
-                <div className="text-[9px] font-mono font-black uppercase text-[#FF0055] tracking-wider">
-                  ► TỔNG TIỀN ĐÃ ỨNG TRƯỚC:
+              <div className="tactile-card p-5 text-left space-y-2">
+                <div className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
+                  {s1.amountLabel}
                 </div>
-                <div className="text-2xl sm:text-3xl font-black text-[#FF4500] font-mono tracking-tight">
-                  {formatVND(topPayer.totalPaid)}
+                <div className="text-2xl sm:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400 font-mono tracking-tight">
+                  {s1.amountValue}
                 </div>
-                <p className="text-[11px] font-bold text-zinc-600 pt-1 border-t border-dashed border-[#e4e2d8]">
-                  Gánh tới <strong className="text-[#0284c7] font-black">{topPayerPercent}%</strong> toàn bộ ngân sách chi tiêu cả đoàn!
+                <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 pt-2.5 border-t border-dashed border-[#e6e4dc] dark:border-[#2e2e38]">
+                  {s1.shareLine}
                 </p>
               </div>
 
-              {/* Shoutout Tag */}
-              <div className="p-2.5 bg-white border border-[#18181b] shadow-[2px_2px_0px_#059669] text-[11px] text-[#18181b] font-bold">
-                🙏 Cả đoàn xin nghiêng mình cảm tạ chủ tịch đã quẹt thẻ trước không trượt phát nào!
+              <div className="p-3.5 rounded-2xl bg-white/85 dark:bg-[#18181f] border border-[#e6e4dc] dark:border-[#272732] text-xs font-medium text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                {s1.footerNote}
               </div>
             </div>
           )}
 
-          {/* SLIDE 2: CHAPTER 03 • THE RECORD BREAKER (HÓA ĐƠN KỶ LỤC) */}
+          {/* SLIDE 2: STANDOUT BILL */}
           {currentSlide === 2 && (
-            <div className="space-y-3.5 animate-fade-in">
-              <div className="flex justify-between items-center">
-                <span className="px-3 py-0.5 bg-[#059669] text-white font-mono font-black text-[10px] tracking-wider uppercase border border-[#18181b] shadow-[2px_2px_0px_#18181b]">
-                  CHƯƠNG 03 // BIGGEST RECORD BILL
-                </span>
-                <span className="text-[#059669] text-base font-black">✦</span>
-              </div>
+            <div className="space-y-4 animate-fade-in">
+              <span className="inline-block px-3 py-1 rounded-full bg-sky-100 dark:bg-sky-950/60 text-sky-900 dark:text-sky-300 border border-sky-200 dark:border-sky-800/50 text-[11px] font-bold tracking-wide uppercase">
+                {s2.chapter}
+              </span>
 
               <div>
-                <h3 className="text-xl sm:text-2xl font-black text-[#18181b] tracking-tight uppercase">
-                  HÓA ĐƠN KỶ LỤC
+                <h3 className="text-2xl font-extrabold text-[#18181b] dark:text-white tracking-tight">
+                  {s2.heading}
                 </h3>
-                <p className="text-[10px] font-mono font-bold text-zinc-500 tracking-wider">
-                  [ THE HEAVYWEIGHT CHAMPION OF EXPENSES ]
+                <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400 mt-1">
+                  {s2.subline}
                 </p>
               </div>
 
-              {/* Record Bill Card */}
-              <div className="p-3.5 bg-white border-2 border-[#18181b] shadow-[4px_4px_0px_#00F0FF,8px_8px_0px_#7B2CBF] space-y-1">
-                <span className="text-[9px] font-mono font-black text-[#0284c7] uppercase tracking-wider">
-                  ► HÓA ĐƠN ĐẮT ĐỎ NHẤT
+              <div className="tactile-card p-5 space-y-2">
+                <span className="text-xs font-bold text-sky-700 dark:text-sky-400 uppercase tracking-wider block">
+                  {isEn ? 'Expense title' : 'Tên khoản chi'}
                 </span>
-                <h4 className="text-lg sm:text-xl font-black text-[#18181b] uppercase truncate">
-                  {topExpense ? `"${topExpense.title}"` : '"Chưa có khoản chi"'}
+                <h4 className="text-lg sm:text-xl font-extrabold text-[#18181b] dark:text-white line-clamp-2 break-words">
+                  {s2.billTitle}
                 </h4>
-                <div className="text-2xl sm:text-3xl font-black text-[#059669] font-mono">
-                  {formatVND(topExpense ? topExpense.amount : 0)}
+                <div className="text-2xl sm:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400 font-mono">
+                  {s2.billAmount}
                 </div>
               </div>
 
-              {/* Anatomy details */}
-              <div className="p-3 bg-white border-2 border-[#18181b] shadow-[3px_3px_0px_#FFE600] text-xs font-bold font-mono space-y-1.5">
-                <div className="flex justify-between text-zinc-600">
-                  <span>Người thanh toán:</span>
-                  <strong className="text-[#18181b]">{topExpensePayer?.displayName || 'Thành viên'}</strong>
+              <div className="tactile-card p-4 sm:p-5 space-y-2.5 text-xs">
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <span className="text-zinc-600 dark:text-zinc-400 font-medium shrink-0">{s2.payerLabel}</span>
+                  <strong className="text-[#18181b] dark:text-white font-bold truncate max-w-[60%] text-right">{s2.payerValue}</strong>
                 </div>
-                <div className="flex justify-between text-zinc-600">
-                  <span>Ngày ghi nhận:</span>
-                  <span className="text-[#FF4500]">{topExpense?.date || 'Trong chuyến đi'}</span>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-zinc-600 dark:text-zinc-400 font-medium shrink-0">{s2.dateLabel}</span>
+                  <span className="font-mono font-bold text-[#18181b] dark:text-white">{s2.dateValue}</span>
                 </div>
-                <div className="flex justify-between text-zinc-600">
-                  <span>Số người chia:</span>
-                  <span className="text-[#059669]">{topExpense?.participants?.length || members.length} thành viên</span>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-zinc-600 dark:text-zinc-400 font-medium flex items-center gap-1 shrink-0">
+                    <Users className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>{s2.splitLabel}</span>
+                  </span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-400">{s2.splitValue}</span>
                 </div>
               </div>
 
-              {/* Tagline */}
-              <div className="p-2.5 bg-white border border-[#18181b] shadow-[2px_2px_0px_#FF0055] text-[11px] text-[#18181b] font-bold text-center">
-                ✦ Bữa ăn ngon nhất chính là những kỷ niệm đắt giá nhất! ✦
+              <div className="p-3.5 rounded-2xl bg-white/85 dark:bg-[#18181f] border border-[#e6e4dc] dark:border-[#272732] text-xs font-medium text-zinc-700 dark:text-zinc-300 text-center leading-relaxed">
+                {s2.footerNote}
               </div>
             </div>
           )}
 
-          {/* SLIDE 3: CHAPTER 04 • ZERO DRAMA / 100% SÒNG PHẲNG */}
+          {/* SLIDE 3: HONEST SETTLEMENT PROGRESS */}
           {currentSlide === 3 && (
-            <div className="space-y-3.5 animate-fade-in text-center">
-              <div className="flex justify-center">
-                <span className="px-3 py-0.5 bg-[#7B2CBF] text-white font-mono font-black text-[10px] tracking-wider uppercase border border-[#18181b] shadow-[2px_2px_0px_#18181b]">
-                  ⚡ CHƯƠNG 04 // FAIR-PLAY ENERGY ⚡
-                </span>
-              </div>
-
-              <div className="w-16 h-16 mx-auto bg-white border-2 border-[#18181b] shadow-[4px_4px_0px_#00F0FF] flex items-center justify-center">
-                <span className="text-3xl">⚡</span>
-              </div>
+            <div className="space-y-4 animate-fade-in">
+              <span
+                className={`inline-block px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase border ${
+                  analytics.isFullySettled
+                    ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50'
+                    : 'bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border-amber-200 dark:border-amber-800/50'
+                }`}
+              >
+                {s3.chapter}
+              </span>
 
               <div>
-                <h3 className="text-2xl sm:text-3xl font-black text-[#18181b] tracking-tight uppercase">
-                  100% SÒNG PHẲNG
+                <h3 className="text-2xl font-extrabold text-[#18181b] dark:text-white tracking-tight">
+                  {s3.heading}
                 </h3>
-                <p className="text-[10px] font-mono font-bold text-zinc-500 tracking-wider">
-                  [ ZERO DRAMA • MAXIMUM CREDIBILITY ]
+                <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400 mt-1">
+                  {s3.subline}
                 </p>
               </div>
 
-              {/* Progress Card */}
-              <div className="p-3.5 bg-white border-2 border-[#18181b] shadow-[4px_4px_0px_#FF0055] text-left space-y-1.5">
-                <div className="flex justify-between text-[10px] font-mono font-black text-[#7B2CBF] uppercase tracking-wider">
-                  <span>TIẾN ĐỘ ĐỐI SOÁT:</span>
-                  <span className="text-[#059669]">100% COMPLETE</span>
+              <div className="tactile-card p-5 space-y-3">
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="text-zinc-600 dark:text-zinc-400">{s3.progressLabel}</span>
+                  <span
+                    className={`font-mono font-extrabold ${
+                      analytics.isFullySettled
+                        ? 'text-emerald-700 dark:text-emerald-400'
+                        : 'text-amber-800 dark:text-amber-300'
+                    }`}
+                  >
+                    {s3.progressPercentText}
+                  </span>
                 </div>
 
-                {/* Stepped Pixel Progress Bar */}
-                <div className="w-full bg-[#f4f3ec] h-3.5 border-2 border-[#18181b] p-0.5">
-                  <div className="h-full w-full bg-gradient-to-r from-[#00F0FF] via-[#7B2CBF] to-[#FFE600]" />
+                <div className="w-full h-3 rounded-full bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      analytics.isFullySettled ? 'bg-emerald-500' : 'bg-amber-500'
+                    }`}
+                    style={{ width: `${analytics.settlementPercent}%` }}
+                  />
                 </div>
 
-                <p className="text-[10px] text-zinc-600 font-bold">
-                  Mọi khoản nợ được tất toán thần tốc và minh bạch chuẩn từng đồng qua VietQR!
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                  {s3.settlerDesc}
                 </p>
               </div>
 
-              {/* Fastest Settler */}
-              <div className="p-3 bg-white border-2 border-[#18181b] shadow-[3px_3px_0px_#059669] text-left">
-                <div className="text-[9px] font-mono font-black text-[#FF0055] uppercase tracking-wider">
-                  ⚡ THÀNH VIÊN THANH TOÁN THẦN TỐC:
+              <div className="tactile-card p-5 space-y-1.5">
+                <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider block">
+                  {s3.settlerCardTitle}
+                </span>
+                <div className="text-lg font-extrabold text-[#18181b] dark:text-white break-words">
+                  {s3.settlerName}
                 </div>
-                <div className="text-lg font-black text-[#059669] uppercase mt-0.5">
-                  {fastestSettler?.displayName || (isEn ? 'Whole crew' : 'CẢ NHÓM')}
-                </div>
-                <p className="text-[10px] font-mono text-zinc-500">
-                  Quét mã QR nhanh như chớp, chuẩn 10/10 uy tín!
-                </p>
               </div>
             </div>
           )}
 
-          {/* SLIDE 4: CHAPTER 05 • CYBER BOARDING PASS (FINALE) */}
+          {/* SLIDE 4: RECAP SUMMARY CARD */}
           {currentSlide === 4 && (
-            <div className="space-y-3 animate-fade-in">
-              <div className="flex items-center justify-between">
-                <span className="px-2.5 py-0.5 bg-[#FF0055] text-white font-mono font-black text-[10px] tracking-wider uppercase border border-[#18181b] shadow-[2px_2px_0px_#18181b]">
-                  ★ CHƯƠNG 05 // CYBER PASS ★
+            <div className="space-y-4 animate-fade-in">
+              <div className="flex items-center justify-between gap-2">
+                <span className="px-3 py-1 rounded-full bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] text-[11px] font-bold tracking-wide uppercase">
+                  {s4.chapter}
                 </span>
-                <span className="text-[#7B2CBF] text-sm font-mono font-black">2026 // PASS</span>
+                <span className="text-xs font-mono font-bold text-zinc-600 dark:text-zinc-400">
+                  {s4.yearBadge}
+                </span>
               </div>
 
               <div>
-                <h3 className="text-xl sm:text-2xl font-black text-[#18181b] uppercase tracking-tight truncate">
-                  {truncName}
+                <h3 className="text-2xl font-extrabold text-[#18181b] dark:text-white tracking-tight line-clamp-2 break-words">
+                  {s4.heading}
                 </h3>
-                <p className="text-[10px] font-mono font-bold text-[#7B2CBF] tracking-wider">
-                  CODE: #{trip.tripCode || 'SPLIQO'} • {trip.startDate}
+                <p className="text-xs font-mono font-semibold text-zinc-600 dark:text-zinc-400 mt-1">
+                  {s4.meta}
                 </p>
               </div>
 
-              {/* The Cyber Ticket Breakdown */}
-              <div className="p-3.5 bg-white border-2 border-[#18181b] shadow-[4px_4px_0px_#00F0FF,8px_8px_0px_#FF0055] space-y-1.5 text-xs font-mono font-bold">
-                <div className="flex justify-between items-center pb-1 border-b border-dashed border-[#e4e2d8]">
-                  <span className="text-zinc-500">Tổng chi toàn chuyến:</span>
-                  <strong className="text-sm font-black text-[#FF4500]">{formatVND(totalExpense)}</strong>
+              <div className="tactile-card p-5 space-y-3 text-xs">
+                <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-dashed border-[#e6e4dc] dark:border-[#2e2e38]">
+                  <span className="text-zinc-600 dark:text-zinc-400 font-medium">{s4.row1Label}</span>
+                  <strong className="text-base font-extrabold font-mono text-[#18181b] dark:text-white">{s4.row1Value}</strong>
                 </div>
 
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-zinc-500">Chi bạo nhất:</span>
-                  <strong className="text-[#0284c7] truncate max-w-[150px]">{topPayer.displayName}</strong>
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <span className="text-zinc-600 dark:text-zinc-400 font-medium shrink-0">{s4.row2Label}</span>
+                  <strong className="font-bold text-[#18181b] dark:text-white truncate max-w-[58%] text-right">{s4.row2Value}</strong>
                 </div>
 
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-zinc-500">Bill đắt nhất:</span>
-                  <strong className="text-[#059669] truncate max-w-[150px]">{topExpense ? topExpense.title : 'Chưa có'}</strong>
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <span className="text-zinc-600 dark:text-zinc-400 font-medium shrink-0">{s4.row3Label}</span>
+                  <strong className="font-bold text-emerald-700 dark:text-emerald-400 truncate max-w-[58%] text-right">{s4.row3Value}</strong>
                 </div>
 
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-zinc-500">Đối soát:</span>
-                  <strong className="text-[#7B2CBF]">100% Sòng phẳng</strong>
+                <div className="flex items-center justify-between gap-2 pt-1 min-w-0">
+                  <span className="text-zinc-600 dark:text-zinc-400 font-medium shrink-0">{s4.row4Label}</span>
+                  <strong
+                    className={`font-bold text-right ${
+                      analytics.isFullySettled
+                        ? 'text-emerald-700 dark:text-emerald-400'
+                        : 'text-amber-800 dark:text-amber-300'
+                    }`}
+                  >
+                    {s4.row4Value}
+                  </strong>
                 </div>
               </div>
 
-              {/* Holographic Badge */}
-              <div className="p-2.5 bg-white border-2 border-[#18181b] shadow-[3px_3px_0px_#059669] flex items-center justify-between text-xs font-bold">
-                <span className="text-[#FF0055] font-black flex items-center gap-1.5 text-[11px]">
-                  <Award className="w-4 h-4 text-[#FF0055]" />
-                  <span>CHỨNG NHẬN SÒNG PHẲNG</span>
-                </span>
-                <span className="font-mono font-black text-[#059669] text-xs">10/10 ★★★★★</span>
+              <div
+                className={`p-3.5 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 ${
+                  analytics.isFullySettled
+                    ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800/50 text-emerald-800 dark:text-emerald-300'
+                    : 'bg-white dark:bg-[#18181f] border-[#e6e4dc] dark:border-[#2e2e38] text-[#18181b] dark:text-white'
+                }`}
+              >
+                <Award className="w-4 h-4 shrink-0" aria-hidden="true" />
+                <span>{s4.footerPill}</span>
               </div>
             </div>
           )}
-
+          </div>
         </div>
 
-        {/* BOTTOM STORY CONTROL & ACTION BAR */}
-        <div className="relative z-20 px-3.5 pt-3 pb-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.75rem))] sm:pb-3.5 shrink-0 bg-gradient-to-t from-[#faf9f6] via-[#faf9f6]/95 to-transparent border-t border-[#dedbd0] space-y-2">
-          {/* Main Action Buttons */}
-          <div className="flex items-center justify-between gap-2">
-            {/* Prev / Next Small Arrows */}
-            <div className="flex items-center gap-1.5">
+        {/* BOTTOM STORY CONTROL & EXPORT BAR */}
+        <div className="relative z-20 px-3 sm:px-4 pt-2.5 pb-[max(0.875rem,calc(env(safe-area-inset-bottom)+0.5rem))] sm:pb-4 shrink-0 bg-[#f4f3ec]/90 dark:bg-[#14141a]/90 backdrop-blur-md border-t border-[#e6e4dc]/60 dark:border-[#2e2e38]/70">
+          <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
               <button
                 type="button"
                 onClick={handlePrev}
                 disabled={currentSlide === 0}
-                className={`p-2.5 rounded-xl border border-[#18181b] bg-white text-[#18181b] shadow-[2px_2px_0px_#18181b] transition-all cursor-pointer ${
-                  currentSlide === 0 ? 'opacity-30 cursor-not-allowed shadow-none' : 'hover:bg-[#edebe4] active:scale-95'
+                className={`w-11 h-11 rounded-full border border-[#dedbd0] dark:border-[#32323e] bg-white dark:bg-[#212129] text-[#18181b] dark:text-white flex items-center justify-center transition-all cursor-pointer ${
+                  currentSlide === 0
+                    ? 'opacity-35 cursor-not-allowed'
+                    : 'hover:bg-[#eae8df] dark:hover:bg-[#2c2c36] active:scale-95'
                 }`}
-                title="Trang trước"
+                title={t('previousSlide', 'Trang trước')}
+                aria-label={t('previousSlide', 'Trang trước')}
               >
-                <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+                <ChevronLeft className="w-4 h-4 stroke-[2.4]" aria-hidden="true" />
               </button>
+
               <button
                 type="button"
                 onClick={handleNext}
                 disabled={currentSlide === totalSlides - 1}
-                className={`p-2.5 rounded-xl border border-[#18181b] bg-white text-[#18181b] shadow-[2px_2px_0px_#18181b] transition-all cursor-pointer ${
-                  currentSlide === totalSlides - 1 ? 'opacity-30 cursor-not-allowed shadow-none' : 'hover:bg-[#edebe4] active:scale-95'
+                className={`w-11 h-11 rounded-full border border-[#dedbd0] dark:border-[#32323e] bg-white dark:bg-[#212129] text-[#18181b] dark:text-white flex items-center justify-center transition-all cursor-pointer ${
+                  currentSlide === totalSlides - 1
+                    ? 'opacity-35 cursor-not-allowed'
+                    : 'hover:bg-[#eae8df] dark:hover:bg-[#2c2c36] active:scale-95'
                 }`}
-                title="Trang tiếp theo"
+                title={t('nextSlide', 'Trang tiếp theo')}
+                aria-label={t('nextSlide', 'Trang tiếp theo')}
               >
-                <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+                <ChevronRight className="w-4 h-4 stroke-[2.4]" aria-hidden="true" />
               </button>
             </div>
 
-            {/* Save All 5 Slides */}
             <button
               type="button"
               onClick={handleDownloadAllSlides}
               disabled={exporting}
-              className="px-3.5 py-2.5 rounded-xl border-2 border-[#7B2CBF] bg-white text-[#7B2CBF] shadow-[2px_2px_0px_#7B2CBF] font-mono font-black text-xs flex items-center gap-1.5 transition-all cursor-pointer hover:bg-[#7B2CBF] hover:text-white active:scale-95"
-              title="Tải toàn bộ 5 ảnh story về máy"
+              className="tactile-btn-pill min-h-[44px] px-3 sm:px-3.5 text-xs font-bold border border-[#dedbd0] dark:border-[#32323e] bg-white dark:bg-[#212129] text-[#18181b] dark:text-white flex items-center gap-1.5 shrink-0 disabled:opacity-50"
+              title={t('saveAllSlidesTooltip', 'Tải toàn bộ 5 ảnh story về máy')}
             >
-              <Layers className="w-4 h-4" />
-              <span>Tải cả 5</span>
+              <Layers className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>{t('saveAllSlidesBtn', 'Tải cả 5')}</span>
             </button>
 
-            {/* Primary CTA: Save Current Slide Image */}
             <button
               type="button"
               onClick={() => handleDownloadSlide(currentSlide)}
               disabled={exporting}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#FF0055] via-[#FF5500] to-[#FFE600] text-black font-black text-xs sm:text-sm flex items-center justify-center gap-2 border-2 border-[#18181b] shadow-[3px_3px_0px_#18181b] hover:brightness-105 active:scale-95 transition-all cursor-pointer"
-              title="Lưu ảnh Story trang này (PNG)"
+              aria-label={
+                exporting
+                  ? t('saving', 'Đang tạo...')
+                  : `${isEn ? 'Save' : 'Lưu ảnh'} (${currentSlide + 1}/5)`
+              }
+              className="tactile-btn-dark flex-1 min-w-0 min-h-[44px] px-3 sm:px-3.5 justify-center text-xs sm:text-sm font-bold disabled:opacity-50"
+              title={t('saveSlideTooltip', 'Lưu ảnh Story trang này (PNG)')}
             >
-              <Download className="w-4 h-4 stroke-[2.5]" />
+              <Download className="w-4 h-4 shrink-0" aria-hidden="true" />
               <span className="truncate">
-                {exporting ? 'Đang tạo...' : `Lưu ảnh Story (${currentSlide + 1}/5)`}
+                {exporting
+                  ? t('saving', 'Đang tạo...')
+                  : isEn
+                    ? `Save (${currentSlide + 1}/5)`
+                    : (
+                      <>
+                        Lưu<span className="hidden min-[390px]:inline"> ảnh</span> ({currentSlide + 1}/5)
+                      </>
+                    )}
               </span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* iOS & Mobile Fallback Image Preview Modal */}
-      {previewImage && (
+      {/* iOS & Mobile Scrollable Image Preview Modal (Supports 1 or all 5 slides + Share Sheet) */}
+      {previewImages && previewImages.length > 0 && (
         <div
-          className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-fade-in"
-          onClick={() => setPreviewImage(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="wrapped-ios-preview-title"
+          className="fixed inset-0 z-[120] bg-[#f4f3ec]/92 dark:bg-[#0f0f12]/92 backdrop-blur-xl flex flex-col items-center justify-center p-4 animate-fade-in"
+          onClick={() => setPreviewImages(null)}
         >
           <div
-            className="w-full max-w-sm bg-[#faf9f6] border-2 border-[#18181b] shadow-[0_20px_50px_rgba(0,0,0,0.35)] p-4 space-y-3"
+            ref={previewDialogRef}
+            className="w-full max-w-sm bg-white dark:bg-[#18181f] rounded-3xl border border-[#dedbd0] dark:border-[#2e2e38] shadow-2xl p-4 sm:p-5 space-y-3"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between">
-              <span className="font-black text-sm text-[#18181b] uppercase tracking-wider font-mono">
-                📸 LƯU ẢNH STORY
+            <div className="flex items-center justify-between gap-2">
+              <span
+                id="wrapped-ios-preview-title"
+                className="font-extrabold text-sm text-[#18181b] dark:text-white"
+              >
+                {t('saveStoryHeader', 'LƯU ẢNH STORY')}
+                {previewImages.length > 1 ? ` (${previewImages.length})` : ''}
               </span>
               <button
                 type="button"
-                onClick={() => setPreviewImage(null)}
-                className="w-7 h-7 rounded-full bg-black/5 hover:bg-[#FF0055] hover:text-white text-[#18181b] flex items-center justify-center cursor-pointer transition-colors"
+                onClick={() => setPreviewImages(null)}
+                aria-label={t('close', 'Đóng')}
+                className="w-11 h-11 rounded-full bg-[#f4f3ec] dark:bg-[#212129] hover:bg-[#eae8df] dark:hover:bg-[#2c2c36] text-[#18181b] dark:text-white flex items-center justify-center cursor-pointer transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
 
-            <div className="p-2.5 bg-amber-50 border border-amber-300 text-[11px] text-amber-900 font-mono leading-relaxed">
-              Nhấn giữ vào ảnh bên dưới trong <strong>1 giây</strong>, sau đó chọn <strong>"Lưu vào Ảnh" (Save to Photos)</strong> để tải về máy.
+            <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
+              {t('longPressSaveNotice', 'Nhấn giữ vào ảnh bên dưới trong 1 giây, sau đó chọn "Lưu vào Ảnh" (Save to Photos) để tải về máy.')}
             </div>
 
-            <div className="max-h-[65vh] overflow-y-auto border border-[#dedbd0] flex justify-center bg-[#faf9f6] p-1">
-              <img
-                src={previewImage}
-                alt="Spliqo Wrapped Story"
-                className="w-full h-auto object-contain select-auto"
-                style={{ WebkitTouchCallout: 'default' }}
-              />
+            {canNativeFileShare && (
+              <button
+                type="button"
+                onClick={handleNativeSharePreview}
+                className="tactile-btn-dark w-full min-h-[44px] justify-center text-xs font-bold"
+              >
+                <Share2 className="w-4 h-4" aria-hidden="true" />
+                <span>{isEn ? 'Share / Save via Share Sheet' : 'Chia sẻ / Lưu nhanh qua Share Sheet'}</span>
+              </button>
+            )}
+
+            <div className="max-h-[60vh] overflow-y-auto space-y-3 pr-1">
+              {previewImages.map((img) => (
+                <div
+                  key={img.slideIndex}
+                  className="p-2 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] space-y-1.5"
+                >
+                  <div className="text-[11px] font-mono font-bold text-zinc-600 dark:text-zinc-400 px-1">
+                    {img.label}
+                  </div>
+                  <img
+                    src={img.url}
+                    alt={`Spliqo Wrapped ${img.label}`}
+                    className="w-full h-auto rounded-xl object-contain select-auto"
+                    style={{ WebkitTouchCallout: 'default' }}
+                  />
+                </div>
+              ))}
             </div>
           </div>
         </div>

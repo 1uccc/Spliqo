@@ -164,7 +164,7 @@ export default function LuckyWheelModal({
     ctx.save();
     ctx.translate(CENTER, CENTER);
     ctx.rotate(rotation);
-    participants.forEach(({ member, name, photo }, i) => {
+    participants.forEach(({ name, photo }, i) => {
       const from = i * slice;
       const mid = from + slice / 2;
       const to = from + slice;
@@ -213,7 +213,7 @@ export default function LuckyWheelModal({
         ctx.fillStyle = '#e0e7ff';
         ctx.fillRect(-radiusAvatar, -radiusAvatar, avatarSize, avatarSize);
         ctx.fillStyle = '#4338ca';
-        ctx.font = `bold ${Math.round(avatarSize * 0.44)}px system-ui, sans-serif`;
+        ctx.font = `bold ${Math.round(avatarSize * 0.44)}px "Lexend", system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(name[0]?.toUpperCase() || '?', 0, 1);
@@ -243,7 +243,7 @@ export default function LuckyWheelModal({
       ctx.rotate(Math.PI / 2);
       ctx.fillStyle = '#17191d';
       const fontSize = Math.max(12, Math.min(20, n > 8 ? 14 : 18));
-      ctx.font = `800 ${fontSize}px system-ui, sans-serif`;
+      ctx.font = `800 ${fontSize}px "Lexend", system-ui, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const maxTextWidth = Math.max(40, (2 * Math.PI * textX / n) * 0.82);
@@ -348,7 +348,7 @@ export default function LuckyWheelModal({
         setSpinning(false);
         setWinner(participants[targetIndex].member);
         audioRef.current?.fanfare(soundRef.current);
-        confetti({ particleCount: 120, spread: 90, origin: { y: 0.57 } });
+        confetti({ particleCount: 120, spread: 90, origin: { y: 0.57 }, disableForReducedMotion: true });
       }
     };
     animationRef.current = requestAnimationFrame(step);
@@ -369,8 +369,8 @@ export default function LuckyWheelModal({
       footer={
         <div className="flex w-full items-center justify-between gap-2">
           <button type="button" onClick={() => setSoundEnabled((v) => !v)}
-            className="rounded-xl p-2 text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-            aria-label={soundEnabled ? 'Tắt âm thanh' : 'Bật âm thanh'}>
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            aria-label={soundEnabled ? (isEn ? 'Mute sound' : 'Tắt âm thanh') : (isEn ? 'Unmute sound' : 'Bật âm thanh')}>
             {soundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </button>
           <div className="flex items-center gap-2">
@@ -405,7 +405,7 @@ export default function LuckyWheelModal({
         <div className="relative overflow-hidden rounded-3xl bg-[#4599f7] px-2 py-3 sm:px-3 sm:py-3.5"
           style={{ backgroundImage: 'repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,.09) 0deg 12deg, transparent 12deg 24deg)' }}>
           <div className="relative mx-auto w-full max-w-[280px] sm:max-w-[310px] select-none" style={{ aspectRatio: '1 / 1' }}>
-            <canvas ref={canvasRef} width={SIZE} height={SIZE} className="block h-full w-full" role="img" aria-label="Vòng quay chọn thành viên" />
+            <canvas ref={canvasRef} width={SIZE} height={SIZE} className="block h-full w-full" role="img" aria-label={isEn ? 'Member selection wheel' : 'Vòng quay chọn thành viên'} />
             {/* Fixed pointer at the top of the wheel. */}
             <div className="pointer-events-none absolute left-1/2 top-[1.2%] z-20 -translate-x-1/2 -translate-y-[40%] drop-shadow-md">
               <div className="relative h-7 w-6 rounded-full bg-[#ef3b2d] shadow-[inset_-2px_-3px_0_rgba(0,0,0,.15)]">
@@ -417,10 +417,10 @@ export default function LuckyWheelModal({
               className="absolute left-1/2 top-1/2 z-10 flex h-[18%] w-[18%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full text-center font-black italic text-[#fde047] transition-transform hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70 select-none shadow-md"
               style={{ fontSize: 'clamp(11px, 2.6vw, 13px)', lineHeight: 1.15 }}>
               <span>{spinning ? '...' : 'START'}</span>
-              {!spinning && <span className="text-[9px] not-italic tracking-[.15em] opacity-90 mt-0.5">&gt;&gt;</span>}
+              {!spinning && <span className="text-[10px] not-italic tracking-[.15em] opacity-90 mt-0.5">&gt;&gt;</span>}
             </button>
           </div>
-          <p className="mt-1 text-center text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-white/95">
+          <p className="mt-1 text-center text-[11px] font-bold uppercase tracking-widest text-white/95">
             {spinning ? t('spinning', 'Đang quay...') : t('spinNow', 'Chạm START để quay')}
           </p>
         </div>
@@ -432,7 +432,7 @@ export default function LuckyWheelModal({
             </div>
             <div className="flex items-center justify-center gap-2.5">
               <img src={winner.photoURL || fallbackAvatar(winner)} alt="" className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2 border-white object-cover shadow" />
-              <strong className="text-base sm:text-lg font-black text-zinc-900 dark:text-white">{winner.displayName || 'Thành viên'}</strong>
+              <strong className="text-base sm:text-lg font-black text-zinc-900 dark:text-white">{winner.displayName || (isEn ? 'Member' : 'Thành viên')}</strong>
             </div>
           </div>
         )}

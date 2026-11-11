@@ -55,12 +55,12 @@ export default function JoinTripPage() {
         const res = await api.get(`/trips/invite/${code.trim()}`);
         const data = (res && res.trip) ? res : (res?.data || res);
         if (!data || !data.trip) {
-          throw new Error('Không tìm thấy chuyến đi tương ứng với mã mời này.');
+          throw new Error(t('tripNotFoundForInviteCode', 'Không tìm thấy chuyến đi tương ứng với mã mời này.'));
         }
         setInviteData(data);
       } catch (err) {
         console.error('[JoinTripPage] Error fetching preview:', err);
-        setError(err.message || 'Không tìm thấy chuyến đi tương ứng với mã mời này.');
+        setError(err.message || t('tripNotFoundForInviteCode', 'Không tìm thấy chuyến đi tương ứng với mã mời này.'));
       } finally {
         setLoading(false);
       }
@@ -89,13 +89,20 @@ export default function JoinTripPage() {
       confetti({
         particleCount: 80,
         spread: 70,
-        origin: { y: 0.6 }
+        origin: { y: 0.6 },
+        disableForReducedMotion: true
       });
 
       if (resData?.alreadyMember) {
         showToast(resData.message || t('alreadyJoinedNotice', 'Bạn đã là thành viên của chuyến đi này.'), 'info');
       } else {
-        showToast(t('joinSuccessToast', `Tham gia chuyến đi "${inviteData?.trip?.name || resData?.trip?.name}" thành công!`), 'success');
+        showToast(
+          t('joinSuccessToast', 'Tham gia chuyến đi "{name}" thành công!').replace(
+            '{name}',
+            inviteData?.trip?.name || resData?.trip?.name || ''
+          ),
+          'success'
+        );
       }
 
       sessionStorage.removeItem('spliqo_auto_join');
@@ -108,7 +115,7 @@ export default function JoinTripPage() {
         navigate('/dashboard');
       }
     } catch (err) {
-      showToast(err.message || 'Lỗi khi tham gia chuyến đi.', 'error');
+      showToast(err.message || t('joinTripError', 'Lỗi khi tham gia chuyến đi.'), 'error');
     } finally {
       setJoining(false);
     }
@@ -129,20 +136,27 @@ export default function JoinTripPage() {
         confetti({
           particleCount: 80,
           spread: 70,
-          origin: { y: 0.6 }
+          origin: { y: 0.6 },
+          disableForReducedMotion: true
         });
 
         if (resData?.alreadyMember) {
           showToast(resData.message || t('alreadyJoinedNotice', 'Bạn đã là thành viên của chuyến đi này.'), 'info');
         } else {
-          showToast(`Tham gia chuyến đi "${inviteData?.trip?.name || resData?.trip?.name}" thành công!`, 'success');
+          showToast(
+            t('joinSuccessToast', 'Tham gia chuyến đi "{name}" thành công!').replace(
+              '{name}',
+              inviteData?.trip?.name || resData?.trip?.name || ''
+            ),
+            'success'
+          );
         }
 
         const targetTripId = resData?.trip?.id || inviteData?.trip?.id;
         navigate(targetTripId ? `/trips/${targetTripId}` : '/dashboard');
       }
     } catch (err) {
-      showToast(err.message || 'Lỗi đăng nhập Google', 'error');
+      showToast(err.message || t('googleLoginError', 'Lỗi đăng nhập Google'), 'error');
       setJoining(false);
     }
   };
@@ -168,14 +182,16 @@ export default function JoinTripPage() {
     <div className="min-h-screen w-full bg-[#f4f3ec] dark:bg-[#0f0f12] text-[#18181b] dark:text-[#f4f4f5] flex flex-col items-center justify-center p-4 relative select-none transition-colors">
       
       {/* Top Right: Language Selector (VI / EN) */}
-      <div className="fixed top-[max(1rem,env(safe-area-inset-top))] right-4 z-30 flex items-center p-0.5 rounded-full bg-white dark:bg-[#24242b] border border-[#dedbd0] dark:border-[#32323c] text-xs shadow-xs">
+      <div className="fixed top-[max(1rem,env(safe-area-inset-top))] right-4 z-30 flex items-center p-1 rounded-full bg-white dark:bg-[#24242b] border border-[#dedbd0] dark:border-[#32323c] text-xs shadow-xs gap-0.5">
         <button
           type="button"
           onClick={() => setLanguage('vi')}
-          className={`px-2 py-0.5 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+          aria-label="Tiếng Việt"
+          aria-pressed={language === 'vi'}
+          className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
             language === 'vi'
               ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-xs'
-              : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+              : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
           }`}
         >
           VI
@@ -183,10 +199,12 @@ export default function JoinTripPage() {
         <button
           type="button"
           onClick={() => setLanguage('en')}
-          className={`px-2 py-0.5 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+          aria-label="English"
+          aria-pressed={language === 'en'}
+          className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
             language === 'en'
               ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-xs'
-              : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+              : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
           }`}
         >
           EN
@@ -198,47 +216,48 @@ export default function JoinTripPage() {
         <button
           type="button"
           onClick={() => setDarkMode(true)}
-          className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-            isDark ? 'bg-[#32323d] text-amber-400 font-bold shadow-xs' : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
+          aria-label={t('darkMode', 'Giao diện Tối')}
+          aria-pressed={isDark}
+          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+            isDark ? 'bg-[#32323d] text-amber-400 font-bold shadow-xs' : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white'
           }`}
-          title="Dark Mode"
+          title={t('darkMode', 'Giao diện Tối')}
         >
-          <Moon className="w-3.5 h-3.5 stroke-[2.2]" />
+          <Moon className="w-4 h-4 stroke-[2.2]" />
         </button>
         <button
           type="button"
           onClick={() => setDarkMode(false)}
-          className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-            !isDark ? 'bg-[#edebe4] text-zinc-900 font-bold shadow-xs' : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
+          aria-label={t('lightMode', 'Giao diện Sáng')}
+          aria-pressed={!isDark}
+          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+            !isDark ? 'bg-[#edebe4] text-zinc-900 font-bold shadow-xs' : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white'
           }`}
-          title="Light Mode"
+          title={t('lightMode', 'Giao diện Sáng')}
         >
-          <Sun className="w-3.5 h-3.5 stroke-[2.2]" />
+          <Sun className="w-4 h-4 stroke-[2.2]" />
         </button>
       </div>
 
       {/* Main Container */}
       <div className="w-full max-w-md relative z-10 animate-fade-in my-6">
-        
-        {/* Outer Tactile Shell */}
-        <div className="bg-[#edebe4] dark:bg-[#15151a] rounded-4xl border border-[#dedbd0] dark:border-[#272730] p-4 sm:p-5 shadow-xl">
-          
-          {/* Inner Card */}
-          <div className="bg-white dark:bg-[#1a1a20] rounded-3xl p-6 sm:p-7 border border-[#e6e4dc] dark:border-[#2e2e38] shadow-xs">
-            
-            {/* Brand Logo & Header */}
-            <div className="text-center mb-5">
-              <div className="w-14 h-14 bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] rounded-full mx-auto flex items-center justify-center shadow-md mb-3 hover:scale-105 transition-all">
-                <Flame className="w-7 h-7 text-amber-400 fill-amber-400" />
-              </div>
-              <h1 className="text-2xl font-black tracking-tight text-[#18181b] dark:text-white">
-                Spli<span className="text-amber-500">qo</span>
-              </h1>
-              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-[11px] font-bold mt-1.5 border border-amber-200 dark:border-amber-800/40">
-                <Sparkles className="w-3 h-3" />
-                <span>{t('joinTripInvitationBadge', 'Lời mời tham gia chuyến đi')}</span>
-              </div>
+
+        {/* Flattened Single Tactile Card */}
+        <div className="bg-white dark:bg-[#1a1a20] rounded-3xl p-6 sm:p-8 border border-[#dedbd0] dark:border-[#2e2e38] shadow-xl">
+
+          {/* Brand Logo & Header */}
+          <div className="text-center mb-5">
+            <div className="w-14 h-14 bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] rounded-full mx-auto flex items-center justify-center shadow-md mb-3 hover:scale-105 transition-all">
+              <Flame className="w-7 h-7 text-amber-400 fill-amber-400" />
             </div>
+            <h1 className="text-2xl font-black tracking-tight text-[#18181b] dark:text-white">
+              Spli<span className="text-amber-700 dark:text-amber-400">qo</span>
+            </h1>
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 text-xs font-bold mt-1.5 border border-amber-200 dark:border-amber-800/40">
+              <Sparkles className="w-3 h-3" />
+              <span>{t('joinTripInvitationBadge', 'Lời mời tham gia chuyến đi')}</span>
+            </div>
+          </div>
 
             {/* State: Loading */}
             {(loading || (authLoading && !inviteData)) && (
@@ -257,21 +276,36 @@ export default function JoinTripPage() {
                   <AlertCircle className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-zinc-900 dark:text-white mb-1">
+                  <h2 className="text-sm font-bold text-zinc-900 dark:text-white mb-1">
                     {t('invalidTripCodeTitle', 'Không tìm thấy chuyến đi')}
-                  </h3>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto">
+                  </h2>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-xs mx-auto">
                     {error}
                   </p>
+                  {!currentUser && (
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-xs mx-auto mt-1.5">
+                      {t('checkInviteOrSignInHint', 'Hãy kiểm tra lại liên kết mời với bạn bè hoặc đăng nhập tài khoản Spliqo để xem các chuyến đi của bạn.')}
+                    </p>
+                  )}
                 </div>
                 <div className="pt-2">
-                  <Link
-                    to="/dashboard"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] text-xs font-bold shadow-xs hover:opacity-90"
-                  >
-                    <Home className="w-3.5 h-3.5" />
-                    <span>{t('goToDashboard', 'Về trang chủ Spliqo')}</span>
-                  </Link>
+                  {currentUser ? (
+                    <Link
+                      to="/dashboard"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] text-xs font-bold shadow-xs hover:opacity-90"
+                    >
+                      <Home className="w-3.5 h-3.5" aria-hidden="true" />
+                      <span>{t('goToDashboard', 'Về trang chủ Spliqo')}</span>
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/auth"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] text-xs font-bold shadow-xs hover:opacity-90"
+                    >
+                      <LogIn className="w-3.5 h-3.5" aria-hidden="true" />
+                      <span>{t('signInToSpliqo', 'Đăng nhập Spliqo')}</span>
+                    </Link>
+                  )}
                 </div>
               </div>
             )}
@@ -286,7 +320,7 @@ export default function JoinTripPage() {
                     <span className="font-mono text-xs font-extrabold text-amber-700 dark:text-amber-400 px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 border border-amber-200/60 dark:border-amber-800/40">
                       #{inviteData.trip?.tripCode}
                     </span>
-                    <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                    <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
                       <ShieldCheck className="w-3.5 h-3.5" /> {t('verifiedTrip', 'Chuyến đi hợp lệ')}
                     </span>
                   </div>
@@ -323,7 +357,7 @@ export default function JoinTripPage() {
                         className="w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-700 object-cover ring-1 ring-white/50 shrink-0"
                       />
                       <div className="truncate">
-                        <span className="text-[10px] text-zinc-400 block">{t('invitedBy', 'Được mời bởi')}</span>
+                        <span className="text-xs text-zinc-600 dark:text-zinc-400 block">{t('invitedBy', 'Được mời bởi')}</span>
                         <strong className="text-xs text-zinc-900 dark:text-white truncate block">
                           {inviteData.creator?.displayName}
                         </strong>
@@ -385,9 +419,9 @@ export default function JoinTripPage() {
                         </button>
 
                         {/* Current User Info & Switch Account */}
-                        <div className="flex items-center justify-between px-2 pt-1 text-[11px] text-zinc-500 dark:text-zinc-400 border-t border-[#dedbd0]/60 dark:border-[#2e2e38]">
+                        <div className="flex items-center justify-between px-2 pt-1 text-xs text-zinc-600 dark:text-zinc-400 border-t border-[#dedbd0]/60 dark:border-[#2e2e38]">
                           <div className="flex items-center gap-1.5 truncate max-w-[220px]">
-                            <span className="text-zinc-400">{t('loggedInAs', 'Đang đăng nhập:')}</span>
+                            <span className="text-zinc-600 dark:text-zinc-400">{t('loggedInAs', 'Đang đăng nhập:')}</span>
                             <span className="font-bold text-zinc-800 dark:text-zinc-200 truncate">
                               {currentUser.displayName || currentUser.email}
                             </span>
@@ -396,9 +430,9 @@ export default function JoinTripPage() {
                             type="button"
                             onClick={async () => {
                               await logout();
-                              showToast('Đã đăng xuất tài khoản.', 'info');
+                              showToast(language === 'en' ? 'Signed out.' : 'Đã đăng xuất tài khoản.', 'info');
                             }}
-                            className="text-amber-600 dark:text-amber-400 hover:underline font-semibold flex items-center gap-1 shrink-0 cursor-pointer"
+                            className="text-amber-700 dark:text-amber-400 hover:underline font-semibold flex items-center gap-1 shrink-0 cursor-pointer"
                           >
                             <LogOut className="w-3 h-3" />
                             <span>{t('switchAccountPrompt', 'Đổi tài khoản')}</span>
@@ -448,7 +482,7 @@ export default function JoinTripPage() {
                         <div className="absolute inset-0 flex items-center">
                           <div className="w-full border-t border-[#e6e4dc] dark:border-[#2e2e38]"></div>
                         </div>
-                        <span className="relative px-3 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 bg-white dark:bg-[#1a1a20] uppercase tracking-wider">
+                        <span className="relative px-3 text-xs font-bold text-zinc-600 dark:text-zinc-400 bg-white dark:bg-[#1a1a20] uppercase tracking-wider">
                           {t('orContinueWith', 'Hoặc')}
                         </span>
                       </div>
@@ -469,7 +503,7 @@ export default function JoinTripPage() {
                           onClick={() => handleLoginToJoin(true)}
                           className="w-full py-2.5 px-3 rounded-2xl bg-[#edebe4] dark:bg-[#2b2b35] hover:bg-[#e4e1d6] dark:hover:bg-[#343440] text-zinc-900 dark:text-zinc-100 font-bold text-xs border border-[#dedbd0] dark:border-[#383844] flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.98]"
                         >
-                          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                          <Sparkles className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
                           <span>{t('registerFastBtn', 'Đăng ký tài khoản')}</span>
                         </button>
                       </div>
@@ -481,12 +515,11 @@ export default function JoinTripPage() {
               </div>
             )}
 
-          </div>
         </div>
 
         {/* Footer info */}
-        <p className="text-center text-[11px] font-medium text-zinc-400 dark:text-zinc-600 mt-4">
-          Spliqo • VietQR Expense Sharing & Balance Algorithm
+        <p className="text-center text-xs font-medium text-zinc-600 dark:text-zinc-400 mt-4">
+          {t('authFooterNotice', 'Spliqo • VietQR Expense Sharing & Balance Algorithm')}
         </p>
 
       </div>

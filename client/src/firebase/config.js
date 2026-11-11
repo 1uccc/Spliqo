@@ -1,8 +1,5 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
-import { getAnalytics, isSupported } from 'firebase/analytics';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyChMfQ7qkVQk2CN3Du6QHYufgBJW0hDvpo",
@@ -18,8 +15,6 @@ export const isFirebaseLive = Boolean(firebaseConfig.apiKey && firebaseConfig.pr
 
 let app = null;
 let auth = null;
-let db = null;
-let storage = null;
 let analytics = null;
 let googleProvider = null;
 
@@ -27,16 +22,18 @@ if (isFirebaseLive) {
   try {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
-    db = getFirestore(app);
-    storage = getStorage(app);
     googleProvider = new GoogleAuthProvider();
 
-    // Initialize Analytics if supported in current browser environment
-    isSupported().then((supported) => {
-      if (supported) {
-        analytics = getAnalytics(app);
-      }
-    }).catch(() => {});
+    // Defer analytics module loading so initial bundle stays lean
+    import('firebase/analytics')
+      .then(({ getAnalytics, isSupported }) =>
+        isSupported().then((supported) => {
+          if (supported) {
+            analytics = getAnalytics(app);
+          }
+        })
+      )
+      .catch(() => {});
 
     console.log('[Firebase Client] Initialized with live project spliq0.');
   } catch (e) {
@@ -46,4 +43,4 @@ if (isFirebaseLive) {
   console.log('[Firebase Client] Running in local demo mode.');
 }
 
-export { app, auth, db, storage, analytics, googleProvider };
+export { app, auth, analytics, googleProvider };

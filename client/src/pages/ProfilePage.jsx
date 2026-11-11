@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { SUPPORTED_CURRENCIES } from '../services/currencyService';
 import { 
   User, 
   Save, 
@@ -13,8 +13,7 @@ import {
   RefreshCw,
   Building,
   QrCode,
-  Flame,
-  ExternalLink
+  Coins
 } from 'lucide-react';
 import AvatarPickerModal from '../components/AvatarPickerModal';
 import { auth } from '../firebase/config';
@@ -37,7 +36,7 @@ const VIETNAM_BANKS = [
 export default function ProfilePage() {
   const { currentUser, updateUserProfile } = useAuth();
   const { showToast } = useToast();
-  const { language, setLanguage, t, isEn } = useLanguage();
+  const { language, setLanguage, displayCurrency, setDisplayCurrency, t, isEn } = useLanguage();
 
   const [displayName, setDisplayName] = useState('');
   const [phone, setPhone] = useState('');
@@ -92,9 +91,9 @@ export default function ProfilePage() {
         paymentQrUrl,
         photoURL,
       });
-      showToast('Cập nhật hồ sơ và thông tin thanh toán thành công!', 'success');
+      showToast(t('profileUpdateSuccess', 'Cập nhật hồ sơ và thông tin thanh toán thành công!'), 'success');
     } catch (err) {
-      showToast(err.message || 'Lỗi khi cập nhật hồ sơ', 'error');
+      showToast(err.message || t('profileUpdateError', 'Lỗi khi cập nhật hồ sơ'), 'error');
     } finally {
       setSaving(false);
     }
@@ -134,29 +133,28 @@ export default function ProfilePage() {
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-6 border-b border-[#e6e4dc] dark:border-[#2e2e38]">
             {/* Avatar circle with click to open picker */}
             <div className="relative group shrink-0">
-              <div 
+              <button
+                type="button"
                 onClick={() => setAvatarModalOpen(true)}
-                className="cursor-pointer relative"
+                className="relative cursor-pointer rounded-full block"
                 title={t('avatarGallery', 'Kho Avatar')}
+                aria-label={t('avatarGallery', 'Kho Avatar')}
               >
                 <img
                   src={photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.uid}`}
                   alt="Avatar"
                   className="w-24 h-24 rounded-full bg-[#f4f3ec] dark:bg-[#252530] object-cover ring-4 ring-[#e6e4dc] dark:ring-[#32323e] group-hover:ring-amber-500/70 transition-all shadow-md group-hover:scale-105"
                 />
-                <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity text-[10px] font-bold">
+                <span className="absolute inset-0 rounded-full bg-black/45 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity text-[11px] font-bold">
                   <Palette className="w-5 h-5 mb-0.5" />
                   <span>{isEn ? 'Change Avatar' : 'Đổi Avatar'}</span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setAvatarModalOpen(true)}
-                className="absolute -bottom-1 -right-1 p-2 rounded-full bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] hover:bg-black dark:hover:bg-zinc-200 shadow-md transition-all text-xs hover:scale-110 cursor-pointer"
-                title={t('avatarGallery', 'Kho Avatar')}
-              >
-                <Palette className="w-3.5 h-3.5" />
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="absolute -bottom-1 -right-1 p-2 rounded-full bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-md transition-all group-hover:scale-110"
+                >
+                  <Palette className="w-3.5 h-3.5" />
+                </span>
               </button>
             </div>
 
@@ -190,7 +188,7 @@ export default function ProfilePage() {
 
               {/* Quick 1-click Preset avatars */}
               <div className="pt-1">
-                <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider block mb-1.5">
+                <span className="text-[11px] uppercase font-bold text-zinc-600 dark:text-zinc-400 tracking-wider block mb-1.5">
                   {t('popularAvatarSuggestions', 'Gợi ý mẫu phổ biến:')}
                 </span>
                 <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
@@ -226,19 +224,21 @@ export default function ProfilePage() {
           {/* Form Fields Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
             <div>
-              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('fullNameRequired', 'Họ và tên *')}</label>
+              <label htmlFor="profile-display-name" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('fullNameRequired', 'Họ và tên *')}</label>
               <input
+                id="profile-display-name"
                 type="text"
                 required
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-sm font-semibold text-[#18181b] dark:text-white outline-none focus:border-zinc-900 dark:focus:border-white transition-colors"
+                className="w-full px-4 py-2.5 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-sm font-semibold text-[#18181b] dark:text-white focus:border-zinc-900 dark:focus:border-white transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">Email</label>
+              <label htmlFor="profile-email" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">Email</label>
               <input
+                id="profile-email"
                 type="email"
                 disabled
                 value={
@@ -246,18 +246,19 @@ export default function ProfilePage() {
                     ? currentUser.email
                     : (auth?.currentUser?.email || currentUser?.email || '')
                 }
-                className="w-full px-4 py-2.5 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-[#e6e4dc] dark:border-[#32323e] text-zinc-500 dark:text-zinc-400 text-sm font-semibold outline-none cursor-not-allowed"
+                className="w-full px-4 py-2.5 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-[#e6e4dc] dark:border-[#32323e] text-zinc-600 dark:text-zinc-400 text-sm font-semibold cursor-not-allowed"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('phoneNumber', 'Số điện thoại')}</label>
+              <label htmlFor="profile-phone" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('phoneNumber', 'Số điện thoại')}</label>
               <input
+                id="profile-phone"
                 type="tel"
                 placeholder="0901234567"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-sm font-semibold text-[#18181b] dark:text-white outline-none focus:border-zinc-900 dark:focus:border-white transition-colors"
+                className="w-full px-4 py-2.5 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-sm font-semibold text-[#18181b] dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus:border-zinc-900 dark:focus:border-white transition-colors"
               />
             </div>
           </div>
@@ -272,23 +273,24 @@ export default function ProfilePage() {
               </div>
               <h3 className="text-sm font-bold text-[#18181b] dark:text-white">{t('bankInfoVietQR', 'Thông tin tài khoản ngân hàng')}</h3>
             </div>
-            <span className="text-[11px] font-semibold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">
+            <span className="text-[11px] font-semibold px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
               {t('autoGenerateVietQR', 'Tự động tạo VietQR')}
             </span>
           </div>
 
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-zinc-600 dark:text-zinc-400">
             {t('bankInfoDesc', 'Khi các thành viên khác nợ tiền bạn trong chuyến đi, hệ thống Spliqo sẽ tự động sinh mã VietQR dựa trên thông tin này để họ quét mã chuyển khoản ngay tức thì.')}
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">{t('receivingBankRequired', 'Ngân hàng nhận tiền *')}</label>
+                <label htmlFor="profile-bank-name" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('receivingBankRequired', 'Ngân hàng nhận tiền *')}</label>
                 <select
+                  id="profile-bank-name"
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-[#f4f3ec] border border-[#e6e4dc] text-sm font-semibold text-[#18181b] outline-none focus:border-zinc-900 focus:bg-white transition-colors"
+                  className="w-full px-4 py-2.5 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-sm font-semibold text-[#18181b] dark:text-white focus:border-zinc-900 dark:focus:border-white focus:bg-white dark:focus:bg-[#2a2a36] transition-colors"
                 >
                   {VIETNAM_BANKS.map((b) => (
                     <option key={b.code} value={b.code}>
@@ -299,26 +301,28 @@ export default function ProfilePage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">{t('bankAccountNumberRequired', 'Số tài khoản ngân hàng *')}</label>
+                <label htmlFor="profile-bank-acc" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('bankAccountNumberRequired', 'Số tài khoản ngân hàng *')}</label>
                 <input
+                  id="profile-bank-acc"
                   type="text"
                   required
-                  placeholder="Ví dụ: 0071001234567"
+                  placeholder={isEn ? 'e.g. 0071001234567' : 'Ví dụ: 0071001234567'}
                   value={bankAccountNumber}
                   onChange={(e) => setBankAccountNumber(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-[#f4f3ec] border border-[#e6e4dc] text-sm font-mono font-bold text-[#18181b] outline-none focus:border-zinc-900 focus:bg-white transition-colors"
+                  className="w-full px-4 py-2.5 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-sm font-mono font-bold text-[#18181b] dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus:border-zinc-900 dark:focus:border-white focus:bg-white dark:focus:bg-[#2a2a36] transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">{t('accountHolderNameRequired', 'Tên chủ tài khoản *')}</label>
+                <label htmlFor="profile-bank-holder" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">{t('accountHolderNameRequired', 'Tên chủ tài khoản *')}</label>
                 <input
+                  id="profile-bank-holder"
                   type="text"
                   required
-                  placeholder="Ví dụ: NGUYEN VAN A"
+                  placeholder={isEn ? 'e.g. NGUYEN VAN A' : 'Ví dụ: NGUYEN VAN A'}
                   value={bankAccountHolder}
                   onChange={(e) => setBankAccountHolder(e.target.value.toUpperCase())}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-[#f4f3ec] border border-[#e6e4dc] text-sm font-mono font-bold text-[#18181b] uppercase outline-none focus:border-zinc-900 focus:bg-white transition-colors"
+                  className="w-full px-4 py-2.5 rounded-2xl bg-[#f4f3ec] dark:bg-[#212129] border border-[#e6e4dc] dark:border-[#32323e] text-sm font-mono font-bold text-[#18181b] dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 uppercase focus:border-zinc-900 dark:focus:border-white focus:bg-white dark:focus:bg-[#2a2a36] transition-colors"
                 />
               </div>
             </div>
@@ -339,12 +343,12 @@ export default function ProfilePage() {
                   <div className="text-[11px] font-bold text-[#18181b] mt-2">
                     {cleanBank} • {cleanAcc}
                   </div>
-                  <div className="text-[10px] text-zinc-500 font-mono">
+                  <div className="text-[11px] text-zinc-600 dark:text-zinc-400 font-mono">
                     {cleanHolder}
                   </div>
                 </div>
               ) : (
-                <div className="py-8 text-xs text-zinc-400 flex flex-col items-center gap-2">
+                <div className="py-8 text-xs text-zinc-600 dark:text-zinc-400 flex flex-col items-center gap-2">
                   <QrCode className="w-10 h-10 text-zinc-300" />
                   <span>{t('previewQrPlaceholder', 'Nhập số tài khoản để xem trước mã QR chuyển khoản tự động.')}</span>
                 </div>
@@ -355,13 +359,13 @@ export default function ProfilePage() {
 
         {/* Language Settings Card */}
         <div className="tactile-card p-6 sm:p-8 space-y-4">
-          <div className="flex items-center gap-2 border-b border-[#e6e4dc] pb-4">
+          <div className="flex items-center gap-2 border-b border-[#e6e4dc] dark:border-[#2e2e38] pb-4">
             <div className="w-8 h-8 rounded-full bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] flex items-center justify-center shadow-xs">
               <Globe className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-[#18181b]">{t('languageSettings', 'Cài đặt ngôn ngữ')}</h3>
-              <p className="text-xs text-zinc-500 mt-0.5">{t('languageSettingsDesc', 'Chọn ngôn ngữ hiển thị cho giao diện người dùng ứng dụng Spliqo')}</p>
+              <h3 className="text-sm font-bold text-[#18181b] dark:text-white">{t('languageSettings', 'Cài đặt ngôn ngữ')}</h3>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">{t('languageSettingsDesc', 'Chọn ngôn ngữ hiển thị cho giao diện người dùng ứng dụng Spliqo')}</p>
             </div>
           </div>
 
@@ -374,7 +378,7 @@ export default function ProfilePage() {
               }}
               className={`p-4 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${
                 language === 'vi'
-                  ? 'bg-purple-50/60 dark:bg-purple-950/20 border-purple-500 text-purple-900 dark:text-purple-300 shadow-xs ring-1 ring-purple-500/30'
+                  ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-600 text-emerald-950 dark:text-emerald-200 shadow-xs ring-1 ring-emerald-500/30'
                   : 'bg-[#f4f3ec] dark:bg-[#212129] border-[#e6e4dc] dark:border-[#32323e] text-zinc-700 dark:text-zinc-300 hover:border-zinc-400'
               }`}
             >
@@ -382,11 +386,11 @@ export default function ProfilePage() {
                 <span className="text-2xl">🇻🇳</span>
                 <div>
                   <div className="font-bold text-sm">Tiếng Việt</div>
-                  <div className="text-[11px] text-zinc-500">{t('defaultLanguage', 'Ngôn ngữ mặc định')}</div>
+                  <div className="text-[11px] text-zinc-600 dark:text-zinc-400">{t('defaultLanguage', 'Ngôn ngữ mặc định')}</div>
                 </div>
               </div>
               {language === 'vi' && (
-                <div className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center">
+                <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center">
                   <Check className="w-3 h-3 stroke-[3]" />
                 </div>
               )}
@@ -400,23 +404,87 @@ export default function ProfilePage() {
               }}
               className={`p-4 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${
                 language === 'en'
-                  ? 'bg-purple-50/60 dark:bg-purple-950/20 border-purple-500 text-purple-900 dark:text-purple-300 shadow-xs ring-1 ring-purple-500/30'
+                  ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-600 text-emerald-950 dark:text-emerald-200 shadow-xs ring-1 ring-emerald-500/30'
                   : 'bg-[#f4f3ec] dark:bg-[#212129] border-[#e6e4dc] dark:border-[#32323e] text-zinc-700 dark:text-zinc-300 hover:border-zinc-400'
               }`}
             >
               <div className="flex items-center gap-3">
-                <span className="text-2xl">🇬🇧</span>
+                <span className="text-2xl">🌐</span>
                 <div>
                   <div className="font-bold text-sm">English</div>
-                  <div className="text-[11px] text-zinc-500">United States</div>
+                  <div className="text-[11px] text-zinc-600 dark:text-zinc-400">International</div>
                 </div>
               </div>
               {language === 'en' && (
-                <div className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center">
+                <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center">
                   <Check className="w-3 h-3 stroke-[3]" />
                 </div>
               )}
             </button>
+          </div>
+        </div>
+
+        {/* Display Currency Selector */}
+        <div className="tactile-card p-6 sm:p-8 space-y-5">
+          <div className="flex items-center justify-between gap-3 flex-wrap border-b border-[#e6e4dc] dark:border-[#2e2e38] pb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-[#f4f3ec] dark:bg-[#252530] flex items-center justify-center">
+                <Coins className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-[#18181b] dark:text-white">
+                  {t('displayCurrencyTitle', 'Đơn vị tiền tệ hiển thị')}
+                </h3>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                  {t(
+                    'displayCurrencyDesc',
+                    'Chọn loại tiền để quy đổi hiển thị tổng quan. Chuyển khoản VietQR vẫn giữ nguyên số tiền VND chính xác.'
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            {SUPPORTED_CURRENCIES.map((cur) => {
+              const isSelected = displayCurrency === cur.code;
+              return (
+                <button
+                  key={cur.code}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => {
+                    setDisplayCurrency(cur.code);
+                    showToast(
+                      isEn
+                        ? `Display currency set to ${cur.code}`
+                        : `Đã chuyển tiền tệ hiển thị sang ${cur.code}`,
+                      'success'
+                    );
+                  }}
+                  className={`p-3 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-600 text-emerald-950 dark:text-emerald-200 shadow-xs ring-1 ring-emerald-500/30'
+                      : 'bg-[#f4f3ec] dark:bg-[#212129] border-[#e6e4dc] dark:border-[#32323e] text-zinc-700 dark:text-zinc-300 hover:border-zinc-400'
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <div className="font-bold text-xs sm:text-sm flex items-center gap-1.5">
+                      <span>{cur.flag}</span>
+                      <span>{cur.code}</span>
+                    </div>
+                    <div className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate mt-0.5">
+                      {isEn ? cur.nameEn : cur.name}
+                    </div>
+                  </div>
+                  {isSelected && (
+                    <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                      <Check className="w-3 h-3 stroke-[3]" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 

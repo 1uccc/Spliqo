@@ -29,11 +29,11 @@ export default function MyTripsPage() {
       const data = await api.get('/trips');
       setTrips(data || []);
     } catch (err) {
-      showToast(err.message || 'Lỗi khi tải dữ liệu', 'error');
+      showToast(err.message || t('loadDataError', 'Lỗi khi tải dữ liệu'), 'error');
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, [showToast, t]);
 
   useEffect(() => {
     fetchTrips();
@@ -122,7 +122,7 @@ export default function MyTripsPage() {
             <button
               key={tab.id}
               onClick={() => setStatusFilter(tab.id)}
-              className={`tactile-tab shrink-0 whitespace-nowrap ${statusFilter === tab.id ? 'active-purple' : ''}`}
+              className={`tactile-tab shrink-0 whitespace-nowrap ${statusFilter === tab.id ? 'active-emerald' : ''}`}
             >
               <span className="whitespace-nowrap shrink-0">{tab.label}</span>
               <span className="tactile-badge w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center shrink-0 leading-none border border-black/5 dark:border-white/10 bg-white/80 dark:bg-white/15 dark:text-white">
@@ -133,10 +133,11 @@ export default function MyTripsPage() {
         </div>
 
         {/* Search Input */}
-        <div className="relative min-w-[240px]">
-          <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-2.5" />
+        <div className="relative w-full sm:w-64 min-w-0">
+          <Search className="w-4 h-4 text-zinc-600 dark:text-zinc-400 absolute left-3.5 top-2.5" aria-hidden="true" />
           <input
             type="text"
+            aria-label={t('searchPlaceholder', 'Tìm theo tên, mã trip...')}
             placeholder={t('searchPlaceholder', 'Tìm theo tên, mã trip...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

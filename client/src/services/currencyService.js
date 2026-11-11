@@ -5,17 +5,17 @@
  */
 
 export const SUPPORTED_CURRENCIES = [
-  { code: 'VND', name: 'Việt Nam Đồng', symbol: '₫', flag: '🇻🇳', defaultRate: 1, step: 1000 },
-  { code: 'USD', name: 'Đô la Mỹ', symbol: '$', flag: '🇺🇸', defaultRate: 25450, step: 0.1 },
-  { code: 'THB', name: 'Baht Thái Lan', symbol: '฿', flag: '🇹🇭', defaultRate: 700, step: 1 },
-  { code: 'JPY', name: 'Yên Nhật', symbol: '¥', flag: '🇯🇵', defaultRate: 165, step: 1 },
-  { code: 'SGD', name: 'Đô la Singapore', symbol: 'S$', flag: '🇸🇬', defaultRate: 19250, step: 0.5 },
-  { code: 'EUR', name: 'Euro Châu Âu', symbol: '€', flag: '🇪🇺', defaultRate: 27500, step: 0.1 },
-  { code: 'KRW', name: 'Won Hàn Quốc', symbol: '₩', flag: '🇰🇷', defaultRate: 18.5, step: 10 },
-  { code: 'TWD', name: 'Tân Đài Tệ', symbol: 'NT$', flag: '🇹🇼', defaultRate: 780, step: 1 },
-  { code: 'CNY', name: 'Nhân Dân Tệ', symbol: '¥', flag: '🇨🇳', defaultRate: 3500, step: 1 },
-  { code: 'GBP', name: 'Bảng Anh', symbol: '£', flag: '🇬🇧', defaultRate: 32600, step: 0.1 },
-  { code: 'AUD', name: 'Đô la Úc', symbol: 'A$', flag: '🇦🇺', defaultRate: 16400, step: 0.5 }
+  { code: 'VND', name: 'Việt Nam Đồng', nameEn: 'Vietnamese Dong', symbol: '₫', flag: '🇻🇳', defaultRate: 1, step: 1000 },
+  { code: 'USD', name: 'Đô la Mỹ', nameEn: 'US Dollar', symbol: '$', flag: '🇺🇸', defaultRate: 25450, step: 0.1 },
+  { code: 'THB', name: 'Baht Thái Lan', nameEn: 'Thai Baht', symbol: '฿', flag: '🇹🇭', defaultRate: 700, step: 1 },
+  { code: 'JPY', name: 'Yên Nhật', nameEn: 'Japanese Yen', symbol: '¥', flag: '🇯🇵', defaultRate: 165, step: 1 },
+  { code: 'SGD', name: 'Đô la Singapore', nameEn: 'Singapore Dollar', symbol: 'S$', flag: '🇸🇬', defaultRate: 19250, step: 0.5 },
+  { code: 'EUR', name: 'Euro Châu Âu', nameEn: 'Euro', symbol: '€', flag: '🇪🇺', defaultRate: 27500, step: 0.1 },
+  { code: 'KRW', name: 'Won Hàn Quốc', nameEn: 'South Korean Won', symbol: '₩', flag: '🇰🇷', defaultRate: 18.5, step: 10 },
+  { code: 'TWD', name: 'Tân Đài Tệ', nameEn: 'New Taiwan Dollar', symbol: 'NT$', flag: '🇹🇼', defaultRate: 780, step: 1 },
+  { code: 'CNY', name: 'Nhân Dân Tệ', nameEn: 'Chinese Yuan', symbol: '¥', flag: '🇨🇳', defaultRate: 3500, step: 1 },
+  { code: 'GBP', name: 'Bảng Anh', nameEn: 'British Pound', symbol: '£', flag: '🇬🇧', defaultRate: 32600, step: 0.1 },
+  { code: 'AUD', name: 'Đô la Úc', nameEn: 'Australian Dollar', symbol: 'A$', flag: '🇦🇺', defaultRate: 16400, step: 0.5 }
 ];
 
 const RATES_STORAGE_KEY = 'spliqo_exchange_rates';
@@ -78,6 +78,27 @@ export function formatForeignAmount(amount, currencyCode = 'VND') {
   }
 
   return `${formattedNum} ${info.symbol}`;
+}
+
+/**
+ * Formats a base VND amount into the user's preferred display currency.
+ * Keeps base VND exact when VND is active; adds approximate indicator when converted.
+ */
+export function formatDisplayCurrency(vndAmount, displayCurrency = 'VND', isEn = false) {
+  const numeric = Number(vndAmount) || 0;
+  const abs = Math.abs(numeric);
+  const sign = numeric < 0 ? '-' : '';
+
+  if (!displayCurrency || displayCurrency === 'VND') {
+    const formatted = new Intl.NumberFormat(isEn ? 'en-US' : 'vi-VN').format(Math.round(abs));
+    return isEn ? `${sign}${formatted}₫` : `${sign}${formatted}đ`;
+  }
+
+  const rate = getExchangeRate(displayCurrency) || 1;
+  const converted = abs / rate;
+  const zeroDecimals = ['JPY', 'KRW', 'VND'].includes(displayCurrency);
+  const rounded = zeroDecimals ? Math.round(converted) : Math.round(converted * 100) / 100;
+  return `${sign}≈ ${formatForeignAmount(rounded, displayCurrency)}`;
 }
 
 /**

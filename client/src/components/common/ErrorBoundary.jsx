@@ -1,6 +1,16 @@
 import React from 'react';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 
+function isEnglishFallback() {
+  try {
+    if (typeof document !== 'undefined' && document.documentElement?.lang === 'en') return true;
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('spliqo_language') === 'en') return true;
+  } catch {
+    // ignore storage access issues
+  }
+  return false;
+}
+
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -27,19 +37,22 @@ export default class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
+      const isEn = isEnglishFallback();
       return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-[#faf9f6] dark:bg-[#121216] text-[#18181b] dark:text-white">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-[#f4f3ec] dark:bg-[#0f0f12] text-[#18181b] dark:text-white">
           <div className="tactile-card p-6 sm:p-8 max-w-md w-full text-center space-y-5 shadow-xl">
             <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-xs">
-              <AlertCircle className="w-8 h-8" />
+              <AlertCircle className="w-8 h-8" aria-hidden="true" />
             </div>
 
             <div className="space-y-2">
               <h2 className="text-lg sm:text-xl font-bold tracking-tight">
-                Đã xảy ra sự cố tải trang
+                {isEn ? 'Something went wrong loading this page' : 'Đã xảy ra sự cố tải trang'}
               </h2>
-              <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
-                Ứng dụng gặp lỗi ngoài dự kiến. Bạn có thể thử tải lại trang hoặc quay lại Trang tổng quan.
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+                {isEn
+                  ? 'An unexpected error occurred. Try reloading the page or returning to your Dashboard.'
+                  : 'Ứng dụng gặp lỗi ngoài dự kiến. Bạn có thể thử tải lại trang hoặc quay lại Trang tổng quan.'}
               </p>
             </div>
 
@@ -55,16 +68,16 @@ export default class ErrorBoundary extends React.Component {
                 onClick={this.handleReload}
                 className="tactile-btn-dark flex-1 py-2.5 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer"
               >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>Tải lại trang</span>
+                <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>{isEn ? 'Reload page' : 'Tải lại trang'}</span>
               </button>
               <button
                 type="button"
                 onClick={this.handleGoHome}
                 className="tactile-btn-pill flex-1 py-2.5 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Home className="w-3.5 h-3.5" />
-                <span>Về trang chủ</span>
+                <Home className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>{isEn ? 'Back to Home' : 'Về trang chủ'}</span>
               </button>
             </div>
           </div>

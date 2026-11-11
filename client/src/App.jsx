@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { LanguageProvider } from './contexts/LanguageContext';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { ConfirmProvider } from './contexts/ConfirmContext';
 import MainLayout from './layouts/MainLayout';
@@ -22,10 +22,11 @@ const JoinTripPage = lazy(() => import('./pages/JoinTripPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 
 function PageFallback() {
+  const { t } = useLanguage();
   return (
-    <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 space-y-3">
-      <div className="w-9 h-9 border-3 border-zinc-200 dark:border-zinc-800 border-t-purple-600 dark:border-t-purple-400 rounded-full animate-spin" />
-      <span className="text-xs font-semibold text-zinc-400">Đang tải trang...</span>
+    <div role="status" aria-live="polite" className="min-h-[60vh] flex flex-col items-center justify-center p-8 space-y-3">
+      <div className="w-9 h-9 border-3 border-zinc-200 dark:border-zinc-800 border-t-emerald-600 dark:border-t-emerald-400 rounded-full animate-spin" />
+      <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">{t('loadingPage', 'Đang tải trang...')}</span>
     </div>
   );
 }
@@ -36,8 +37,8 @@ function ProtectedRoute({ children }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#faf9f6] dark:bg-[#121216]">
-        <div className="w-9 h-9 border-3 border-zinc-200 dark:border-zinc-800 border-t-purple-600 dark:border-t-purple-400 rounded-full animate-spin" />
+      <div role="status" aria-label="Loading" className="min-h-screen flex items-center justify-center bg-[#f4f3ec] dark:bg-[#0f0f12]">
+        <div className="w-9 h-9 border-3 border-zinc-200 dark:border-zinc-800 border-t-emerald-600 dark:border-t-emerald-400 rounded-full animate-spin" />
       </div>
     );
   }

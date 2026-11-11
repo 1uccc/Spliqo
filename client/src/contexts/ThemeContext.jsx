@@ -16,12 +16,17 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-      localStorage.setItem('spliqo_theme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      localStorage.setItem('spliqo_theme', 'light');
+    const isDarkMode = theme === 'dark';
+    root.classList.toggle('dark', isDarkMode);
+    root.style.colorScheme = isDarkMode ? 'dark' : 'light';
+    try {
+      localStorage.setItem('spliqo_theme', theme);
+    } catch {
+      // ignore storage failure
+    }
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) {
+      themeMeta.setAttribute('content', isDarkMode ? '#0f0f12' : '#f4f3ec');
     }
   }, [theme]);
 

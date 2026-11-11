@@ -8,11 +8,11 @@ import {
   Flame, 
   Settings2, 
   Calendar, 
-  Users, 
   Sparkles,
   Info
 } from 'lucide-react';
 import { formatVND } from '../../services/calculation';
+import { SUPPORTED_CURRENCIES, getCurrencyInfo, getExchangeRate, formatForeignAmount } from '../../services/currencyService';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function TripBudgetGauge({
@@ -23,12 +23,18 @@ export default function TripBudgetGauge({
   onSaveBudget,
   t: propT
 }) {
-  const { t: contextT, isEn } = useLanguage();
+  const { t: contextT, isEn, formatMoney } = useLanguage();
   const t = propT || contextT;
   const [modalOpen, setModalOpen] = useState(false);
   const [budgetType, setBudgetType] = useState(trip?.budget?.type || 'total');
-  const [budgetAmount, setBudgetAmount] = useState(trip?.budget?.amount ? String(trip.budget.amount) : '');
+  const [budgetCurrency, setBudgetCurrency] = useState(trip?.budget?.currency || 'VND');
+  const [budgetAmount, setBudgetAmount] = useState(() => {
+    const savedCur = trip?.budget?.currency || 'VND';
+    if (savedCur !== 'VND' && trip?.budget?.originalAmount) return String(trip.budget.originalAmount);
+    return trip?.budget?.amount ? String(trip.budget.amount) : '';
+  });
   const [saving, setSaving] = useState(false);
+  const [now] = useState(() => new Date());
 
   // Budget calculations
   const hasBudget = trip?.budget && Number(trip.budget.amount) > 0;
@@ -44,7 +50,7 @@ export default function TripBudgetGauge({
 
   // Days analysis
   const parseDate = (dStr) => {
-    if (!dStr) return new Date();
+    if (!dStr) return now;
     const [y, m, d] = dStr.split('-').map(Number);
     return new Date(y, (m || 1) - 1, d || 1);
   };
@@ -54,7 +60,6 @@ export default function TripBudgetGauge({
   const diffTime = endDate.getTime() - startDate.getTime();
   const totalDays = Math.max(1, Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1);
 
-  const now = new Date();
   const startDiff = now.getTime() - startDate.getTime();
   const rawElapsed = Math.round(startDiff / (1000 * 60 * 60 * 24)) + 1;
   const elapsedDays = Math.min(totalDays, Math.max(1, rawElapsed));
@@ -66,7 +71,7 @@ export default function TripBudgetGauge({
   const burnRateExcess = projectedTotal - effectiveBudget;
 
   // Today's expenses
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = now.toISOString().split('T')[0];
   const todayExpenses = expenses.filter(e => (e.date || '').split('T')[0] === todayStr);
   const todaySpent = todayExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
   const todayPercentOfDaily = dailyTarget > 0 ? Math.round((todaySpent / dailyTarget) * 100) : 0;
@@ -76,25 +81,61 @@ export default function TripBudgetGauge({
     setBudgetAmount(String(val));
   };
 
+  const handleCurrencyChange = (nextCode) => {
+    if (nextCode === budgetCurrency) return;
+    const currentVal = Number(budgetAmount) || 0;
+    const currentVnd = budgetCurrency === 'VND' ? currentVal : currentVal * getExchangeRate(budgetCurrency);
+    setBudgetCurrency(nextCode);
+    if (currentVnd > 0) {
+      if (nextCode === 'VND') {
+        setBudgetAmount(String(Math.round(currentVnd)));
+      } else {
+        const nextRate = getExchangeRate(nextCode) || 1;
+        setBudgetAmount(String(Math.round((currentVnd / nextRate) * 100) / 100));
+      }
+    }
+  };
+
   const handleOpenModal = () => {
+    const savedCur = trip?.budget?.currency || 'VND';
+    const initialVal =
+      savedCur !== 'VND' && trip?.budget?.originalAmount
+        ? trip.budget.originalAmount
+        : trip?.budget?.amount;
     setBudgetType(trip?.budget?.type || 'total');
-    setBudgetAmount(trip?.budget?.amount ? String(trip.budget.amount) : '');
+    setBudgetCurrency(savedCur);
+    setBudgetAmount(initialVal ? String(initialVal) : '');
     setModalOpen(true);
   };
 
+  const parsedBudgetInput = Number(budgetAmount) || 0;
+  const activeBudgetRate = budgetCurrency === 'VND' ? 1 : getExchangeRate(budgetCurrency);
+  const previewVndAmount = Math.round(parsedBudgetInput * activeBudgetRate);
+
   const handleSubmit = async (e) => {
     e?.preventDefault();
-    const num = Math.round(Number(budgetAmount) || 0);
+    if (parsedBudgetInput <= 0) {
+      setSaving(true);
+      try {
+        await onSaveBudget(null);
+        setModalOpen(false);
+      } catch {
+        // Toast handled by parent
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
     setSaving(true);
     try {
-      if (num <= 0) {
-        await onSaveBudget(null);
-      } else {
-        await onSaveBudget({
-          amount: num,
-          type: budgetType
-        });
-      }
+      await onSaveBudget({
+        amount: previewVndAmount,
+        type: budgetType,
+        ...(budgetCurrency !== 'VND'
+          ? { currency: budgetCurrency, originalAmount: parsedBudgetInput }
+          : {})
+      });
       setModalOpen(false);
     } catch {
       // Toast handled by parent
@@ -122,8 +163,8 @@ export default function TripBudgetGauge({
     iconColor: 'text-emerald-500',
     headline: t('budgetSafe', 'Chi tiêu đang rất an toàn'),
     desc: isEn 
-      ? `Spent ${percentUsed}% of budget. Remaining ${formatVND(remaining)} for the next ${totalDays - elapsedDays + 1} days.`
-      : `Đã chi ${percentUsed}% ngân sách. Còn lại ${formatVND(remaining)} cho ${totalDays - elapsedDays + 1} ngày tới.`
+      ? `Spent ${percentUsed}% of budget. Remaining ${formatMoney(remaining)} for the next ${totalDays - elapsedDays + 1} days.`
+      : `Đã chi ${percentUsed}% ngân sách. Còn lại ${formatMoney(remaining)} cho ${totalDays - elapsedDays + 1} ngày tới.`
   };
 
   if (isOverBudget) {
@@ -133,8 +174,8 @@ export default function TripBudgetGauge({
       iconColor: 'text-rose-500',
       headline: t('budgetExceeded', 'Báo động: Đã vượt ngân sách dự kiến!'),
       desc: isEn
-        ? `Group has exceeded budget by ${formatVND(Math.abs(remaining))}. Time to balance upcoming spending!`
-        : `Nhóm đã vung tay quá trán thêm ${formatVND(Math.abs(remaining))}. Cần cân đối lại các khoản chi sắp tới!`
+        ? `Group has exceeded budget by ${formatMoney(Math.abs(remaining))}. Time to balance upcoming spending!`
+        : `Nhóm đã vung tay quá trán thêm ${formatMoney(Math.abs(remaining))}. Cần cân đối lại các khoản chi sắp tới!`
     };
   } else if (percentUsed >= 85 || (projectedTotal > effectiveBudget && percentUsed >= 60)) {
     statusTheme = {
@@ -143,8 +184,8 @@ export default function TripBudgetGauge({
       iconColor: 'text-amber-500',
       headline: t('budgetWarning', 'Cảnh báo: Tốc độ chi tiêu đang ở mức cao'),
       desc: isEn
-        ? `Reached ${percentUsed}% of budget limit. Projected to exceed by ~${formatVND(burnRateExcess)}.`
-        : `Đã chạm ngưỡng ${percentUsed}% ngân sách. Dự kiến cuối chuyến đi sẽ vượt khoảng ${formatVND(burnRateExcess)}.`
+        ? `Reached ${percentUsed}% of budget limit. Projected to exceed by ~${formatMoney(burnRateExcess)}.`
+        : `Đã chạm ngưỡng ${percentUsed}% ngân sách. Dự kiến cuối chuyến đi sẽ vượt khoảng ${formatMoney(burnRateExcess)}.`
     };
   } else if (percentUsed >= 60) {
     statusTheme = {
@@ -153,8 +194,8 @@ export default function TripBudgetGauge({
       iconColor: 'text-blue-500',
       headline: t('budgetModerate', 'Đang sử dụng hơn nửa ngân sách'),
       desc: isEn
-        ? `Group spent ${percentUsed}%. Safe remaining daily quota: ${formatVND(Math.max(0, Math.round(remaining / Math.max(1, totalDays - elapsedDays + 1))))}/day.`
-        : `Nhóm đã tiêu ${percentUsed}%. Hạn mức an toàn còn lại trung bình: ${formatVND(Math.max(0, Math.round(remaining / Math.max(1, totalDays - elapsedDays + 1))))}/ngày.`
+        ? `Group spent ${percentUsed}%. Safe remaining daily quota: ${formatMoney(Math.max(0, Math.round(remaining / Math.max(1, totalDays - elapsedDays + 1))))}/day.`
+        : `Nhóm đã tiêu ${percentUsed}%. Hạn mức an toàn còn lại trung bình: ${formatMoney(Math.max(0, Math.round(remaining / Math.max(1, totalDays - elapsedDays + 1))))}/ngày.`
     };
   }
 
@@ -185,15 +226,15 @@ export default function TripBudgetGauge({
                   {t('tripBudgetTracker', 'Hạn mức chi tiêu & Cảnh báo')}
                 </h3>
                 {hasBudget && (
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusTheme.badge}`}>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${statusTheme.badge}`}>
                     {percentUsed}%
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+              <p className="text-[11px] text-zinc-600 dark:text-zinc-400">
                 {hasBudget 
                   ? (currentType === 'per_person' 
-                      ? `${formatVND(rawAmount)} / ${isEn ? 'person' : 'người'} × ${memberCount} ${isEn ? 'members' : 'người'}` 
+                      ? `${formatMoney(rawAmount)} / ${isEn ? 'person' : 'người'} × ${memberCount} ${isEn ? 'members' : 'người'}` 
                       : t('totalTripBudget', 'Hạn mức trọn gói cả chuyến đi'))
                   : t('noBudgetNotice', 'Chưa thiết lập hạn mức chi tiêu dự kiến')}
               </p>
@@ -205,7 +246,7 @@ export default function TripBudgetGauge({
             onClick={handleOpenModal}
             className="self-start sm:self-auto text-xs font-bold px-3 py-1.5 rounded-xl bg-white dark:bg-[#23232c] hover:bg-[#faf9f6] dark:hover:bg-[#2c2c36] text-zinc-700 dark:text-zinc-200 border border-[#e6e4dc] dark:border-[#32323e] flex items-center gap-1.5 shadow-2xs transition-all active:scale-95 cursor-pointer"
           >
-            <Settings2 className="w-3.5 h-3.5 text-zinc-500" />
+            <Settings2 className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
             <span>{hasBudget ? t('editBudget', 'Sửa ngân sách') : t('setBudgetBtn', 'Đặt ngân sách')}</span>
           </button>
         </div>
@@ -215,23 +256,34 @@ export default function TripBudgetGauge({
           <div className="space-y-4 relative z-10">
             {/* Visual Progress Bar (Multi-layer segmented gauge) */}
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs font-bold">
+              <div className="flex items-center justify-between gap-2 flex-wrap text-xs font-bold">
                 <span className="text-[#18181b] dark:text-white">
-                  {formatVND(totalSpent)} <span className="text-zinc-400 font-normal">/ {formatVND(effectiveBudget)}</span>
+                  {formatMoney(totalSpent)}{' '}
+                  <span className="text-zinc-600 dark:text-zinc-400 font-normal">
+                    / {formatMoney(effectiveBudget)}
+                    {trip?.budget?.currency && trip.budget.currency !== 'VND' && trip?.budget?.originalAmount ? (
+                      <span className="ml-1 font-mono text-[11px]">
+                        ({formatForeignAmount(
+                          currentType === 'per_person' ? trip.budget.originalAmount * memberCount : trip.budget.originalAmount,
+                          trip.budget.currency
+                        )})
+                      </span>
+                    ) : null}
+                  </span>
                 </span>
-                <span className={isOverBudget ? 'text-rose-600 dark:text-rose-400 font-extrabold' : 'text-zinc-500 dark:text-zinc-400'}>
+                <span className={isOverBudget ? 'text-rose-600 dark:text-rose-400 font-extrabold' : 'text-zinc-600 dark:text-zinc-400'}>
                   {isOverBudget 
-                    ? `${t('overBudgetBy', 'Vượt')} ${formatVND(Math.abs(remaining))}` 
-                    : `${t('remainingBudget', 'Còn')} ${formatVND(remaining)}`}
+                    ? `${t('overBudgetBy', 'Vượt')} ${formatMoney(Math.abs(remaining))}` 
+                    : `${t('remainingBudget', 'Còn')} ${formatMoney(remaining)}`}
                 </span>
               </div>
 
               {/* Progress Track */}
               <div className="w-full h-3.5 bg-[#f4f3ec] dark:bg-[#1f1f28] rounded-full overflow-hidden p-0.5 border border-[#e6e4dc] dark:border-[#32323e] relative">
                 {/* 70% Safe Line Indicator */}
-                <div className="absolute top-0 bottom-0 left-[70%] w-0.5 bg-zinc-300 dark:bg-zinc-600 z-10 opacity-70" title="Mốc 70%" />
+                <div className="absolute top-0 bottom-0 left-[70%] w-0.5 bg-zinc-300 dark:bg-zinc-600 z-10 opacity-70" title={isEn ? '70% safe mark' : 'Mốc 70%'} />
                 {/* 100% Budget Line Indicator */}
-                <div className="absolute top-0 bottom-0 left-[99%] w-0.5 bg-rose-400 dark:bg-rose-500 z-10" title="Mốc 100%" />
+                <div className="absolute top-0 bottom-0 left-[99%] w-0.5 bg-rose-400 dark:bg-rose-500 z-10" title={isEn ? '100% budget mark' : 'Mốc 100%'} />
 
                 <div
                   className={`h-full rounded-full bg-gradient-to-r ${statusTheme.barColor} transition-all duration-700 ease-out`}
@@ -239,8 +291,8 @@ export default function TripBudgetGauge({
                 />
               </div>
 
-              <div className="flex items-center justify-between text-[10px] text-zinc-400 px-0.5 font-medium">
-                <span>0đ</span>
+              <div className="flex items-center justify-between text-[11px] text-zinc-600 dark:text-zinc-400 px-0.5 font-medium">
+                <span>{formatMoney(0)}</span>
                 <span>{t('safeMark', 'An toàn (70%)')}</span>
                 <span>{t('budgetLimitMark', 'Hạn mức (100%)')}</span>
               </div>
@@ -271,56 +323,56 @@ export default function TripBudgetGauge({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
               {/* Daily Target */}
               <div className="p-3 rounded-2xl bg-[#faf9f6] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2a2a36]">
-                <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-semibold mb-1">
+                <div className="flex items-center gap-1 text-[11px] text-zinc-600 dark:text-zinc-400 font-semibold mb-1">
                   <Calendar className="w-3 h-3" />
                   <span>{t('dailyTarget', 'Định mức/ngày')}</span>
                 </div>
                 <div className="text-xs sm:text-sm font-extrabold text-[#18181b] dark:text-white truncate">
-                  {formatVND(dailyTarget)}
+                  {formatMoney(dailyTarget)}
                 </div>
-                <div className="text-[10px] text-zinc-500 mt-0.5">
+                <div className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5">
                   {isEn ? `Total ${totalDays} days` : `Tổng ${totalDays} ngày đi`}
                 </div>
               </div>
 
               {/* Daily Burn Rate */}
               <div className="p-3 rounded-2xl bg-[#faf9f6] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2a2a36]">
-                <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-semibold mb-1">
+                <div className="flex items-center gap-1 text-[11px] text-zinc-600 dark:text-zinc-400 font-semibold mb-1">
                   <TrendingUp className="w-3 h-3" />
                   <span>{t('actualDailySpent', 'Thực tế tiêu/ngày')}</span>
                 </div>
-                <div className={`text-xs sm:text-sm font-extrabold truncate ${dailySpentAvg > dailyTarget ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                  {formatVND(dailySpentAvg)}
+                <div className={`text-xs sm:text-sm font-extrabold truncate ${dailySpentAvg > dailyTarget ? 'text-amber-700 dark:text-amber-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
+                  {formatMoney(dailySpentAvg)}
                 </div>
-                <div className="text-[10px] text-zinc-500 mt-0.5">
+                <div className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5">
                   {isEn ? `Day ${elapsedDays}/${totalDays}` : `Ngày ${elapsedDays}/${totalDays}`}
                 </div>
               </div>
 
               {/* Today's Expense */}
               <div className="p-3 rounded-2xl bg-[#faf9f6] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2a2a36]">
-                <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-semibold mb-1">
+                <div className="flex items-center gap-1 text-[11px] text-zinc-600 dark:text-zinc-400 font-semibold mb-1">
                   <Flame className="w-3 h-3 text-orange-500" />
                   <span>{t('spentToday', 'Đã chi hôm nay')}</span>
                 </div>
                 <div className="text-xs sm:text-sm font-extrabold text-[#18181b] dark:text-white truncate">
-                  {formatVND(todaySpent)}
+                  {formatMoney(todaySpent)}
                 </div>
-                <div className="text-[10px] text-zinc-500 mt-0.5 truncate">
+                <div className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5 truncate">
                   {todayPercentOfDaily > 0 ? (isEn ? `${todayPercentOfDaily}% daily quota` : `${todayPercentOfDaily}% chỉ tiêu ngày`) : t('noBillToday', 'Chưa có bill hôm nay')}
                 </div>
               </div>
 
               {/* Projected Total */}
               <div className="p-3 rounded-2xl bg-[#faf9f6] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2a2a36]">
-                <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-semibold mb-1">
-                  <Sparkles className="w-3 h-3 text-purple-500" />
+                <div className="flex items-center gap-1 text-[11px] text-zinc-600 dark:text-zinc-400 font-semibold mb-1">
+                  <Sparkles className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                   <span>{t('projectedTotal', 'Dự báo tổng kết')}</span>
                 </div>
-                <div className={`text-xs sm:text-sm font-extrabold truncate ${projectedTotal > effectiveBudget ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                  ~{formatVND(projectedTotal)}
+                <div className={`text-xs sm:text-sm font-extrabold truncate ${projectedTotal > effectiveBudget ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
+                  ~{formatMoney(projectedTotal)}
                 </div>
-                <div className="text-[10px] text-zinc-500 mt-0.5 truncate">
+                <div className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5 truncate">
                   {projectedTotal > effectiveBudget ? t('riskOverBudget', 'Nguy cơ vượt hạn mức') : t('onTrackBudget', 'Nằm trong kế hoạch')}
                 </div>
               </div>
@@ -397,7 +449,7 @@ export default function TripBudgetGauge({
                 className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   budgetType === 'total'
                     ? 'bg-white dark:bg-[#2c2c36] text-[#18181b] dark:text-white shadow-xs'
-                    : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-white'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                 }`}
               >
                 {t('groupTotalBudget', 'Trọn gói cả nhóm')}
@@ -408,7 +460,7 @@ export default function TripBudgetGauge({
                 className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   budgetType === 'per_person'
                     ? 'bg-white dark:bg-[#2c2c36] text-[#18181b] dark:text-white shadow-xs'
-                    : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-white'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                 }`}
               >
                 {t('perPersonBudgetType', 'Theo đầu người')}
@@ -416,31 +468,68 @@ export default function TripBudgetGauge({
             </div>
           </div>
 
+          {/* Currency Selector for Overseas Trips */}
+          <div className="space-y-1.5">
+            <span className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
+              {t('budgetCurrencyLabel', 'Tiền tệ ngân sách')}
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {SUPPORTED_CURRENCIES.map((c) => {
+                const isSelected = budgetCurrency === c.code;
+                return (
+                  <button
+                    key={c.code}
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => handleCurrencyChange(c.code)}
+                    className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                      isSelected
+                        ? 'bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] shadow-xs'
+                        : 'bg-[#f4f3ec] dark:bg-[#1a1a22] text-zinc-700 dark:text-zinc-300 border border-[#e6e4dc] dark:border-[#2e2e38] hover:bg-[#eae8df] dark:hover:bg-[#252530]'
+                    }`}
+                  >
+                    <span aria-hidden="true">{c.flag}</span>
+                    <span className="font-mono">{c.code}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Amount Input */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
-              {budgetType === 'per_person' ? t('budgetAmountLabelPerPerson', 'Số tiền dự kiến mỗi người (VND)') : t('budgetAmountLabelTotal', 'Tổng số tiền dự kiến cả chuyến (VND)')}
+            <label htmlFor="budget-amount-input" className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+              {budgetType === 'per_person'
+                ? `${t('budgetEstimatedPerPersonLabel', 'Ngân sách dự kiến mỗi người')} (${budgetCurrency})`
+                : `${t('budgetEstimatedTotalLabel', 'Tổng ngân sách dự kiến cả chuyến')} (${budgetCurrency})`}
             </label>
             <div className="relative">
               <input
+                id="budget-amount-input"
                 type="number"
                 min="0"
-                step="any"
+                step={budgetCurrency === 'VND' ? '1000' : 'any'}
                 value={budgetAmount}
                 onChange={(e) => setBudgetAmount(e.target.value)}
-                placeholder={budgetType === 'per_person' ? (isEn ? 'e.g. 3000000' : 'Ví dụ: 3000000') : (isEn ? 'e.g. 15000000' : 'Ví dụ: 15000000')}
-                className="w-full px-4 py-3 rounded-2xl bg-[#faf9f6] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2e2e38] text-sm font-bold text-[#18181b] dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                placeholder={
+                  budgetCurrency === 'VND'
+                    ? budgetType === 'per_person' ? (isEn ? 'e.g. 3000000' : 'Ví dụ: 3000000') : (isEn ? 'e.g. 15000000' : 'Ví dụ: 15000000')
+                    : budgetType === 'per_person' ? (isEn ? 'e.g. 5000' : 'Ví dụ: 5000') : (isEn ? 'e.g. 20000' : 'Ví dụ: 20000')
+                }
+                className="w-full px-4 py-3 pr-16 rounded-2xl bg-[#faf9f6] dark:bg-[#1a1a22] border border-[#e6e4dc] dark:border-[#2e2e38] text-sm font-bold text-[#18181b] dark:text-white focus:ring-2 focus:ring-emerald-500 font-mono"
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400">
-                VNĐ
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-600 dark:text-zinc-400 font-mono">
+                {getCurrencyInfo(budgetCurrency).symbol} {budgetCurrency !== 'VND' ? budgetCurrency : ''}
               </span>
             </div>
-            {budgetAmount && Number(budgetAmount) > 0 && (
-              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-                = {formatVND(budgetAmount)}
+            {parsedBudgetInput > 0 && (
+              <p className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold font-mono">
+                {budgetCurrency === 'VND'
+                  ? `= ${formatMoney(previewVndAmount)}`
+                  : `≈ ${formatVND(previewVndAmount)} (${isEn ? 'base VND' : 'quy đổi chuẩn'})`}
                 {budgetType === 'per_person' && (
-                  <span className="text-zinc-500 dark:text-zinc-400 ml-1">
-                    ({isEn ? `Entire group ${memberCount} members:` : `Cả nhóm ${memberCount} người:`} {formatVND(Number(budgetAmount) * memberCount)})
+                  <span className="text-zinc-600 dark:text-zinc-400 ml-1 font-sans">
+                    ({isEn ? `Entire group ${memberCount} members:` : `Cả nhóm ${memberCount} người:`} {formatVND(previewVndAmount * memberCount)})
                   </span>
                 )}
               </p>
@@ -448,24 +537,26 @@ export default function TripBudgetGauge({
           </div>
 
           {/* Quick Preset Buttons */}
-          <div className="space-y-1.5">
-            <span className="text-[11px] font-semibold text-zinc-500">{t('quickPresets', 'Gợi ý nhanh:')}</span>
-            <div className="flex flex-wrap gap-1.5">
-              {(budgetType === 'per_person' 
-                ? [1000000, 2000000, 3000000, 5000000, 10000000]
-                : [5000000, 10000000, 15000000, 20000000, 30000000]
-              ).map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() => handleSelectPreset(preset)}
-                  className="px-2.5 py-1 rounded-xl bg-[#f4f3ec] dark:bg-[#252530] hover:bg-[#eae8df] dark:hover:bg-[#2e2e3c] text-[11px] font-bold text-zinc-700 dark:text-zinc-300 border border-[#e6e4dc] dark:border-[#32323e] cursor-pointer active:scale-95 transition-all"
-                >
-                  {formatVND(preset)}
-                </button>
-              ))}
+          {budgetCurrency === 'VND' && (
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">{t('quickPresets', 'Gợi ý nhanh:')}</span>
+              <div className="flex flex-wrap gap-1.5">
+                {(budgetType === 'per_person' 
+                  ? [1000000, 2000000, 3000000, 5000000, 10000000]
+                  : [5000000, 10000000, 15000000, 20000000, 30000000]
+                ).map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => handleSelectPreset(preset)}
+                    className="px-2.5 py-1 rounded-xl bg-[#f4f3ec] dark:bg-[#252530] hover:bg-[#eae8df] dark:hover:bg-[#2e2e3c] text-[11px] font-bold text-zinc-700 dark:text-zinc-300 border border-[#e6e4dc] dark:border-[#32323e] cursor-pointer active:scale-95 transition-all"
+                  >
+                    {formatVND(preset)}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 text-[11px] text-amber-800 dark:text-amber-200 flex items-start gap-2">
             <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />

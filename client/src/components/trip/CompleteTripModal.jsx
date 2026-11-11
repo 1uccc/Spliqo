@@ -1,7 +1,7 @@
 import React from 'react';
 import Modal from '../Modal';
 import { AlertCircle, ArrowRight, Sparkles, Loader2, CheckCircle2 } from 'lucide-react';
-import { formatVND } from '../../services/calculation';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function CompleteTripModal({
   isOpen,
@@ -18,6 +18,7 @@ export default function CompleteTripModal({
   onGoToSettlementTab,
   t
 }) {
+  const { isEn, formatMoney } = useLanguage();
   return (
     <Modal
       isOpen={isOpen}
@@ -126,9 +127,9 @@ export default function CompleteTripModal({
                         className="w-7 h-7 rounded-full bg-white object-cover border border-[#e6e4dc] shrink-0"
                       />
                       <span className="font-bold text-[#18181b] dark:text-white truncate max-w-[90px] sm:max-w-[120px]">
-                        {debt.fromUser?.displayName || 'Thành viên'}
+                        {debt.fromUser?.displayName || (isEn ? 'Member' : 'Thành viên')}
                       </span>
-                      <span className="text-[11px] text-zinc-400 font-medium shrink-0">
+                      <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium shrink-0">
                         {t('transferredTo', 'chuyển cho')}
                       </span>
                       <img
@@ -137,16 +138,16 @@ export default function CompleteTripModal({
                         className="w-7 h-7 rounded-full bg-white object-cover border border-[#e6e4dc] shrink-0"
                       />
                       <span className="font-bold text-[#18181b] dark:text-white truncate max-w-[90px] sm:max-w-[120px]">
-                        {debt.toUser?.displayName || 'Thành viên'}
+                        {debt.toUser?.displayName || (isEn ? 'Member' : 'Thành viên')}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
                       <span className="font-extrabold text-rose-600 dark:text-rose-400">
-                        {formatVND(debt.amount)}
+                        {formatMoney(debt.amount)}
                       </span>
                       <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
                           debt.status === 'PAID'
                             ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
                             : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
@@ -176,22 +177,22 @@ export default function CompleteTripModal({
             </div>
 
             {/* Snapshot Info */}
-            <div className="grid grid-cols-3 gap-2.5 p-3.5 rounded-2xl bg-[#f4f3ec] dark:bg-[#1a1a20] border border-[#e6e4dc] dark:border-[#2e2e38] text-center">
-              <div>
-                <span className="text-[10px] text-zinc-500 font-semibold block">{t('totalTripCost', 'Tổng chi')}</span>
-                <span className="text-xs font-extrabold text-[#18181b] dark:text-white truncate block">
-                  {formatVND(balances?.totalExpense || 0)}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-3.5 rounded-2xl bg-[#f4f3ec] dark:bg-[#1a1a20] border border-[#e6e4dc] dark:border-[#2e2e38] text-center">
+              <div className="col-span-2 sm:col-span-1">
+                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-semibold block">{t('totalTripCost', 'Tổng chi')}</span>
+                <span className="text-xs font-extrabold font-mono text-[#18181b] dark:text-white truncate block">
+                  {formatMoney(balances?.totalExpense || 0)}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-zinc-500 font-semibold block">{t('members', 'Thành viên')}</span>
+                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-semibold block">{t('members', 'Thành viên')}</span>
                 <span className="text-xs font-extrabold text-[#18181b] dark:text-white block">
                   {members.length} {t('memberShort', 'người')}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-zinc-500 font-semibold block">{t('settlement', 'Công nợ')}</span>
-                <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 block">
+                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-semibold block">{t('settlement', 'Công nợ')}</span>
+                <span className="text-xs font-extrabold text-emerald-700 dark:text-emerald-400 block">
                   100% {t('confirmed', 'Đã tất toán')}
                 </span>
               </div>
