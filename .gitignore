@@ -11,3 +11,4 @@ dist/
 *.log
 server/data/
 .firebase/
+.impeccable/
